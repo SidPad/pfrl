@@ -121,13 +121,14 @@ def _batch_run_episodes(
     episode_len = np.zeros(num_envs, dtype="i")
 
     obss = env.reset()
+    actions = None
     rs = np.zeros(num_envs, dtype="f")
 
     termination_conditions = False
     timestep = 0
     while True:
         # a_t
-        actions = agent.batch_act(obss)
+        actions = agent.batch_act(obss, actions)
         timestep += 1
         # o_{t+1}, r_{t+1}
         obss, rs, dones, infos = env.step(actions)
