@@ -55,7 +55,7 @@ def train_agent_batch(
 
     # o_0, r_0
     obss = env.reset()
-
+    actions = None
     t = step_offset
     if hasattr(agent, "t"):
         agent.t = step_offset
@@ -64,7 +64,7 @@ def train_agent_batch(
     try:
         while True:
             # a_t
-            actions = agent.batch_act(obss)
+            actions = agent.batch_act(obss, actions)
             # o_{t+1}, r_{t+1}
             obss, rs, dones, infos = env.step(actions)
             episode_r += rs
