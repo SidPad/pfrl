@@ -265,15 +265,27 @@ def batch_recurrent_experiences(
         "discount": torch.full(
             (len(flat_transitions),), gamma, dtype=torch.float, device=device
         ),
-        "recurrent_state": recurrent_state_from_numpy(
+        "recurrent_state_critic": recurrent_state_from_numpy(
             concatenate_recurrent_states(
-                [ep[0]["recurrent_state"] for ep in experiences]
+                [ep[0]["recurrent_state_critic"] for ep in experiences]
             ),
             device,
         ),
-        "next_recurrent_state": recurrent_state_from_numpy(
+        "next_recurrent_state_critic": recurrent_state_from_numpy(
             concatenate_recurrent_states(
-                [ep[0]["next_recurrent_state"] for ep in experiences]
+                [ep[0]["next_recurrent_state_critic"] for ep in experiences]
+            ),
+            device,
+        ),
+        "recurrent_state_actor": recurrent_state_from_numpy(
+            concatenate_recurrent_states(
+                [ep[0]["recurrent_state_actor"] for ep in experiences]
+            ),
+            device,
+        ),
+        "next_recurrent_state_actor": recurrent_state_from_numpy(
+            concatenate_recurrent_states(
+                [ep[0]["next_recurrent_state_actor"] for ep in experiences]
             ),
             device,
         ),
