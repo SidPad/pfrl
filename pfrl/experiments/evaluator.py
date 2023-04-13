@@ -25,7 +25,7 @@ def _run_episodes(
     lengths = []
     terminate = False
     timestep = 0
-
+    a = None
     reset = True
     while not terminate:
         if reset:
@@ -34,7 +34,7 @@ def _run_episodes(
             test_r = 0
             episode_len = 0
             info = {}
-        a = agent.act(obs)
+        a = agent.act(obs, a)
         obs, r, done, info = env.step(a)
         test_r += r
         episode_len += 1
