@@ -56,6 +56,8 @@ def train_agent_batch(
     # o_0, r_0
     obss = env.reset()
     actions = None
+    empty_action = np.zeros(23)
+    timer = 0
     t = step_offset
     if hasattr(agent, "t"):
         agent.t = step_offset
@@ -63,82 +65,86 @@ def train_agent_batch(
     eval_stats_history = []  # List of evaluation episode stats dict
     try:
         while True:
-            # a_t
-            actions = agent.batch_act(obss, actions)
-            # o_{t+1}, r_{t+1}
-            obss, rs, dones, infos = env.step(actions)
-            episode_r += rs
-            episode_len += 1
+            if timer % 5 == 0:
+                # a_t
+                actions = agent.batch_act(obss)
+                # o_{t+1}, r_{t+1}
+                obss, rs, dones, infos = env.step(actions)
+                episode_r += rs
+                episode_len += 1
 
-            # Compute mask for done and reset
-            if max_episode_len is None:
-                resets = np.zeros(num_envs, dtype=bool)
-            else:
-                resets = episode_len == max_episode_len
-            resets = np.logical_or(
-                resets, [info.get("needs_reset", False) for info in infos]
-            )
-            # Agent observes the consequences
-            agent.batch_observe(obss, rs, dones, resets)
+                # Compute mask for done and reset
+                if max_episode_len is None:
+                    resets = np.zeros(num_envs, dtype=bool)
+                else:
+                    resets = episode_len == max_episode_len
+                resets = np.logical_or(
+                    resets, [info.get("needs_reset", False) for info in infos]
+                )
+                # Agent observes the consequences
+                agent.batch_observe(obss, rs, dones, resets)
 
-            # Make mask. 0 if done/reset, 1 if pass
-            end = np.logical_or(resets, dones)
-            not_end = np.logical_not(end)
+                # Make mask. 0 if done/reset, 1 if pass
+                end = np.logical_or(resets, dones)
+                not_end = np.logical_not(end)
 
-            # For episodes that ends, do the following:
-            #   1. increment the episode count
-            #   2. record the return
-            #   3. clear the record of rewards
-            #   4. clear the record of the number of steps
-            #   5. reset the env to start a new episode
-            # 3-5 are skipped when training is already finished.
-            episode_idx += end
-            recent_returns.extend(episode_r[end])
+                # For episodes that ends, do the following:
+                #   1. increment the episode count
+                #   2. record the return
+                #   3. clear the record of rewards
+                #   4. clear the record of the number of steps
+                #   5. reset the env to start a new episode
+                # 3-5 are skipped when training is already finished.
+                episode_idx += end
+                recent_returns.extend(episode_r[end])
 
-            for _ in range(num_envs):
-                t += 1
-                if checkpoint_freq and t % checkpoint_freq == 0:
-                    save_agent(agent, t, outdir, logger, suffix="_checkpoint")
+                for _ in range(num_envs):
+                    t += 1
+                    if checkpoint_freq and t % checkpoint_freq == 0:
+                        save_agent(agent, t, outdir, logger, suffix="_checkpoint")
 
-                for hook in step_hooks:
-                    hook(env, agent, t)
+                    for hook in step_hooks:
+                        hook(env, agent, t)
 
-            if (
-                log_interval is not None
-                and t >= log_interval
-                and t % log_interval < num_envs
-            ):
-                logger.info(
-                    "outdir:{} step:{} episode:{} last_R: {} average_R:{}".format(  # NOQA
-                        outdir,
-                        t,
-                        np.sum(episode_idx),
-                        recent_returns[-1] if recent_returns else np.nan,
-                        np.mean(recent_returns) if recent_returns else np.nan,
+                if (
+                    log_interval is not None
+                    and t >= log_interval
+                    and t % log_interval < num_envs
+                ):
+                    logger.info(
+                        "outdir:{} step:{} episode:{} last_R: {} average_R:{}".format(  # NOQA
+                            outdir,
+                            t,
+                            np.sum(episode_idx),
+                            recent_returns[-1] if recent_returns else np.nan,
+                            np.mean(recent_returns) if recent_returns else np.nan,
+                        )
                     )
-                )
-                logger.info("statistics: {}".format(agent.get_statistics()))
-            if evaluator:
-                eval_score = evaluator.evaluate_if_necessary(
-                    t=t, episodes=np.sum(episode_idx)
-                )
-                if eval_score is not None:
-                    eval_stats = dict(agent.get_statistics())
-                    eval_stats["eval_score"] = eval_score
-                    eval_stats_history.append(eval_stats)
-                    if (
-                        successful_score is not None
-                        and evaluator.max_score >= successful_score
-                    ):
-                        break
+                    logger.info("statistics: {}".format(agent.get_statistics()))
+                if evaluator:
+                    eval_score = evaluator.evaluate_if_necessary(
+                        t=t, episodes=np.sum(episode_idx)
+                    )
+                    if eval_score is not None:
+                        eval_stats = dict(agent.get_statistics())
+                        eval_stats["eval_score"] = eval_score
+                        eval_stats_history.append(eval_stats)
+                        if (
+                            successful_score is not None
+                            and evaluator.max_score >= successful_score
+                        ):
+                            break
 
-            if t >= steps:
-                break
+                if t >= steps:
+                    break
 
-            # Start new episodes if needed
-            episode_r[end] = 0
-            episode_len[end] = 0
-            obss = env.reset(not_end)
+                # Start new episodes if needed
+                episode_r[end] = 0
+                episode_len[end] = 0
+                obss = env.reset(not_end)
+            else:
+                env.step(empty_action)
+            timer + =1
 
     except (Exception, KeyboardInterrupt):
         # Save the current model before being killed
