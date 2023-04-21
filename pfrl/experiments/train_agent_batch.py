@@ -55,7 +55,8 @@ def train_agent_batch(
 
     # o_0, r_0
     obss = env.reset()
-    actions = None
+    empty_action = np.zeros(23)
+    actions = empty_action
     t = step_offset
     if hasattr(agent, "t"):
         agent.t = step_offset
