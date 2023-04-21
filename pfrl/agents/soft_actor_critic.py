@@ -1469,7 +1469,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 batch_xs = self.batch_states(batch_obs, self.device, self.phi)
                 if batch_acts[0].all() == 0:
                     batch_acts = []
-                    for b in range(3):
+                    for b in range(6):
                         batch_acts.append(np.zeros(23))
                 batch_axs = self.batch_states(batch_acts, self.device, self.phi)
                 
