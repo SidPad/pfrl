@@ -25,7 +25,8 @@ def _run_episodes(
     lengths = []
     terminate = False
     timestep = 0
-    a = None
+    empty_action = np.zeros(23)
+    a = empty_action
     reset = True
     while not terminate:
         if reset:
@@ -121,7 +122,8 @@ def _batch_run_episodes(
     episode_len = np.zeros(num_envs, dtype="i")
 
     obss = env.reset()
-    actions = None
+    empty_action = np.zeros(23)
+    actions = empty_action
     rs = np.zeros(num_envs, dtype="f")
 
     termination_conditions = False
