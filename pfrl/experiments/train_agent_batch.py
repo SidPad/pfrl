@@ -144,7 +144,7 @@ def train_agent_batch(
                 obss = env.reset(not_end)
             else:
                 env.step(empty_action)
-            timer + =1
+            timer += 1
 
     except (Exception, KeyboardInterrupt):
         # Save the current model before being killed
