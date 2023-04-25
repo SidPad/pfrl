@@ -135,7 +135,7 @@ def _batch_run_episodes(
     while True:
         if timer % 5 == 0:
             # a_t
-            actions = agent.batch_act(obss, actions)
+            actions = agent.batch_act(obss)
             timestep += 1
             # o_{t+1}, r_{t+1}
             obss, rs, dones, infos = env.step(actions)
