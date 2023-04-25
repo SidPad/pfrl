@@ -1491,7 +1491,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 if batch_acts[0].all() == 0:
                     batch_acts = []
                     for b in range(6):
-                        batch_acts.append(np.zeros(23))
+                        batch_acts.append(np.zeros(27))
                 batch_axs = self.batch_states(batch_acts, self.device, self.phi)
                 
                 # mask1 = torch.all(batch_xs[:, -3:] == torch.tensor([1.0, 0.0, 0.0]).to(self.device), dim = 1)
