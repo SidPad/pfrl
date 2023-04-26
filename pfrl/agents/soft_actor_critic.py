@@ -1167,14 +1167,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = batch_actions[self.indicesAA]
 
         batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
-        if len(batch_state) < 512:
-            batch_state = torch.cat([batch_state, torch.zeros(512-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
+        if len(batch_state) < 160:
+            batch_state = torch.cat([batch_state, torch.zeros(160-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
         batch_state = torch.split(batch_state, 16, dim=0)
         batch_state = [t.squeeze(0) for t in batch_state]
         
         batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
-        if len(batch_actions) < 512:
-            batch_actions = torch.cat([batch_actions, torch.zeros(512-len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
+        if len(batch_actions) < 160:
+            batch_actions = torch.cat([batch_actions, torch.zeros(160-len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
         batch_actions = torch.split(batch_actions, 16, dim=0)
         batch_actions = [t.squeeze(0) for t in batch_actions]
 
