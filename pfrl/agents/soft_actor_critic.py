@@ -556,6 +556,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         gpu=None,
         replay_start_size=10000,
         minibatch_size=100,
+        seq_len,
         update_interval=1,
         phi=lambda x: x,
         soft_update_tau=5e-3,
@@ -726,7 +727,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.prev_r_mean = None
         self.prev_r_std = None
         
-        self.seq_length = 4
+        self.seq_length = seq_len
         self.minibatch_size = minibatch_size
 
     @property
