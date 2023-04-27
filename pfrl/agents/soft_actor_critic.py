@@ -727,6 +727,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.prev_r_std = None
         
         self.seq_length = 4
+        self.minibatch_size = minibatch_size
 
     @property
     def temperature(self):
@@ -1169,14 +1170,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = batch_actions[self.indicesAA]
 
         batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
-        if len(batch_state) < (minibatch_size * self.seq_length):
-            batch_state = torch.cat([batch_state, torch.zeros((minibatch_size * self.seq_length)-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
+        if len(batch_state) < (self.minibatch_size * self.seq_length):
+            batch_state = torch.cat([batch_state, torch.zeros((self.minibatch_size * self.seq_length)-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
         batch_state = torch.split(batch_state, self.seq_length, dim=0)
         batch_state = [t.squeeze(0) for t in batch_state]
         
         batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
-        if len(batch_actions) < (minibatch_size * self.seq_length):
-            batch_actions = torch.cat([batch_actions, torch.zeros((minibatch_size * self.seq_length)-len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
+        if len(batch_actions) < (self.minibatch_size * self.seq_length):
+            batch_actions = torch.cat([batch_actions, torch.zeros((self.minibatch_size * self.seq_length)-len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
         batch_actions = torch.split(batch_actions, self.seq_length, dim=0)
         batch_actions = [t.squeeze(0) for t in batch_actions]
 
