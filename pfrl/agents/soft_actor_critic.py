@@ -725,6 +725,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.r_std = torch.ones((3,)).to(self.device)
         self.prev_r_mean = None
         self.prev_r_std = None
+        
+        self.seq_length = 4
 
     @property
     def temperature(self):
@@ -827,8 +829,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             for j in range(len(ep_len_actual_sum2)): 
                 if j in indicesA:
-                    random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - 16)
-                    indicesAA = np.append(indicesAA, [i for i in range(random_indexA, random_indexA + 16)])
+                    random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - self.seq_length)
+                    indicesAA = np.append(indicesAA, [i for i in range(random_indexA, random_indexA + self.seq_length)])
                 # if j in indicesB:
                 #     random_indexB = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - 30)
                 #     indicesBB = np.append(indicesBB, [i for i in range(random_indexB, random_indexB + 30)])
@@ -839,7 +841,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.indicesAA = torch.tensor(indicesAA, dtype=torch.long).to(self.device)
             # self.indicesBB = torch.tensor(indicesBB, dtype=torch.long).to(self.device)
             # self.indicesCC = torch.tensor(indicesCC, dtype=torch.long).to(self.device)
-            self.ndcsAA = self.indicesAA[15::16]
+            self.ndcsAA = self.indicesAA[(self.seq_length-1)::self.seq_length]
             # self.indices = torch.cat((self.indicesAA, self.indicesBB, self.indicesCC), dim=0)
             # self.indices = torch.cat((self.indicesAA), dim=0)
 
@@ -854,19 +856,19 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
             # if len(batch_next_state) < 960:
             #     batch_next_state = torch.cat([batch_next_state, torch.zeros(960-len(batch_next_state), batch_next_state.shape[0]).to(self.device)], dim=1)
-            batch_next_state = torch.split(batch_next_state, 16, dim=0)
+            batch_next_state = torch.split(batch_next_state, self.seq_length, dim=0)
             batch_next_state = [t.squeeze(0) for t in batch_next_state]
                 
             batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
             # if len(batch_state) < 960:
             #     batch_state = torch.cat([batch_state, torch.zeros(960-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
-            batch_state = torch.split(batch_state, 16, dim=0)
+            batch_state = torch.split(batch_state, self.seq_length, dim=0)
             batch_state = [t.squeeze(0) for t in batch_state]
             
             batch_actions1 = nn.utils.rnn.pad_sequence(batch_actions1, batch_first=True, padding_value=0)
             # if len(batch_actions) < 960:
             #     batch_actions = torch.cat([batch_actions, torch.zeros(960-len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
-            batch_actions1 = torch.split(batch_actions1, 16, dim=0)
+            batch_actions1 = torch.split(batch_actions1, self.seq_length, dim=0)
             batch_actions1 = [t.squeeze(0) for t in batch_actions1]
             
             batch_recurrent_action = []
@@ -938,7 +940,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
             # batch_actions_clone = [batch_actions for batch_actions in batch_actions]
             batch_actions1 = torch.cat(batch_actions1).to(self.device)
-            batch_actions1 = batch_actions1[15::16]
+            batch_actions1 = batch_actions1[(self.seq_length-1)::self.seq_length]
             # batch_actions1, batch_actions2, batch_actions3 = torch.split(batch_actions_clone, [len(self.indicesAA), len(self.indicesBB), len(self.indicesCC)])
             # batch_actions1 = torch.cat((batch_actions1, torch.zeros(960-len(self.indicesAA), 23).to(self.device))).to(torch.float32)
             # batch_actions2 = torch.cat((batch_actions2, torch.zeros(960-len(self.indicesBB), 23).to(self.device))).to(torch.float32)
@@ -1167,15 +1169,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = batch_actions[self.indicesAA]
 
         batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
-        if len(batch_state) < 256:
-            batch_state = torch.cat([batch_state, torch.zeros(256-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
-        batch_state = torch.split(batch_state, 16, dim=0)
+        if len(batch_state) < (minibatch_size * self.seq_length):
+            batch_state = torch.cat([batch_state, torch.zeros((minibatch_size * self.seq_length)-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
+        batch_state = torch.split(batch_state, self.seq_length, dim=0)
         batch_state = [t.squeeze(0) for t in batch_state]
         
         batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
-        if len(batch_actions) < 256:
-            batch_actions = torch.cat([batch_actions, torch.zeros(256-len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
-        batch_actions = torch.split(batch_actions, 16, dim=0)
+        if len(batch_actions) < (minibatch_size * self.seq_length):
+            batch_actions = torch.cat([batch_actions, torch.zeros((minibatch_size * self.seq_length)-len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
+        batch_actions = torch.split(batch_actions, self.seq_length, dim=0)
         batch_actions = [t.squeeze(0) for t in batch_actions]
 
         batch_recurrent_action = []
