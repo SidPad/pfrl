@@ -828,7 +828,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             indicesAA = []
             # indicesBB = []
             # indicesCC = []
-            
+            print(print(ep_len_actual)
+            print(ep_len_actual_sum1)
+            print(ep_len_actual_sum2)
             for j in range(len(ep_len_actual_sum2)): 
                 if j in indicesA:
                     random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - self.seq_len)
