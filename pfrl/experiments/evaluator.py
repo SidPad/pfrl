@@ -122,7 +122,7 @@ def _batch_run_episodes(
     episode_len = np.zeros(num_envs, dtype="i")
 
     obss = env.reset()
-    empty_action = np.zeros(27)
+    empty_action = [np.zeros(27) for _ in range(num_envs)]
     actions = empty_action
     rs = np.zeros(num_envs, dtype="f")
 
