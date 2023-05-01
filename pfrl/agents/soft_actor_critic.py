@@ -833,8 +833,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             print(ep_len_actual_sum2)
             for j in range(len(ep_len_actual_sum2)): 
                 if j in indicesA:
-                    random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - self.seq_len)
-                    indicesAA = np.append(indicesAA, [i for i in range(random_indexA, random_indexA + self.seq_len)])
+                    if (ep_len_actual_sum1[j] - self.seq_len) > ep_len_actual_sum2[j]:
+                        random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - self.seq_len)
+                        indicesAA = np.append(indicesAA, [i for i in range(random_indexA, random_indexA + self.seq_len)])
+                    else:
+                        random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j])
+                        indicesAA = np.append(indicesAA, [i for i in range(random_indexA, ep_len_actual_sum1[j])])
                 # if j in indicesB:
                 #     random_indexB = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - 30)
                 #     indicesBB = np.append(indicesBB, [i for i in range(random_indexB, random_indexB + 30)])
