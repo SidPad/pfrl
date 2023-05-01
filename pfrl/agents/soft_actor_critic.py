@@ -828,9 +828,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             indicesAA = []
             # indicesBB = []
             # indicesCC = []
-            print(ep_len_actual)
-            print(ep_len_actual_sum1)
-            print(ep_len_actual_sum2)
+            
             for j in range(len(ep_len_actual_sum2)): 
                 if j in indicesA:
                     if (ep_len_actual_sum1[j] - self.seq_len) > ep_len_actual_sum2[j]:
@@ -1007,6 +1005,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     next_action_distrib1 = self.policy1(batch_input_next_state_actor1)
                     next_actions1 = next_action_distrib1.sample()
                     next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
+                    print(batch_input_next_state_critic1.shape)
+                    print(next_actions1.shape)
                     next_q1T1 = self.target_q_func1_T1((batch_input_next_state_critic1, next_actions1))
                     next_q2T1 = self.target_q_func2_T1((batch_input_next_state_critic1, next_actions1))
                     next_qT1 = torch.min(next_q1T1, next_q2T1)
