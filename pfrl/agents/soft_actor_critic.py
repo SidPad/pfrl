@@ -1096,9 +1096,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             #     self.q_func1_loss_T3_record.append(float(loss1_T3))
             #     self.q_func2_loss_T3_record.append(float(loss2_T3))
         
-            self.shared_q_optimizer_critic.zero_grad()
-            loss.backward(retain_graph=True)
-            self.shared_q_optimizer_critic.step()
+            # self.shared_q_optimizer_critic.zero_grad()
+            # loss.backward(retain_graph=True)
+            # self.shared_q_optimizer_critic.step()
 
             if loss1_T1.item() != 0:
                 self.q_func1_optimizer1.zero_grad()
