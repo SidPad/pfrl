@@ -848,11 +848,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 #     indicesCC = np.append(indicesCC, [i for i in range(random_indexC, random_indexC + 30)])
 
             self.indicesAA = torch.tensor(indicesAA, dtype=torch.long).to(self.device)
-            ndcsAA = torch.split(self.indicesAA, splitter)
+            ndcsAA = torch.split(self.indicesAA, tuple(splitter))
             ndcsAA = [ndcsAA[-1] for ndcsAA in ndcsAA]
             # self.indicesBB = torch.tensor(indicesBB, dtype=torch.long).to(self.device)
             # self.indicesCC = torch.tensor(indicesCC, dtype=torch.long).to(self.device)
-            self.ndcsAA = self.indicesAA[tuple(ndcsAA)]
+            self.ndcsAA = self.indicesAA[ndcsAA]
             # self.indices = torch.cat((self.indicesAA, self.indicesBB, self.indicesCC), dim=0)
             # self.indices = torch.cat((self.indicesAA), dim=0)
 
