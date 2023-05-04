@@ -846,11 +846,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 # if j in indicesC:
                 #     random_indexC = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - 30)
                 #     indicesCC = np.append(indicesCC, [i for i in range(random_indexC, random_indexC + 30)])
-            print(splitter)
+            splitter = [int(splitter) for splitter in splitter]
             self.indicesAA = torch.tensor(indicesAA, dtype=torch.long).to(self.device)
             splitter = tuple(splitter)
-            print(type(splitter))
-            print(splitter)
             ndcsAA = torch.split(self.indicesAA, splitter)
             ndcsAA = [ndcsAA[-1] for ndcsAA in ndcsAA]
             # self.indicesBB = torch.tensor(indicesBB, dtype=torch.long).to(self.device)
