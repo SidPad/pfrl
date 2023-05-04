@@ -853,6 +853,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             ndcsAA = [ndcsAA[-1] for ndcsAA in ndcsAA]
             # self.indicesBB = torch.tensor(indicesBB, dtype=torch.long).to(self.device)
             # self.indicesCC = torch.tensor(indicesCC, dtype=torch.long).to(self.device)
+            print(ndcsAA)
             self.ndcsAA = self.indicesAA[ndcsAA]
             # self.indices = torch.cat((self.indicesAA, self.indicesBB, self.indicesCC), dim=0)
             # self.indices = torch.cat((self.indicesAA), dim=0)
