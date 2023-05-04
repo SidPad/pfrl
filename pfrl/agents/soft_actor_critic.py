@@ -828,15 +828,18 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             indicesAA = []
             # indicesBB = []
             # indicesCC = []
-            
+            splitter = []
             for j in range(len(ep_len_actual_sum2)): 
                 if j in indicesA:
                     if (ep_len_actual_sum1[j] - self.seq_len) > ep_len_actual_sum2[j]:
                         random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - self.seq_len)
-                        indicesAA = np.append(indicesAA, [i for i in range(random_indexA, random_indexA + self.seq_len)])
+                        numbers = [i for i in range(random_indexA, random_indexA + self.seq_len)]
+                        indicesAA = np.append(indicesAA, numbers)
                     else:
                         random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j])
-                        indicesAA = np.append(indicesAA, [i for i in range(random_indexA, ep_len_actual_sum1[j])])
+                        numbers = [i for i in range(random_indexA, ep_len_actual_sum1[j])]
+                        indicesAA = np.append(indicesAA, numbers)
+                    splitter = np.append(splitter, len(numbers))
                 # if j in indicesB:
                 #     random_indexB = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - 30)
                 #     indicesBB = np.append(indicesBB, [i for i in range(random_indexB, random_indexB + 30)])
@@ -845,9 +848,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 #     indicesCC = np.append(indicesCC, [i for i in range(random_indexC, random_indexC + 30)])
 
             self.indicesAA = torch.tensor(indicesAA, dtype=torch.long).to(self.device)
+            ndcsAA = torch.split(self.indicesAA, splitter)
+            ndcsAA = [ndcsAA[-1] for ndcsAA in ndcsAA]
             # self.indicesBB = torch.tensor(indicesBB, dtype=torch.long).to(self.device)
             # self.indicesCC = torch.tensor(indicesCC, dtype=torch.long).to(self.device)
-            self.ndcsAA = self.indicesAA[(self.seq_len-1)::self.seq_len]
+            self.ndcsAA = self.indicesAA[ndcsAA]
             # self.indices = torch.cat((self.indicesAA, self.indicesBB, self.indicesCC), dim=0)
             # self.indices = torch.cat((self.indicesAA), dim=0)
 
