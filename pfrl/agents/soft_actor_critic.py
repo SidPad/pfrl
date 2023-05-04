@@ -850,7 +850,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.indicesAA = torch.tensor(indicesAA, dtype=torch.long).to(self.device)
             splitter = tuple(splitter)
             ndcsAA = torch.split(self.indicesAA, splitter)
-            ndcsAA = [ndcsAA[-1] for ndcsAA in ndcsAA]
+            ndcsAA = [ndcsAA[-1].view(1) for ndcsAA in ndcsAA]
             # self.indicesBB = torch.tensor(indicesBB, dtype=torch.long).to(self.device)
             # self.indicesCC = torch.tensor(indicesCC, dtype=torch.long).to(self.device)
             print(ndcsAA)
