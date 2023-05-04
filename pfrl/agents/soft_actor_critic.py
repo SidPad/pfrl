@@ -888,14 +888,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 new_action = action.clone().detach()
                 batch_recurrent_action.append(new_action)
             
-            batch_recurrent_action = [tensor.cpu() for tensor in batch_recurrent_action]
-
-            for i in range(len(batch_recurrent_action)):
-                batch_recurrent_action[i] = batch_recurrent_action[i][:-1, :]
-                zero_row = torch.zeros(1, batch_recurrent_action[i].shape[1])
-                batch_recurrent_action[i] = torch.cat([zero_row, batch_recurrent_action[i]], dim=0)
-            
             batch_recurrent_action = [tensor.to(self.device) for tensor in batch_recurrent_action]
+
+            # for i in range(len(batch_recurrent_action)):
+            #     batch_recurrent_action[i] = batch_recurrent_action[i][:-1, :]
+            #     zero_row = torch.zeros(1, batch_recurrent_action[i].shape[1])
+            #     batch_recurrent_action[i] = torch.cat([zero_row, batch_recurrent_action[i]], dim=0)
+            
+            # batch_recurrent_action = [tensor.to(self.device) for tensor in batch_recurrent_action]
             
             batch_input_state = [torch.cat((batch_state, batch_recurrent_action), dim = 1).to(torch.float32) for batch_state, batch_recurrent_action in zip(batch_state, batch_recurrent_action)]
             batch_input_next_state = [torch.cat((batch_next_state, batch_actions), dim = 1).to(torch.float32) for batch_next_state, batch_actions in zip(batch_next_state, batch_actions1)]
