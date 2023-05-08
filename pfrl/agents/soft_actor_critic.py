@@ -883,8 +883,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             #     batch_state = torch.cat([batch_state, torch.zeros(960-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
             batch_state = torch.split(batch_state, self.seq_len, dim=0)
             batch_state = [t.squeeze(0) for t in batch_state]
-            print(len(batch_state))
-            print(batch_state[0].shape)
+            
             batch_actions1 = nn.utils.rnn.pad_sequence(batch_actions1, batch_first=True, padding_value=0)
             # if len(batch_actions) < 960:
             #     batch_actions = torch.cat([batch_actions, torch.zeros(960-len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
@@ -962,6 +961,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             # batch_actions_clone = [batch_actions for batch_actions in batch_actions]
             batch_actions1 = torch.cat(batch_actions1).to(self.device)
             batch_actions1 = batch_actions1[(self.seq_len - 1)::self.seq_len]
+            print("batch_actions1")
+            print(batch_actions1.shape)
             # batch_actions1, batch_actions2, batch_actions3 = torch.split(batch_actions_clone, [len(self.indicesAA), len(self.indicesBB), len(self.indicesCC)])
             # batch_actions1 = torch.cat((batch_actions1, torch.zeros(960-len(self.indicesAA), 23).to(self.device))).to(torch.float32)
             # batch_actions2 = torch.cat((batch_actions2, torch.zeros(960-len(self.indicesBB), 23).to(self.device))).to(torch.float32)
@@ -994,7 +995,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 _, batch_input_state1 = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)
                 # batch_input_state1 = torch.squeeze(batch_input_state1)
                 batch_input_state1 = self.shared_layer_critic(batch_input_state1[-1])
-
+                print("batch_input_state1")
+                print(batch_input_state1.shape)
                 # batch_input_next_state_critic_clone = batch_input_next_state_critic.clone().detach()
                 # batch_input_next_state_critic1, batch_input_next_state_critic2, batch_input_next_state_critic3 = torch.split(batch_input_next_state_critic_clone, [len(self.indicesAA), len(self.indicesBB), len(self.indicesCC)])
                 # batch_input_next_state_critic1 = torch.cat((batch_input_next_state_critic1, torch.zeros(960-len(self.indicesAA), 61).to(self.device))).to(torch.float32)
