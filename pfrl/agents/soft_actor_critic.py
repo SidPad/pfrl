@@ -869,7 +869,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
             batch_state = torch.cat(batch_state)
             batch_state = batch_state[self.indicesAA]
-
+    
             batch_actions1 = batch_actions1[self.indicesAA]
 
             batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
@@ -883,7 +883,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             #     batch_state = torch.cat([batch_state, torch.zeros(960-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
             batch_state = torch.split(batch_state, self.seq_len, dim=0)
             batch_state = [t.squeeze(0) for t in batch_state]
-            
+            print(len(batch_state))
+            print(batch_state[0].shape)
             batch_actions1 = nn.utils.rnn.pad_sequence(batch_actions1, batch_first=True, padding_value=0)
             # if len(batch_actions) < 960:
             #     batch_actions = torch.cat([batch_actions, torch.zeros(960-len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
@@ -896,7 +897,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 batch_recurrent_action.append(new_action)
             
             batch_recurrent_action = [tensor.to(self.device) for tensor in batch_recurrent_action]
-
+            print(len(batch_recurrent_action))
+            print(batch_recurrent_action[0].shape)
             # for i in range(len(batch_recurrent_action)):
             #     batch_recurrent_action[i] = batch_recurrent_action[i][:-1, :]
             #     zero_row = torch.zeros(1, batch_recurrent_action[i].shape[1])
