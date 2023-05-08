@@ -847,17 +847,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 #     random_indexC = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - 30)
                 #     indicesCC = np.append(indicesCC, [i for i in range(random_indexC, random_indexC + 30)])
             splitter = [int(splitter) for splitter in splitter]
-            print("splitter")
-            print(splitter)
             self.indicesAA = torch.tensor(indicesAA, dtype=torch.long).to(self.device)
-            print("self.indicesAA")
-            print(self.indicesAA)
-            print(len(self.indicesAA))
             splitter = tuple(splitter)
             ndcsAA = torch.split(self.indicesAA, splitter)
             self.ndcsAA = torch.tensor([ndcsAA[-1] for ndcsAA in ndcsAA])
-            print("self.ndcsAA")
-            print(self.ndcsAA)
             # self.indicesBB = torch.tensor(indicesBB, dtype=torch.long).to(self.device)
             # self.indicesCC = torch.tensor(indicesCC, dtype=torch.long).to(self.device)
             # self.ndcsAA = self.indicesAA[ndcsAA]
@@ -873,20 +866,20 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_actions1 = batch_actions1[self.indicesAA]
 
             batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
-            # if len(batch_next_state) < 960:
-            #     batch_next_state = torch.cat([batch_next_state, torch.zeros(960-len(batch_next_state), batch_next_state.shape[0]).to(self.device)], dim=1)
+            if len(batch_next_state) < (self.seq_len * self.minibatch_size):
+                batch_next_state = torch.cat([batch_next_state, torch.zeros((self.seq_len * self.minibatch_size)-len(batch_next_state), batch_next_state.shape[0]).to(self.device)], dim=1)
             batch_next_state = torch.split(batch_next_state, self.seq_len, dim=0)
             batch_next_state = [t.squeeze(0) for t in batch_next_state]
                 
             batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
-            # if len(batch_state) < 960:
-            #     batch_state = torch.cat([batch_state, torch.zeros(960-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
+            if len(batch_state) < (self.seq_len * self.minibatch_size):
+                batch_state = torch.cat([batch_state, torch.zeros((self.seq_len * self.minibatch_size)-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
             batch_state = torch.split(batch_state, self.seq_len, dim=0)
             batch_state = [t.squeeze(0) for t in batch_state]
             
             batch_actions1 = nn.utils.rnn.pad_sequence(batch_actions1, batch_first=True, padding_value=0)
-            # if len(batch_actions) < 960:
-            #     batch_actions = torch.cat([batch_actions, torch.zeros(960-len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
+            if len(batch_actions) < self.seq_len * self.minibatch_size:
+                batch_actions = torch.cat([batch_actions, torch.zeros((self.seq_len * self.minibatch_size) - len(batch_actions), batch_actions.shape[0]).to(self.device)], dim=1)
             batch_actions1 = torch.split(batch_actions1, self.seq_len, dim=0)
             batch_actions1 = [t.squeeze(0) for t in batch_actions1]
             
@@ -958,11 +951,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
             # batch_actions_clone = [batch_actions for batch_actions in batch_actions]
             batch_actions1 = torch.cat(batch_actions1).to(self.device)
-            print("batch_actions1")
-            print(batch_actions1.shape)
             batch_actions1 = batch_actions1[(self.seq_len - 1)::self.seq_len]
-            print("batch_actions2")
-            print(batch_actions1.shape)
             # batch_actions1, batch_actions2, batch_actions3 = torch.split(batch_actions_clone, [len(self.indicesAA), len(self.indicesBB), len(self.indicesCC)])
             # batch_actions1 = torch.cat((batch_actions1, torch.zeros(960-len(self.indicesAA), 23).to(self.device))).to(torch.float32)
             # batch_actions2 = torch.cat((batch_actions2, torch.zeros(960-len(self.indicesBB), 23).to(self.device))).to(torch.float32)
