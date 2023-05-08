@@ -1192,13 +1192,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state = torch.split(batch_state, self.seq_len, dim=0)
         batch_state = [t.squeeze(0) for t in batch_state]
         
-        batch_actions1 = nn.utils.rnn.pad_sequence(batch_actions1, batch_first=True, padding_value=0)
-        if len(batch_actions1) < (self.seq_len * self.minibatch_size):
-            zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions1.shape[1])).to(self.device)
-            zero_tensor2[:batch_actions1.shape[0], :] = batch_actions1
-            batch_actions1 = zero_tensor2
-        batch_actions1 = torch.split(batch_actions1, self.seq_len, dim=0)
-        batch_actions1 = [t.squeeze(0) for t in batch_actions1]
+        batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
+        if len(batch_actions) < (self.seq_len * self.minibatch_size):
+            zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
+            zero_tensor2[:batch_actions.shape[0], :] = batch_actions
+            batch_actions = zero_tensor2
+        batch_actions = torch.split(batch_actions, self.seq_len, dim=0)
+        batch_actions = [t.squeeze(0) for t in batch_actions]
 
         batch_recurrent_action = []
         for action in batch_actions:
