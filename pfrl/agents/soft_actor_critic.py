@@ -864,25 +864,28 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_state = batch_state[self.indicesAA]
     
             batch_actions1 = batch_actions1[self.indicesAA]
+        
             batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
             if len(batch_next_state) < (self.seq_len * self.minibatch_size):
-                print(batch_next_state.shape[1])
                 zero_tensor = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_state.shape[1])).to(self.device)
                 zero_tensor[:batch_next_state.shape[0], :] = batch_next_state
                 batch_next_state = zero_tensor
-            print(batch_next_state.shape)
             batch_next_state = torch.split(batch_next_state, self.seq_len, dim=0)
             batch_next_state = [t.squeeze(0) for t in batch_next_state]
                 
             batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
             if len(batch_state) < (self.seq_len * self.minibatch_size):
-                batch_state = torch.cat([batch_state, torch.zeros((self.seq_len * self.minibatch_size)-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
+                zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
+                zero_tensor1[:batch_state.shape[0], :] = batch_state
+                batch_state = zero_tensor1
             batch_state = torch.split(batch_state, self.seq_len, dim=0)
             batch_state = [t.squeeze(0) for t in batch_state]
             
             batch_actions1 = nn.utils.rnn.pad_sequence(batch_actions1, batch_first=True, padding_value=0)
             if len(batch_actions1) < (self.seq_len * self.minibatch_size):
-                batch_actions1 = torch.cat([batch_actions1, torch.zeros((self.seq_len * self.minibatch_size)-len(batch_actions1), batch_actions1.shape[0]).to(self.device)], dim=1)
+                zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions1.shape[1])).to(self.device)
+                zero_tensor2[:batch_actions1.shape[0], :] = batch_actions1
+                batch_actions1 = zero_tensor2
             batch_actions1 = torch.split(batch_actions1, self.seq_len, dim=0)
             batch_actions1 = [t.squeeze(0) for t in batch_actions1]
             
