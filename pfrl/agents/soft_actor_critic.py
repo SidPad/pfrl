@@ -866,14 +866,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_actions1 = batch_actions1[self.indicesAA]
 
             batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
-            if len(batch_next_state) < (self.seq_len * self.minibatch_size):
-                batch_next_state = torch.cat([batch_next_state, torch.zeros((self.seq_len * self.minibatch_size)-len(batch_next_state), batch_next_state.shape[0]).to(self.device)], dim=1)
+            # if len(batch_next_state) < (self.seq_len * self.minibatch_size):
+            #     batch_next_state = torch.cat([batch_next_state, torch.zeros((self.seq_len * self.minibatch_size)-len(batch_next_state), batch_next_state.shape[0]).to(self.device)], dim=1)
             batch_next_state = torch.split(batch_next_state, self.seq_len, dim=0)
             batch_next_state = [t.squeeze(0) for t in batch_next_state]
                 
             batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
-            if len(batch_state) < (self.seq_len * self.minibatch_size):
-                batch_state = torch.cat([batch_state, torch.zeros((self.seq_len * self.minibatch_size)-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
+            # if len(batch_state) < (self.seq_len * self.minibatch_size):
+            #     batch_state = torch.cat([batch_state, torch.zeros((self.seq_len * self.minibatch_size)-len(batch_state), batch_state.shape[0]).to(self.device)], dim=1)
             batch_state = torch.split(batch_state, self.seq_len, dim=0)
             batch_state = [t.squeeze(0) for t in batch_state]
             
