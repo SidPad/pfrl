@@ -896,8 +896,6 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 batch_recurrent_action.append(new_action)
             
             batch_recurrent_action = [tensor.to(self.device) for tensor in batch_recurrent_action]
-            print(len(batch_recurrent_action))
-            print(batch_recurrent_action[0].shape)
             # for i in range(len(batch_recurrent_action)):
             #     batch_recurrent_action[i] = batch_recurrent_action[i][:-1, :]
             #     zero_row = torch.zeros(1, batch_recurrent_action[i].shape[1])
@@ -960,8 +958,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
             # batch_actions_clone = [batch_actions for batch_actions in batch_actions]
             batch_actions1 = torch.cat(batch_actions1).to(self.device)
-            batch_actions1 = batch_actions1[(self.seq_len - 1)::self.seq_len]
             print("batch_actions1")
+            print(batch_actions1.shape)
+            batch_actions1 = batch_actions1[(self.seq_len - 1)::self.seq_len]
+            print("batch_actions2")
             print(batch_actions1.shape)
             # batch_actions1, batch_actions2, batch_actions3 = torch.split(batch_actions_clone, [len(self.indicesAA), len(self.indicesBB), len(self.indicesCC)])
             # batch_actions1 = torch.cat((batch_actions1, torch.zeros(960-len(self.indicesAA), 23).to(self.device))).to(torch.float32)
