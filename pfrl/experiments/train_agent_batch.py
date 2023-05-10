@@ -80,7 +80,7 @@ def train_agent_batch(
                 resets, [info.get("needs_reset", False) for info in infos]
             )
             # Agent observes the consequences
-            agent.batch_observe(obss, rs, dones, resets)
+            agent.batch_observe(obss, actions, rs, dones, resets)
 
             # Make mask. 0 if done/reset, 1 if pass
             end = np.logical_or(resets, dones)
