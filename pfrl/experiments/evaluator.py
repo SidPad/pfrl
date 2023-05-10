@@ -41,7 +41,7 @@ def _run_episodes(
         episode_len += 1
         timestep += 1
         reset = done or episode_len == max_episode_len or info.get("needs_reset", False)
-        agent.observe(obs, r, done, reset)
+        agent.observe(obs, a, r, done, reset)
         if reset:
             logger.info(
                 "evaluation episode %s length:%s R:%s", len(scores), episode_len, test_r
@@ -202,7 +202,7 @@ def _batch_run_episodes(
             resets.fill(True)
 
         # Agent observes the consequences.
-        agent.batch_observe(obss, rs, dones, resets)
+        agent.batch_observe(obss, actions, rs, dones, resets)
 
         if termination_conditions:
             break
