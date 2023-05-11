@@ -771,13 +771,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 self.shared_q_critic), pfrl.utils.evaluating(self.shared_q_actor
             ), pfrl.utils.evaluating(self.shared_layer_critic), pfrl.utils.evaluating(self.shared_layer_actor):                              
 
-                _, batch_input_next_state_critic1 = pack_and_forward(self.shared_q_critic, batch_input_next_state, batch_next_recurrent_state_critic)                
+                _, batch_input_next_state_critic1 = pack_and_forward(self.shared_q_critic, batch_next_state, batch_next_recurrent_state_critic)                
                 batch_input_next_state_critic1 = self.shared_layer_critic(batch_input_next_state_critic1[-1])
                 
-                _, batch_input_next_state_actor1 = pack_and_forward(self.shared_q_actor, batch_input_next_state, batch_next_recurrent_state_actor)                
+                _, batch_input_next_state_actor1 = pack_and_forward(self.shared_q_actor, batch_next_state, batch_next_recurrent_state_actor)                
                 batch_input_next_state_actor1 = self.shared_layer_actor(batch_input_next_state_actor1[-1])              
                 
-                _, batch_input_state1 = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)                
+                _, batch_input_state1 = pack_and_forward(self.shared_q_critic, batch_state, batch_recurrent_state_critic)                
                 batch_input_state1 = self.shared_layer_critic(batch_input_state1[-1])
                 
                 temp1 = self.temperature
@@ -869,10 +869,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         batch_input_state = [torch.cat((batch_state, batch_recurrent_action), dim = 1).to(torch.float32) for batch_state, batch_recurrent_action in zip(batch_state, batch_recurrent_action)]        
 
-        _, batch_input_state_critic1 = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
+        _, batch_input_state_critic1 = pack_and_forward(self.shared_q_critic, batch_state, batch_recurrent_state_critic)        
         batch_input_state_critic1 = self.shared_layer_critic(batch_input_state_critic1[-1])        
 
-        _, batch_input_state_actor1 = pack_and_forward(self.shared_q_actor, batch_input_state, batch_recurrent_state_actor)        
+        _, batch_input_state_actor1 = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)        
         batch_input_state_actor1 = self.shared_layer_actor(batch_input_state_actor1[-1])
         
         temp1 = self.temperature
@@ -926,19 +926,19 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 if self.training:
                     self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
                     _, self.train_recurrent_states_critic = one_step_forward(
-                        self.shared_q_critic, batch_input, self.train_recurrent_states_critic
+                        self.shared_q_critic, batch_xs, self.train_recurrent_states_critic
                     )
                     self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
                     batch_input_actor, self.train_recurrent_states_actor = one_step_forward(
-                        self.shared_q_actor, batch_input, self.train_recurrent_states_actor
+                        self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
                     )                    
                     batch_input_actor = self.shared_layer_actor(self.train_recurrent_states_actor[-1])
                 else:
                     _, self.test_recurrent_states_critic = one_step_forward(
-                        self.shared_q_critic, batch_input, self.test_recurrent_states_critic
+                        self.shared_q_critic, batch_xs, self.test_recurrent_states_critic
                     )
                     batch_input_actor, self.test_recurrent_states_actor = one_step_forward(
-                        self.shared_q_actor, batch_input, self.test_recurrent_states_actor
+                        self.shared_q_actor, batch_xs, self.test_recurrent_states_actor
                     )                    
                     batch_input_actor = self.shared_layer_actor(self.test_recurrent_states_actor[-1])
                       
@@ -1003,12 +1003,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
                 self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
                 _, self.train_recurrent_states_critic = one_step_forward(
-                    self.shared_q_critic, batch_input, self.train_recurrent_states_critic
+                    self.shared_q_critic, batch_xs, self.train_recurrent_states_critic
                 )
                 
                 self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
                 _, self.train_recurrent_states_actor = one_step_forward(
-                    self.shared_q_actor, batch_input, self.train_recurrent_states_actor
+                    self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
                 )
         else:
             batch_action = self.batch_select_greedy_action(batch_obs, batch_acts)
