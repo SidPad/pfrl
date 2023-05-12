@@ -926,24 +926,30 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_input = torch.cat((batch_xs, batch_axs), dim=1).to(torch.float32)
 
             if self.recurrent:
-                if self.training:
-                    self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
-                    _, self.train_recurrent_states_critic = one_step_forward(
-                        self.shared_q_critic, batch_xs, self.train_recurrent_states_critic
-                    )
+                if self.training:                    
                     self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
                     batch_input_actor, self.train_recurrent_states_actor = one_step_forward(
                         self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
                     )                    
                     batch_input_actor = self.shared_layer_actor(self.train_recurrent_states_actor[-1])
-                else:
-                    _, self.test_recurrent_states_critic = one_step_forward(
-                        self.shared_q_critic, batch_xs, self.test_recurrent_states_critic
+                    
+                    batch_input_critic = torch.cat((batch_xs, batch_input_actor), dim=1).to(torch.float32)
+                    
+                    self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
+                    _, self.train_recurrent_states_critic = one_step_forward(
+                        self.shared_q_critic, batch_input_critic, self.train_recurrent_states_critic
                     )
+                else:                    
                     batch_input_actor, self.test_recurrent_states_actor = one_step_forward(
                         self.shared_q_actor, batch_xs, self.test_recurrent_states_actor
                     )                    
                     batch_input_actor = self.shared_layer_actor(self.test_recurrent_states_actor[-1])
+                    
+                    batch_input_actor = torch.cat((batch_xs, batch_input_actor), dim=1).to(torch.float32)
+                    
+                    _, self.test_recurrent_states_critic = one_step_forward(
+                        self.shared_q_critic, batch_input_actor, self.test_recurrent_states_critic
+                    )
                       
             policy_out1 = self.policy1(batch_input_actor)            
             
@@ -1000,13 +1006,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     batch_acts = []
                     for b in range(6):
                         batch_acts.append(np.zeros(27))
-                batch_axs = self.batch_states(batch_acts, self.device, self.phi)              
+                batch_axs = self.batch_states(batch_action, self.device, self.phi)              
                 
                 batch_input = torch.cat((batch_xs, batch_axs), dim=1).to(torch.float32)
 
                 self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
                 _, self.train_recurrent_states_critic = one_step_forward(
-                    self.shared_q_critic, batch_xs, self.train_recurrent_states_critic
+                    self.shared_q_critic, batch_input, self.train_recurrent_states_critic
                 )
                 
                 self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
