@@ -774,8 +774,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 _, batch_input_next_state_actor1 = pack_and_forward(self.shared_q_actor, batch_next_state, batch_next_recurrent_state_actor)                
                 batch_input_next_state_actor1 = self.shared_layer_actor(batch_input_next_state_actor1[-1])              
                 
-                _, batch_input_state1 = pack_and_forward(self.shared_q_critic, batch_state, batch_recurrent_state_critic)                
-                batch_input_state1 = self.shared_layer_critic(batch_input_state1[-1])
+                # _, batch_input_state1 = pack_and_forward(self.shared_q_critic, batch_state, batch_recurrent_state_critic)                
+                # batch_input_state1 = self.shared_layer_critic(batch_input_state1[-1])
                 
                 temp1 = self.temperature
                                 
