@@ -852,6 +852,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         batch_actions = batch_actions[self.indicesAA]
         # batch_next_actions = batch_next_actions[self.indicesAA]
+        
+        print(batch_actions.shape)
+        print(batch_state.shape)
 
         batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
         if len(batch_state) < (self.seq_len * self.minibatch_size):
@@ -881,11 +884,6 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         del batch_actions[0]
         batch_actions.append(actions1)
-        
-        print(len(batch_actions))
-        print(batch_actions[0].shape)
-        print(len(batch_state))
-        print(batch_state[0].shape)
         
         batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]
         
