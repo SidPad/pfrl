@@ -851,7 +851,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state = batch_state[self.indicesAA]
 
         batch_actions = batch_actions[self.indicesAA]
-        batch_next_actions = batch_next_actions[self.indicesAA]
+        # batch_next_actions = batch_next_actions[self.indicesAA]
 
         batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
         if len(batch_state) < (self.seq_len * self.minibatch_size):
