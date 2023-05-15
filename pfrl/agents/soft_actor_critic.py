@@ -1035,12 +1035,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 shared_output_actor = self.shared_layer_actor(self.train_recurrent_states_actor[-1])
                     
                 policy_output = self.policy1(shared_output_actor)
-                
-                if deterministic:
-                    batch_action = mode_of_distribution(policy_out).cpu().numpy()                
-                else:
-                    batch_action = policy_out.sample().cpu().numpy()                
-                        
+                                
+                batch_action = mode_of_distribution(policy_out).cpu().numpy()                
+                                       
                 print(batch_action.shape)
                 
                 self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
