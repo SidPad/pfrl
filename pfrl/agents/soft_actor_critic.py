@@ -881,10 +881,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         for i, ele in zip(range(len(actions1)), batch_actions):
             ele = ele[1:, :]
+            print(ele.shape)
+            print(actions1[i].shape)
             ele = torch.cat((ele, actions1[i]), dim=0)
         
-        # del batch_actions[0]
-        # batch_actions.append(actions1)
         print(batch_actions[-1].shape)
                         
         batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]
