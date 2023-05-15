@@ -882,6 +882,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         del batch_actions[0]
         batch_actions.append(actions1)
         
+        print(len(batch_actions))
+        print(batch_actions[0].shape)
+        print(len(batch_state))
+        print(batch_state[0].shape)
+        
         batch_input_state = [torch.cat((batch_state, batch_actions1), dim = 1).to(torch.float32) for batch_state, batch_actions1 in zip(batch_state, batch_actions)]
         
         _, batch_input_state_critic1 = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
