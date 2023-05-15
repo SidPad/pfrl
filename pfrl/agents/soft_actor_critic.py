@@ -1015,37 +1015,37 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
     def _batch_act_train(self, batch_obs, batch_acts):
         assert self.training
-        if self.burnin_action_func is not None and self.n_policy_updates == 0:
-            batch_action = [self.burnin_action_func() for _ in range(len(batch_obs))]
-            if self.recurrent:
-                batch_xs = self.batch_states(batch_obs, self.device, self.phi)
-                if batch_acts[0].all() == 0:
-                    batch_acts = []
-                    for b in range(6):
-                        batch_acts.append(np.zeros(27))
-                batch_axs = self.batch_states(batch_action, self.device, self.phi)              
+        with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.shared_q_actor), pfrl.utils.evaluating(self.shared_layer_actor):
+            if self.burnin_action_func is not None and self.n_policy_updates == 0:
+                batch_action = [self.burnin_action_func() for _ in range(len(batch_obs))]
+                if self.recurrent:
+                    batch_xs = self.batch_states(batch_obs, self.device, self.phi)
+                    if batch_acts[0].all() == 0:
+                        batch_acts = []
+                        for b in range(6):
+                            batch_acts.append(np.zeros(27))
+                    batch_axs = self.batch_states(batch_action, self.device, self.phi)              
                 
-                # batch_input = torch.cat((batch_xs, batch_axs), dim=1).to(torch.float32)
+                    # batch_input = torch.cat((batch_xs, batch_axs), dim=1).to(torch.float32)
 
-                self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
-                _, self.train_recurrent_states_actor = one_step_forward(
-                    self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
-                )
+                    self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
+                    _, self.train_recurrent_states_actor = one_step_forward(
+                        self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
+                    )
                 
-                shared_output_actor = self.shared_layer_actor(self.train_recurrent_states_actor[-1])
+                    shared_output_actor = self.shared_layer_actor(self.train_recurrent_states_actor[-1])
                     
-                policy_output = self.policy1(shared_output_actor)
+                    policy_output = self.policy1(shared_output_actor)
                                 
-                batch_action = mode_of_distribution(policy_output).cpu().numpy()                
+                    batch_action = mode_of_distribution(policy_output).cpu().numpy()                
                                        
-                print(batch_action.shape)
+                    print(batch_action.shape)
                 
-                self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
-                _, self.train_recurrent_states_critic = one_step_forward(
-                    self.shared_q_critic, batch_input, self.train_recurrent_states_critic
-                )
-                
-                
+                    self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
+                    _, self.train_recurrent_states_critic = one_step_forward(
+                        self.shared_q_critic, batch_input, self.train_recurrent_states_critic
+                    )
+                                
         else:
             batch_action = self.batch_select_greedy_action(batch_obs, batch_acts)
         self.batch_last_obs = list(batch_obs)
