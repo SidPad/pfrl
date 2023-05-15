@@ -786,7 +786,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 del batch_next_actions[0]                            
                 batch_next_actions.append(next_actions1)
                 
-                batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, next_actions1)]
+                batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
                 _, batch_input_next_state_critic1 = pack_and_forward(self.shared_q_critic, batch_input_next_state, batch_next_recurrent_state_critic)                
                 batch_input_next_state_critic1 = self.shared_layer_critic(batch_input_next_state_critic1[-1])
                 
