@@ -857,8 +857,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         if len(batch_state) < (self.seq_len * self.minibatch_size):
             zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
             zero_tensor1[:batch_state.shape[0], :] = batch_state
-            batch_state = zero_tensor1
-        print(batch_state.shape)
+            batch_state = zero_tensor1        
         batch_state = torch.split(batch_state, self.seq_len, dim=0)
         batch_state = [t.squeeze(0) for t in batch_state]
         
@@ -866,37 +865,29 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         if len(batch_actions) < (self.seq_len * self.minibatch_size):
             zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
             zero_tensor2[:batch_actions.shape[0], :] = batch_actions
-            batch_actions = zero_tensor2
-        print(batch_actions.shape)
-        batch_actions = torch.split(batch_actions, self.seq_len, dim=0)
-        batch_actions = [t.squeeze(0) for t in batch_actions]       
+            batch_actions = zero_tensor2        
+        batch_actions = torch.split(batch_actions, self.seq_len, dim=0)        
+        batch_actions = [t.squeeze(0) for t in batch_actions]      
                            
-        _, batch_input_state_actor1 = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)        
-        print("YES")
-        print(batch_input_state_actor1.shape)
-        print(batch_input_state_actor1[-1].shape)
-        batch_input_state_actor1 = self.shared_layer_actor(batch_input_state_actor1[-1])
-        print(batch_input_state_actor1.shape)
+        _, batch_input_state_actor1 = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)                
+        batch_input_state_actor1 = self.shared_layer_actor(batch_input_state_actor1[-1])        
         temp1 = self.temperature
         n = 1
-        print(batch_input_state_actor1.shape)
+        
         action_distrib1 = self.policy1(batch_input_state_actor1)
         actions1 = action_distrib1.rsample()
         log_prob1 = action_distrib1.log_prob(actions1).to(self.device)
         print(actions1.shape)
-        print("yooyoo")
-        del batch_actions[0]
-        batch_actions.append(actions1)
         
-        batch_input_state = []
-        for batch_s, batch_a in zip(batch_state, batch_actions):
-            print(batch_s.shape)
-            print(batch_a.shape)
-            concated = torch.cat((batch_s, batch_a), dim = 1).to(torch.float32)            
-            batch_input_state.append(concated)
+        for i, ele in zip(range(len(actions1)), batch_actions):
+            ele = ele[1:, :]
+            ele = torch.cat((ele, actions1[i]), dim=0)
         
-        print(len(batch_input_state))
-        # batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]
+        # del batch_actions[0]
+        # batch_actions.append(actions1)
+        print(batch_actions[-1].shape)
+                        
+        batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]
         
         _, batch_input_state_critic1 = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
         batch_input_state_critic1 = self.shared_layer_critic(batch_input_state_critic1[-1])       
