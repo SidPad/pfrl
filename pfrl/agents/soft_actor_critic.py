@@ -1036,7 +1036,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     
                 policy_output = self.policy1(shared_output_actor)
                                 
-                batch_action = mode_of_distribution(policy_out).cpu().numpy()                
+                batch_action = mode_of_distribution(policy_output).cpu().numpy()                
                                        
                 print(batch_action.shape)
                 
