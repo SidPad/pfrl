@@ -858,6 +858,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
             zero_tensor1[:batch_state.shape[0], :] = batch_state
             batch_state = zero_tensor1
+        print(batch_state.shape)
         batch_state = torch.split(batch_state, self.seq_len, dim=0)
         batch_state = [t.squeeze(0) for t in batch_state]
         
@@ -866,10 +867,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
             zero_tensor2[:batch_actions.shape[0], :] = batch_actions
             batch_actions = zero_tensor2
+        print(batch_actions.shape)
         batch_actions = torch.split(batch_actions, self.seq_len, dim=0)
         batch_actions = [t.squeeze(0) for t in batch_actions]       
                            
         _, batch_input_state_actor1 = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)        
+        print("YES")
         print(batch_input_state_actor1.shape)
         print(batch_input_state_actor1[-1].shape)
         batch_input_state_actor1 = self.shared_layer_actor(batch_input_state_actor1[-1])
