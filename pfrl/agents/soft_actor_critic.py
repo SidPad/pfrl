@@ -881,9 +881,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         for i, ele in zip(range(len(actions1)), batch_actions):
             ele = ele[1:, :]
-            aaa = actions1[i].unsqueeze(0)
-            print(ele.shape)
-            print(aaa.shape)
+            aaa = actions1[i].unsqueeze(0)            
             ele = torch.cat((ele, aaa), dim=0)
         
         print(batch_actions[-1].shape)
@@ -947,12 +945,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         batch_action = policy_out1.sample().cpu().numpy()                
             
                     action = torch.tensor(batch_action)
-                    action = action.to('cuda:0')
-                    
-                    del batch_axs[0]
-                    batch_axs.append(action)
-                    
-                    batch_axs = self.batch_states(batch_acts, self.device, self.phi)
+                    action = action.to('cuda:0')                  
+                                        
+                    batch_axs = self.batch_states(action, self.device, self.phi)
                     batch_input_critic = torch.cat((batch_xs, batch_axs), dim=1).to(torch.float32)                   
                                         
                     self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
@@ -973,11 +968,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         batch_action = policy_out1.sample().cpu().numpy()                
             
                     action = torch.tensor(batch_action)
-                    action = action.to('cuda:0')
-                    
-                    del batch_axs[0]
-                    batch_axs.append(action)
-                    
+                    action = action.to('cuda:0')                   
+                                        
+                    batch_axs = self.batch_states(action, self.device, self.phi)
                     batch_input_critic = torch.cat((batch_xs, batch_axs), dim=1).to(torch.float32)
                     
                     _, self.test_recurrent_states_critic = one_step_forward(
