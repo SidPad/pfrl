@@ -1046,10 +1046,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         self.shared_q_critic, batch_input, self.train_recurrent_states_critic
                     )
                                 
-        else:
-            batch_action = self.batch_select_greedy_action(batch_obs, batch_acts)
-        self.batch_last_obs = list(batch_obs)
-        self.batch_last_action = list(batch_action)
+            else:
+                batch_action = self.batch_select_greedy_action(batch_obs, batch_acts)
+            self.batch_last_obs = list(batch_obs)
+            self.batch_last_action = list(batch_action)
 
         return batch_action
 
