@@ -879,6 +879,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         actions1 = action_distrib1.rsample()
         log_prob1 = action_distrib1.log_prob(actions1).to(self.device)
         print(actions1.shape)
+        print("yooyoo")
         del batch_actions[0]
         batch_actions.append(actions1)
         
