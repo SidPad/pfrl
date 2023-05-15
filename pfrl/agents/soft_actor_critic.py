@@ -1024,22 +1024,25 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     for b in range(6):
                         batch_acts.append(np.zeros(27))
                 batch_axs = self.batch_states(batch_action, self.device, self.phi)              
-                print(len(batch_action))
-                print(batch_axs.shape)
-                print(batch_axs[0].shape)
-                print(batch_xs.shape)
-                print(batch_xs[0].shape)
+                
                 # batch_input = torch.cat((batch_xs, batch_axs), dim=1).to(torch.float32)
 
+                self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
+                _, self.train_recurrent_states_actor = one_step_forward(
+                    self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
+                )
+                
+                shared_output_actor = self.shared_layer_actor(self.train_recurrent_states_actor[-1])
+                    
+                policy_output = self.policy1(shared_output_actor)
+                print(policy_output.shape)
+                
                 self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
                 _, self.train_recurrent_states_critic = one_step_forward(
                     self.shared_q_critic, batch_input, self.train_recurrent_states_critic
                 )
                 
-                self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
-                _, self.train_recurrent_states_actor = one_step_forward(
-                    self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
-                )
+                
         else:
             batch_action = self.batch_select_greedy_action(batch_obs, batch_acts)
         self.batch_last_obs = list(batch_obs)
