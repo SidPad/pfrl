@@ -851,11 +851,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state = batch_state[self.indicesAA]
 
         batch_actions = batch_actions[self.indicesAA]
-        # batch_next_actions = batch_next_actions[self.indicesAA]
-        
-        print(batch_actions.shape)
-        print(batch_state.shape)
-
+        # batch_next_actions = batch_next_actions[self.indicesAA]      
+      
         batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
         if len(batch_state) < (self.seq_len * self.minibatch_size):
             zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
@@ -881,7 +878,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         action_distrib1 = self.policy1(batch_input_state_actor1)
         actions1 = action_distrib1.rsample()
         log_prob1 = action_distrib1.log_prob(actions1).to(self.device)
-        
+        print(actions1.shape)
         del batch_actions[0]
         batch_actions.append(actions1)
         
@@ -889,8 +886,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         for batch_s, batch_a in zip(batch_state, batch_actions):
             print(batch_s.shape)
             print(batch_a.shape)
-            concated = torch.cat((batch_s, batch_a), dim = 1).to(torch.float32)
-            print(concated.shape)
+            concated = torch.cat((batch_s, batch_a), dim = 1).to(torch.float32)            
             batch_input_state.append(concated)
         
         print(len(batch_input_state))
