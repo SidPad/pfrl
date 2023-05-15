@@ -870,11 +870,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = [t.squeeze(0) for t in batch_actions]       
                            
         _, batch_input_state_actor1 = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)        
+        print(batch_input_state_actor1.shape)
+        print(batch_input_state_actor1[-1].shape)
         batch_input_state_actor1 = self.shared_layer_actor(batch_input_state_actor1[-1])
-        
+        print(batch_input_state_actor1.shape)
         temp1 = self.temperature
         n = 1
-        
+        print(batch_input_state_actor1.shape)
         action_distrib1 = self.policy1(batch_input_state_actor1)
         actions1 = action_distrib1.rsample()
         log_prob1 = action_distrib1.log_prob(actions1).to(self.device)
