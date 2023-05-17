@@ -678,14 +678,16 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_rewards1 = batch["reward"]
             batch_terminal1 = batch["is_state_terminal"]
             batch_state = batch["state"]
-            batch_actions1 = batch["action"]
+            batch_actions = batch["action"]
             batch_next_actions = batch["next_action"]
             batch_discount1 = batch["discount"]
             batch_next_recurrent_state_critic = batch["next_recurrent_state_critic"]
             batch_next_recurrent_state_actor = batch["next_recurrent_state_actor"]
             batch_recurrent_state_critic = batch["recurrent_state_critic"]
             batch_recurrent_state_actor = batch["recurrent_state_actor"]            
-            
+            print("STATE")
+            print(batch_state[0])
+            print(batch_next_state[0])
             batch_next_state = [tensor.to(self.device) for tensor in batch_next_state]
             batch_state = [tensor.to(self.device) for tensor in batch_state]
             
@@ -723,7 +725,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_state = torch.cat(batch_state)
             batch_state = batch_state[self.indicesAA]
     
-            batch_actions1 = batch_actions1[self.indicesAA]
+            batch_actions = batch_actions[self.indicesAA]
         
             batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
             if len(batch_next_state) < (self.seq_len * self.minibatch_size):
@@ -741,13 +743,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_state = torch.split(batch_state, self.seq_len, dim=0)
             batch_state = [t.squeeze(0) for t in batch_state]
             
-            batch_actions1 = nn.utils.rnn.pad_sequence(batch_actions1, batch_first=True, padding_value=0)
-            if len(batch_actions1) < (self.seq_len * self.minibatch_size):
-                zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions1.shape[1])).to(self.device)
-                zero_tensor2[:batch_actions1.shape[0], :] = batch_actions1
-                batch_actions1 = zero_tensor2
-            batch_actions1 = torch.split(batch_actions1, self.seq_len, dim=0)
-            batch_actions1 = [t.squeeze(0) for t in batch_actions1]
+            batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
+            if len(batch_actions) < (self.seq_len * self.minibatch_size):
+                zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
+                zero_tensor2[:batch_actions.shape[0], :] = batch_actions
+                batch_actions = zero_tensor2
+            batch_actions = torch.split(batch_actions, self.seq_len, dim=0)
+            batch_actions = [t.squeeze(0) for t in batch_actions]
                       
             batch_next_actions = nn.utils.rnn.pad_sequence(batch_next_actions, batch_first=True, padding_value=0)
             if len(batch_next_actions) < (self.seq_len * self.minibatch_size):
@@ -757,15 +759,16 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
             batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
             
-            batch_input_state = [torch.cat((batch_state, batch_actions1), dim = 1).to(torch.float32) for batch_state, batch_actions1 in zip(batch_state, batch_actions1)]
+            batch_input_state = [torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32) for batch_state, batch_actions in zip(batch_state, batch_actions)]
             # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
             
             batch_rewards1 = batch_rewards1[self.ndcsAA]            
             batch_discount1 = batch_discount1[self.ndcsAA]            
             batch_terminal1 = batch_terminal1[self.ndcsAA]
             
-            batch_actions1 = torch.cat(batch_actions1).to(self.device)
-            batch_actions1 = batch_actions1[(self.seq_len - 1)::self.seq_len]           
+            batch_actions = torch.cat(batch_actions).to(self.device)
+            batch_actions = batch_actions[(self.seq_len - 1)::self.seq_len]           
+            batch_actions1 = batch_actions.clone().detach().to(self.device)
             
             #### TASK 1 #### Figure out what pfrl.utils.evaluating does
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(
@@ -788,10 +791,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)                
                                 
                 print("ACTION SHAPE")
-                print(len(batch_next_actions))
+                print(len(batch_actions1))
                 print(len(batch_next_state))                
                 
-                for i, ele in zip(range(len(next_actions1)), batch_next_actions):
+                for i, ele in zip(range(len(batch_actions1)), batch_actions1):
                     ele = ele[:-1, :]
                     aaa = next_actions1[i].unsqueeze(0)            
                     ele = torch.cat((ele, aaa), dim=0)                               
