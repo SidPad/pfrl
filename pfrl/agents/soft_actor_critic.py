@@ -555,6 +555,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.train_recurrent_states_actor: Any = None
         self.train_prev_recurrent_states_actor: Any = None
         self.test_recurrent_states_actor: Any = None
+            
+        self.greedy_recurrent_states_actor: Any = None
+        self.greedy_prev_recurrent_states_actor: Any = None
 
         if gpu is not None and gpu >= 0:
             assert torch.cuda.is_available()
@@ -1087,17 +1090,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         get_recurrent_state_at(
                             self.train_recurrent_states_actor, i, detach=True
                         )
-                    )
-                    transition["greedy_recurrent_states_actor"] = recurrent_state_as_numpy(
-                        get_recurrent_state_at(
-                            self.greedy_recurrent_states_actor, i, detach=True
-                        )
-                    )
-                    transition["greedy_prev_recurrent_states_actor"] = recurrent_state_as_numpy(
-                        get_recurrent_state_at(
-                            self.greedy_prev_recurrent_states_actor, i, detach=True
-                        )
-                    )
+                    )                    
                  
                 self.replay_buffer.append(env_id=i, **transition)
                 if batch_reset[i] or batch_done[i]:
