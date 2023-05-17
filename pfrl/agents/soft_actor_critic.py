@@ -789,13 +789,6 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)                
                                 
-                print("ACTION SHAPE")
-                print(len(batch_actions1))
-                print(batch_actions1[0].shape)
-                print(len(batch_next_state))
-                print(batch_next_state[0].shape)
-                print(next_actions1.shape)
-                
                 for i, ele in zip(range(len(batch_actions1)), batch_actions1):
                     ele = ele[:-1, :]
                     aaa = next_actions1[i].unsqueeze(0)            
