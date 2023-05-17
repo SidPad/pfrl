@@ -685,9 +685,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_next_recurrent_state_actor = batch["next_recurrent_state_actor"]
             batch_recurrent_state_critic = batch["recurrent_state_critic"]
             batch_recurrent_state_actor = batch["recurrent_state_actor"]            
-            print("Action")
-            print(batch_next_actions[0])
-            print(batch_actions1[0])
+            
             batch_next_state = [tensor.to(self.device) for tensor in batch_next_state]
             batch_state = [tensor.to(self.device) for tensor in batch_state]
             
@@ -791,11 +789,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                                 
                 print("ACTION SHAPE")
                 print(len(batch_next_actions))
-                print(batch_next_actions[0].shape)
-                print(next_actions1.shape)
+                print(len(batch_next_state))                
                 
-                del batch_next_actions[-1]
-                batch_next_actions.append(next_actions1)
+                for i, ele in zip(range(len(next_actions1)), batch_next_actions):
+                    ele = ele[:-1, :]
+                    aaa = next_actions1[i].unsqueeze(0)            
+                    ele = torch.cat((ele, aaa), dim=0)                               
                 
                 batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
                 
