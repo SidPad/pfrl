@@ -764,9 +764,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_discount1 = batch_discount1[self.ndcsAA]            
             batch_terminal1 = batch_terminal1[self.ndcsAA]
             
-            batch_actions = torch.cat(batch_actions).to(self.device)
-            batch_actions = batch_actions[(self.seq_len - 1)::self.seq_len]           
-            batch_actions1 = batch_actions.clone().detach().to(self.device)
+            # batch_actions = torch.cat(batch_actions).to(self.device)
+            # batch_actions = batch_actions[(self.seq_len - 1)::self.seq_len]           
+            # batch_actions1 = batch_actions.clone().detach().to(self.device)
+            batch_actions1 = batch_actions
             
             #### TASK 1 #### Figure out what pfrl.utils.evaluating does
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(
@@ -789,8 +790,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)                
                                 
                 print("ACTION SHAPE")
-                print(batch_actions1.shape)
-                print(batch_next_state.shape)        
+                print(len(batch_actions1))
+                print(batch_actions1[0].shape)
+                print(len(batch_next_state))
+                print(batch_next_state[0].shape)
                 print(next_actions1.shape)
                 
                 for i, ele in zip(range(len(batch_actions1)), batch_actions1):
