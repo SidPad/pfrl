@@ -685,9 +685,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_next_recurrent_state_actor = batch["next_recurrent_state_actor"]
             batch_recurrent_state_critic = batch["recurrent_state_critic"]
             batch_recurrent_state_actor = batch["recurrent_state_actor"]            
-            print("STATE")
-            print(batch_state[0])
-            print(batch_next_state[0])
+            
             batch_next_state = [tensor.to(self.device) for tensor in batch_next_state]
             batch_state = [tensor.to(self.device) for tensor in batch_state]
             
@@ -791,8 +789,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)                
                                 
                 print("ACTION SHAPE")
-                print(len(batch_actions1))
-                print(len(batch_next_state))                
+                print(batch_actions1.shape)
+                print(batch_next_state.shape)        
+                print(next_actions1.shape)
                 
                 for i, ele in zip(range(len(batch_actions1)), batch_actions1):
                     ele = ele[:-1, :]
