@@ -830,7 +830,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 self.q_func2_loss_T1_record.append(float(loss2_T1))
             
             self.shared_q_optimizer_critic.zero_grad()
-            loss.backward()
+            loss.backward(retain_graph=True)
             self.shared_q_optimizer_critic.step()
             
             self.q_func1_optimizer1.zero_grad()
