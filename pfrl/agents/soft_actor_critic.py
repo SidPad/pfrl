@@ -797,8 +797,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
                 
                 self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
-                _, self.train_recurrent_states_critic = pack_and_forward(self.shared_q_critic, batch_input_next_state, batch_next_recurrent_state_critic)                
-                batch_input_next_state_critic1 = self.shared_layer_critic(self.train_recurrent_states_critic[-1])
+                _, self.train_recurrent_states_critic = pack_and_forward(self.target_q_func_shared, batch_input_next_state, batch_next_recurrent_state_critic)                
+                batch_input_next_state_critic1 = self.target_q_func_shared_layer(self.train_recurrent_states_critic[-1])
                 
                 next_q1T1 = self.target_q_func1_T1(batch_input_next_state_critic1)
                 next_q2T1 = self.target_q_func2_T1(batch_input_next_state_critic1)
@@ -828,6 +828,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 self.q2_record_T1.extend(predict_q2_T1.detach().cpu().numpy())
                 self.q_func1_loss_T1_record.append(float(loss1_T1))
                 self.q_func2_loss_T1_record.append(float(loss2_T1))
+            
+            self.shared_q_optimizer_critic.zero_grad()
+            loss.backward()
+            self.shared_q_optimizer_critic.step()
             
             self.q_func1_optimizer1.zero_grad()
             loss1_T1.backward()
