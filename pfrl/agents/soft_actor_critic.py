@@ -1051,11 +1051,21 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         self.shared_q_critic, batch_xs, self.train_recurrent_states_critic
                     )
                     
+                    t_r_states_critic = self.train_recurrent_states_critic.squeeze()
+                    
+                    list_t_r_states_critic = [t_r_states_critic[i].detach().cpu().numpy() for i in range(len(t_r_states_critic))]
+                    
                     print("RECUR")
-                    print(self.train_recurrent_states_critic.shape)
+                    
                     print(len(batch_obs))
+                    print(batch_obs[0].shape)
                     print(type(batch_obs))
                     print(type(batch_obs[0]))
+                    
+                    print(len(list_t_r_states_critic))
+                    print(list_t_r_states_critic[0].shape)
+                    print(type(list_t_r_states_critic))
+                    print(type(list_t_r_states_critic[0]))
                     
                     self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
                     _, self.train_recurrent_states_actor = one_step_forward(
