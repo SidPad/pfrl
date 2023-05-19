@@ -1054,7 +1054,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     print("RECUR")
                     print(self.train_recurrent_states_critic.shape)
                     print(len(batch_obs))
-                    print(batch_obs[0].shape)
+                    print(type(batch_obs))
+                    print(type(batch_obs[0]))
                     
                     self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
                     _, self.train_recurrent_states_actor = one_step_forward(
