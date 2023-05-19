@@ -688,7 +688,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             ep_len_actual = [len(tensor) for tensor in batch_state]
             ep_len_actual_sum1 = np.cumsum(ep_len_actual)
             ep_len_actual_sum2 = [ep_len_actual_sum - ep_len_actual for ep_len_actual_sum, ep_len_actual in zip(ep_len_actual_sum1, ep_len_actual)]
-
+                        
+            demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
+            demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
+            batch_actions = [torch.cat((torch.zeros(1,27).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
+            batch_actions = torch.cat(batch_actions)
+            print(batch_actions.shape)
+            batch_actions = batch_actions[self.indicesAA]
+            print(batch_actions.shape)
+            
             # get the indices for episodes for each task
             indicesA = [i for i, tensor in enumerate(batch_next_state)]            
             
@@ -718,14 +726,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
             batch_state = torch.cat(batch_state)
             batch_state = batch_state[self.indicesAA]
-            
-            print(batch_actions.shape)
-            batch_actions = batch_actions[:-1]
-            batch_actions = torch.cat((torch.zeros(1,27).to(self.device), batch_actions), dim=0)
-            print(batch_actions.shape)
-            batch_actions = batch_actions[self.indicesAA]
-            print(batch_actions.shape)
-        
+                              
             batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
             if len(batch_next_state) < (self.seq_len * self.minibatch_size):
                 zero_tensor = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_state.shape[1])).to(self.device)
