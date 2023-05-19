@@ -1119,18 +1119,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     "next_action": batch_acts[i],
                     "is_state_terminal": batch_done[i],
                 }
-                if self.recurrent:
-                    sample = recurrent_state_as_numpy(
-                        get_recurrent_state_at(
-                            self.train_recurrent_states_critic, i, detach=True
-                        )
-                    )
-                    
-                    print("HAKLE")
-                    print(type(sample))
-                    print(len(sample))
-                    print(sample[0].shape)
-                    
+                if self.recurrent:                                        
                     transition["recurrent_state_critic"] = recurrent_state_as_numpy(
                         get_recurrent_state_at(
                             self.train_prev_recurrent_states_critic, i, detach=True
