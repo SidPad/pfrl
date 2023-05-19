@@ -767,10 +767,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             batch_actions1 = batch_actions
             batch_actions1 = [batch_actions1[1:,:] for batch_actions1 in batch_actions1]
-            print(batch_actions1[0].shape)
+            
             # batch_actions = batch_actions[(self.seq_len - 1)::self.seq_len]
             # batch_actions1 = batch_actions.clone().detach().to(self.device)
-            batch_actions1 = torch.cat(batch_actions).to(self.device)
+            # batch_actions1 = torch.cat(batch_actions).to(self.device)
             # batch_actions1 = batch_actions1[(self.seq_len - 1)::self.seq_len]
             
             #### TASK 1 #### Figure out what pfrl.utils.evaluating does
@@ -792,14 +792,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                                 
                 next_action_distrib1 = self.policy1(batch_input_next_state_actor1)
                 next_actions1 = next_action_distrib1.sample()
-                next_log_prob1 = next_action_distrib1.log_prob(next_actions1)                
+                next_log_prob1 = next_action_distrib1.log_prob(next_actions1)                               
+                               
+                # for i, ele in zip(range(len(batch_actions1)), batch_actions1):
+                #     ele = ele[1:, :]
+                #     aaa = next_actions1[i].unsqueeze(0)            
+                #     ele = torch.cat((ele, aaa), dim=0) 
                 
-                print(batch_actions1.shape)
-                                
-                for i, ele in zip(range(len(batch_actions1)), batch_actions1):
-                    ele = ele[1:, :]
-                    aaa = next_actions1[i].unsqueeze(0)            
-                    ele = torch.cat((ele, aaa), dim=0)  
                 print(len(next_actions1))
                 batch_actions1 = [torch.cat((batch_actions1, next_actions1[i]), dim=0) for i,batch_actions1 in zip(range(len(next_actions1)), batch_actions1)]
                 print(len(batch_actions1))
