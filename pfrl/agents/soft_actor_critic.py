@@ -669,6 +669,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         )
 
     def update_q_func(self, batch):
+        print("update_q_func")
         """Compute loss for a given Q-function."""
         with torch.autograd.profiler.profile(use_cuda=True) as prof:
             batch_next_state = batch["next_state"]
@@ -840,6 +841,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func2_optimizer1.step()         
 
     def update_temperature(self, log_prob1):
+        print("update_temperature")
         assert not log_prob1.requires_grad
         
         loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
@@ -850,6 +852,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.temperature_optimizer1.step()        
 
     def update_policy_and_temperature(self, batch):
+        print("update_policy_and_temperature")
         """Compute loss for actor."""
         batch_state = batch["state"]
         batch_actions = batch["action"]        
@@ -940,6 +943,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.sync_target_network()
 
     def batch_select_greedy_action(self, batch_obs, batch_acts, deterministic=False):
+        print("batch_select_greedy_action")
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1):#, pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
             batch_xs = self.batch_states(batch_obs, self.device, self.phi)            
                         
@@ -950,7 +954,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
                     )                                        
                     
-                    batch_input_actor = self.shared_layer_actor(self.train_recurrent_states_actor)
+                    batch_input_actor = self.shared_layer_actor(self.train_recurrent_states_actor[-1])
                     
                     policy_out1 = self.policy1(batch_input_actor)
                     
@@ -972,7 +976,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         self.shared_q_actor, batch_xs, self.test_recurrent_states_actor
                     )                                       
                     
-                    batch_input_actor = self.shared_layer_actor(self.test_recurrent_states_actor)
+                    batch_input_actor = self.shared_layer_actor(self.test_recurrent_states_actor[-1])
                     
                     policy_out1 = self.policy1(batch_input_actor)
                     
@@ -991,12 +995,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         return batch_action
 
     def batch_act(self, batch_obs, batch_acts):
+        print("batch_act")
         if self.training:
             return self._batch_act_train(batch_obs, batch_acts)
         else:
             return self._batch_act_eval(batch_obs, batch_acts)
 
     def batch_observe(self, batch_obs, batch_acts, batch_reward, batch_done, batch_reset):
+        print("batch_observe")
         if self.training:
             self._batch_observe_train(batch_obs, batch_acts, batch_reward, batch_done, batch_reset)
         else:
@@ -1018,12 +1024,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 )               
                 
     def _batch_act_eval(self, batch_obs, batch_acts):
+        print("_batch_act_eval")
         assert not self.training
         return self.batch_select_greedy_action(
             batch_obs, batch_acts, deterministic=self.act_deterministically
         )
 
     def _batch_act_train(self, batch_obs, batch_acts):
+        print("_batch_act_train")
         assert self.training
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.shared_q_actor), pfrl.utils.evaluating(self.shared_layer_actor):
             if self.burnin_action_func is not None and self.n_policy_updates == 0:
@@ -1076,6 +1084,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             return recurrent_states
 
     def _batch_observe_train(self, batch_obs, batch_acts, batch_reward, batch_done, batch_reset):
+        print("_batch_observe_train")
         assert self.training
         for i in range(len(batch_obs)):
             self.t += 1
