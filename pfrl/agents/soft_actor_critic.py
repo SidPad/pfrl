@@ -798,9 +798,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 #     ele = ele[1:, :]
                 #     aaa = next_actions1[i].unsqueeze(0)            
                 #     ele = torch.cat((ele, aaa), dim=0) 
-                
-                print(len(next_actions1))
-                batch_actions1 = [torch.cat((batch_actions1, next_actions1[i]), dim=0) for i,batch_actions1 in zip(range(len(next_actions1)), batch_actions1)]
+                                
+                batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]
                 print(len(batch_actions1))
                 print(batch_actions1[0].shape)
                 batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_actions1)]
