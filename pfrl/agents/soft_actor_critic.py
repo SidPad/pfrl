@@ -1072,7 +1072,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
                     )
                     
-                    t_r_states_actor = self.train_recurrent_states_actor.squeeze()
+                    t_r_states_actor = train_recurrent_states_actor.squeeze()
                     self.train_recurrent_states_actor = [t_r_states_actor[i].detach().cpu().numpy() for i in range(len(t_r_states_actor))]
             else:
                 batch_action = self.batch_select_greedy_action(batch_obs, batch_acts)
