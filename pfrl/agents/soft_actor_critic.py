@@ -721,7 +721,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             print(batch_actions.shape)
             batch_actions = batch_actions[:-1]
-            batch_actions = torch.cat(torch.zeros(1,27).to(self.device), batch_actions, dim=1)
+            batch_actions = torch.cat((torch.zeros(1,27).to(self.device), batch_actions), dim=1)
             print(batch_actions.shape)
             batch_actions = batch_actions[self.indicesAA]
             print(batch_actions.shape)
