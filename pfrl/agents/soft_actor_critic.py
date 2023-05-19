@@ -765,8 +765,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_discount1 = batch_discount1[self.ndcsAA]            
             batch_terminal1 = batch_terminal1[self.ndcsAA]
             
-            print(len(batch_actions))
-            print(batch_actions[0].shape)
+            batch_actions1 = batch_actions
+            batch_actions1 = [batch_actions1[1:,:] for batch_actions1 in batch_actions1]
+            print(batch_actions1[0].shape)
             # batch_actions = batch_actions[(self.seq_len - 1)::self.seq_len]
             # batch_actions1 = batch_actions.clone().detach().to(self.device)
             batch_actions1 = torch.cat(batch_actions).to(self.device)
@@ -798,8 +799,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 for i, ele in zip(range(len(batch_actions1)), batch_actions1):
                     ele = ele[1:, :]
                     aaa = next_actions1[i].unsqueeze(0)            
-                    ele = torch.cat((ele, aaa), dim=0)                               
-                
+                    ele = torch.cat((ele, aaa), dim=0)  
+                print(len(next_actions1))
+                batch_actions1 = [torch.cat((batch_actions1, next_actions1[i]), dim=0) for i,batch_actions1 in zip(range(len(next_actions1)), batch_actions1)]
+                print(len(batch_actions1))
+                print(batch_actions1[0].shape)
                 batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_actions1)]
                 
                 self.target_q_func_shared.flatten_parameters()
