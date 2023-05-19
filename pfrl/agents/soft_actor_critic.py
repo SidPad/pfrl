@@ -685,16 +685,6 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_next_recurrent_state_actor = batch["next_recurrent_state_actor"]
             batch_recurrent_state_critic = batch["recurrent_state_critic"]
             batch_recurrent_state_actor = batch["recurrent_state_actor"]            
-            
-            print(len(batch_next_recurrent_state_critic))
-            print(batch_next_recurrent_state_critic[0].shape)
-            print(len(batch_next_recurrent_state_actor))
-            print(batch_next_recurrent_state_actor[0].shape)
-            print(len(batch_recurrent_state_critic))
-            print(batch_recurrent_state_critic[0].shape)
-            print(len(batch_recurrent_state_actor))
-            print(batch_recurrent_state_actor[0].shape)
-            
             batch_next_state = [tensor.to(self.device) for tensor in batch_next_state]
             batch_state = [tensor.to(self.device) for tensor in batch_state]
             
@@ -963,7 +953,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
                     )                                        
                     
-                    batch_input_actor = self.shared_layer_actor(t_r_states_actor)
+                    batch_input_actor = self.shared_layer_actor(self.train_recurrent_states_actor)
                     
                     policy_out1 = self.policy1(batch_input_actor)
                     
