@@ -820,8 +820,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 
             n = 1
             
-            predict_q1_T1 = torch.flatten(self.q_func1_T1(batch_input_state1, last_action))
-            predict_q2_T1 = torch.flatten(self.q_func2_T1(batch_input_state1, last_action))
+            predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
+            predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
             loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
             loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)          
 
