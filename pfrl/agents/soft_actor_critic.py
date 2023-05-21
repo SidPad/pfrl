@@ -676,7 +676,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_terminal1 = batch["is_state_terminal"]
             batch_state = batch["state"]
             batch_actions = batch["action"]
-            batch_next_actions = batch["next_action"]
+            batch_next_actions = batch_actions
             batch_discount1 = batch["discount"]
             batch_next_recurrent_state_critic = batch["next_recurrent_state_critic"]
             batch_next_recurrent_state_actor = batch["next_recurrent_state_actor"]
@@ -725,6 +725,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_state = batch_state[self.indicesAA]
             
             batch_actions = demo_batch_actions[self.indicesAA]
+            batch_next_actions = batch_next_actions[self.indicesAA]
                               
             batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
             if len(batch_next_state) < (self.seq_len * self.minibatch_size):
@@ -770,8 +771,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             # batch_actions = batch_actions[(self.seq_len - 1)::self.seq_len]
             # batch_actions1 = batch_actions.clone().detach().to(self.device)
-            # batch_actions1 = torch.cat(batch_actions).to(self.device)
-            # batch_actions1 = batch_actions1[(self.seq_len - 1)::self.seq_len]
+            last_action = torch.cat(batch_actions).to(self.device)
+            last_action = last_action[(self.seq_len - 1)::self.seq_len]
             
             #### TASK 1 #### Figure out what pfrl.utils.evaluating does
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(
@@ -800,14 +801,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 #     ele = torch.cat((ele, aaa), dim=0) 
                                 
                 batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]                
-                batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_actions1)]
+                batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
                 
                 self.target_q_func_shared.flatten_parameters()
                 _, next_critic_recurrent_state = pack_and_forward(self.target_q_func_shared, batch_input_next_state, batch_next_recurrent_state_critic)                
                 batch_input_next_state_critic1 = self.target_q_func_shared_layer(next_critic_recurrent_state[-1])
                 
-                next_q1T1 = self.target_q_func1_T1(batch_input_next_state_critic1)
-                next_q2T1 = self.target_q_func2_T1(batch_input_next_state_critic1)
+                next_q1T1 = self.target_q_func1_T1((batch_input_next_state_critic1, next_actions1))
+                next_q2T1 = self.target_q_func2_T1((batch_input_next_state_critic1, next_actions1))
                 
                 next_qT1 = torch.min(next_q1T1, next_q2T1)
                 entropy_term_1 = temp1 * next_log_prob1[..., None]
@@ -819,8 +820,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 
             n = 1
             
-            predict_q1_T1 = torch.flatten(self.q_func1_T1(batch_input_state1))
-            predict_q2_T1 = torch.flatten(self.q_func2_T1(batch_input_state1))
+            predict_q1_T1 = torch.flatten(self.q_func1_T1(batch_input_state1, last_action))
+            predict_q2_T1 = torch.flatten(self.q_func2_T1(batch_input_state1, last_action))
             loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
             loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)          
 
@@ -904,10 +905,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         actions1 = action_distrib1.rsample()
         log_prob1 = action_distrib1.log_prob(actions1).to(self.device)        
         
-        for i, ele in zip(range(len(actions1)), batch_actions):
-            ele = ele[:-1, :]
-            aaa = actions1[i].unsqueeze(0)            
-            ele = torch.cat((ele, aaa), dim=0)       
+        # for i, ele in zip(range(len(actions1)), batch_actions):
+        #     ele = ele[:-1, :]
+        #     aaa = actions1[i].unsqueeze(0)            
+        #     ele = torch.cat((ele, aaa), dim=0)       
                                 
         batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]
         
@@ -918,8 +919,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # actions = torch.cat(batch_actions).to(self.device)
         # actions = actions[(self.seq_len - 1)::self.seq_len]
         
-        q1_T1 = self.q_func1_T1(batch_input_state_critic1)
-        q2_T1 = self.q_func2_T1(batch_input_state_critic1)
+        q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
+        q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
         q_T1 = torch.min(q1_T1, q2_T1)
         entropy_term1 = temp1 * log_prob1[..., None]
         assert q_T1.shape == entropy_term1.shape
