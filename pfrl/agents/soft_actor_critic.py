@@ -1002,9 +1002,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     action = torch.tensor(batch_action)
                     action = action.to('cuda:0')
                     
+                    batch_input = torch.cat((batch_xs, action), dim=1)
                     self.shared_q_critic.flatten_parameters()
                     _, self.test_recurrent_states_critic = one_step_forward(
-                        self.shared_q_critic, batch_input_critic, self.test_recurrent_states_critic
+                        self.shared_q_critic, batch_input, self.test_recurrent_states_critic
                     )
                                         
         return batch_action
