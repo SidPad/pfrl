@@ -719,10 +719,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             # ndcsAA = torch.split(self.indicesAA, splitter)
             # self.ndcsAA = torch.tensor([ndcsAA[-1] for ndcsAA in ndcsAA])            
 
-            # batch_next_state = torch.cat(batch_next_state)
+            batch_next_state = torch.cat(batch_next_state)
             # batch_next_state = batch_next_state[self.indicesAA]
 
-            # batch_state = torch.cat(batch_state)
+            batch_state = torch.cat(batch_state)
             # batch_state = batch_state[self.indicesAA]
             
             # batch_actions = demo_batch_actions[self.indicesAA]
