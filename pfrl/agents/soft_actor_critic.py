@@ -759,10 +759,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             #     batch_next_actions = zero_tensor3
             batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
             batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
-            print(len(batch_state))
-            print(batch_state[0].shape)
-            print(len(batch_actions))
-            print(batch_actions[0].shape)
+            
             batch_input_state = [torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32) for batch_state, batch_actions in zip(batch_state, batch_actions)]
             # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
             
@@ -785,11 +782,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 self.shared_q_critic), pfrl.utils.evaluating(self.shared_q_actor
             ), pfrl.utils.evaluating(self.shared_layer_critic), pfrl.utils.evaluating(self.shared_layer_actor):                              
                                 
-                self.shared_q_actor.flatten_parameters()
-                print(len(batch_next_state))
-                print(batch_next_state[0].shape)
-                print(len(batch_next_recurrent_state_actor))
-                print(batch_next_recurrent_state_actor[0].shape)
+                self.shared_q_actor.flatten_parameters()                
                 _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_next_state, batch_next_recurrent_state_actor)                
                 batch_input_next_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])
                 
@@ -821,6 +814,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_qT1 = torch.min(next_q1T1, next_q2T1)
                 entropy_term_1 = temp1 * next_log_prob1[..., None]
                 assert next_qT1.shape == entropy_term_1.shape
+                print(batch_rewards1.shape)
+                print(batch_discount1.shape)
+                print(batch_terminal1.shape)
+                print(next_qT1.shape)
+                print(entropy_term_1.shape)
 
                 target_q_T1 = batch_rewards1 + batch_discount1 * (
                     1.0 - batch_terminal1
