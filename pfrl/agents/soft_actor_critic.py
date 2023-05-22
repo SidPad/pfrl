@@ -763,9 +763,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_input_state = [torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32) for batch_state, batch_actions in zip(batch_state, batch_actions)]
             # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
             
-            # batch_rewards1 = batch_rewards1[self.ndcsAA]            
-            # batch_discount1 = batch_discount1[self.ndcsAA]            
+            # batch_rewards1 = batch_rewards1[self.ndcsAA]
+            # batch_discount1 = batch_discount1[self.ndcsAA]
             # batch_terminal1 = batch_terminal1[self.ndcsAA]
+            
+            batch_rewards1 = batch_rewards1[(self.seq_len - 1)::self.seq_len]
+            batch_discount1 = batch_discount1[(self.seq_len - 1)::self.seq_len]
+            batch_terminal1 = batch_terminal1[(self.seq_len - 1)::self.seq_len]
             
             batch_actions1 = batch_actions
             batch_actions1 = [batch_actions1[1:,:] for batch_actions1 in batch_actions1]
