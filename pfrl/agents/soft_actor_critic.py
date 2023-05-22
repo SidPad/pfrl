@@ -741,8 +741,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             #     zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
             #     zero_tensor1[:batch_state.shape[0], :] = batch_state
             #     batch_state = zero_tensor1
-            # batch_state = torch.split(batch_state, self.seq_len, dim=0)
-            # batch_state = [t.squeeze(0) for t in batch_state]
+            batch_state = torch.split(batch_state, self.seq_len, dim=0)
+            batch_state = [t.squeeze(0) for t in batch_state]
             
             batch_actions = nn.utils.rnn.pad_sequence(demo_batch_actions, batch_first=True, padding_value=0)
             # if len(batch_actions) < (self.seq_len * self.minibatch_size):
