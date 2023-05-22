@@ -783,6 +783,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             ), pfrl.utils.evaluating(self.shared_layer_critic), pfrl.utils.evaluating(self.shared_layer_actor):                              
                                 
                 self.shared_q_actor.flatten_parameters()
+                print(len(batch_next_state))
+                print(batch_next_state[0].shape)
+                print(len(batch_next_recurrent_state_actor))
+                print(batch_next_recurrent_state_actor[0].shape)
                 _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_next_state, batch_next_recurrent_state_actor)                
                 batch_input_next_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])
                 
