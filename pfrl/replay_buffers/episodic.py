@@ -78,8 +78,7 @@ class EpisodicReplayBuffer(AbstractEpisodicReplayBuffer):
             self.episodic_memory = RandomAccessQueue()
 
             # Recover episodic_memory with best effort.
-            episode = []
-            print(self.memory)
+            episode = []            
             for item in self.memory:
                 episode.append(item)
                 if item["is_state_terminal"]:
