@@ -685,11 +685,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_recurrent_state_actor = batch["recurrent_state_actor"]            
             batch_next_state = [tensor.to(self.device) for tensor in batch_next_state]
             batch_state = [tensor.to(self.device) for tensor in batch_state]
-            print(len(batch_next_state))
-            print(batch_next_state[0].shape)
+            
             ep_len_actual = [len(tensor) for tensor in batch_state]
-            ep_len_actual_sum1 = np.cumsum(ep_len_actual)
-            ep_len_actual_sum2 = [ep_len_actual_sum - ep_len_actual for ep_len_actual_sum, ep_len_actual in zip(ep_len_actual_sum1, ep_len_actual)]
+            # ep_len_actual_sum1 = np.cumsum(ep_len_actual)
+            # ep_len_actual_sum2 = [ep_len_actual_sum - ep_len_actual for ep_len_actual_sum, ep_len_actual in zip(ep_len_actual_sum1, ep_len_actual)]
                         
             demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
             demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
@@ -697,76 +696,76 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             demo_batch_actions = torch.cat(demo_batch_actions)            
             
             # get the indices for episodes for each task
-            indicesA = [i for i, tensor in enumerate(batch_next_state)]            
+            # indicesA = [i for i, tensor in enumerate(batch_next_state)]            
             
             # get indices for every step in each episode and get 30 indices that are in order anywhere within the episode length from each episode
-            indicesAA = []            
-            splitter = []
+            # indicesAA = []            
+            # splitter = []
             
-            for j in range(len(ep_len_actual_sum2)): 
-                if j in indicesA:
-                    if (ep_len_actual_sum1[j] - self.seq_len) > ep_len_actual_sum2[j]:
-                        random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - self.seq_len)
-                        numbers = [i for i in range(random_indexA, random_indexA + self.seq_len)]
-                        indicesAA = np.append(indicesAA, numbers)
-                    else:
-                        random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j])
-                        numbers = [i for i in range(random_indexA, ep_len_actual_sum1[j])]
-                        indicesAA = np.append(indicesAA, numbers)
-                    splitter = np.append(splitter, len(numbers))                
-            splitter = [int(splitter) for splitter in splitter]
-            self.indicesAA = torch.tensor(indicesAA, dtype=torch.long).to(self.device)
-            splitter = tuple(splitter)
-            ndcsAA = torch.split(self.indicesAA, splitter)
-            self.ndcsAA = torch.tensor([ndcsAA[-1] for ndcsAA in ndcsAA])            
+            # for j in range(len(ep_len_actual_sum2)): 
+            #     if j in indicesA:
+            #         if (ep_len_actual_sum1[j] - self.seq_len) > ep_len_actual_sum2[j]:
+            #             random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - self.seq_len)
+            #             numbers = [i for i in range(random_indexA, random_indexA + self.seq_len)]
+            #             indicesAA = np.append(indicesAA, numbers)
+            #         else:
+            #             random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j])
+            #             numbers = [i for i in range(random_indexA, ep_len_actual_sum1[j])]
+            #             indicesAA = np.append(indicesAA, numbers)
+            #         splitter = np.append(splitter, len(numbers))                
+            # splitter = [int(splitter) for splitter in splitter]
+            # self.indicesAA = torch.tensor(indicesAA, dtype=torch.long).to(self.device)
+            # splitter = tuple(splitter)
+            # ndcsAA = torch.split(self.indicesAA, splitter)
+            # self.ndcsAA = torch.tensor([ndcsAA[-1] for ndcsAA in ndcsAA])            
 
-            batch_next_state = torch.cat(batch_next_state)
-            batch_next_state = batch_next_state[self.indicesAA]
+            # batch_next_state = torch.cat(batch_next_state)
+            # batch_next_state = batch_next_state[self.indicesAA]
 
-            batch_state = torch.cat(batch_state)
-            batch_state = batch_state[self.indicesAA]
+            # batch_state = torch.cat(batch_state)
+            # batch_state = batch_state[self.indicesAA]
             
-            batch_actions = demo_batch_actions[self.indicesAA]
-            batch_next_actions = batch_next_actions[self.indicesAA]
+            # batch_actions = demo_batch_actions[self.indicesAA]
+            # batch_next_actions = batch_next_actions[self.indicesAA]
                               
             batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
-            if len(batch_next_state) < (self.seq_len * self.minibatch_size):
-                zero_tensor = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_state.shape[1])).to(self.device)
-                zero_tensor[:batch_next_state.shape[0], :] = batch_next_state
-                batch_next_state = zero_tensor
+            # if len(batch_next_state) < (self.seq_len * self.minibatch_size):
+            #     zero_tensor = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_state.shape[1])).to(self.device)
+            #     zero_tensor[:batch_next_state.shape[0], :] = batch_next_state
+            #     batch_next_state = zero_tensor
             batch_next_state = torch.split(batch_next_state, self.seq_len, dim=0)
             batch_next_state = [t.squeeze(0) for t in batch_next_state]
                 
             batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
-            if len(batch_state) < (self.seq_len * self.minibatch_size):
-                zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
-                zero_tensor1[:batch_state.shape[0], :] = batch_state
-                batch_state = zero_tensor1
-            batch_state = torch.split(batch_state, self.seq_len, dim=0)
-            batch_state = [t.squeeze(0) for t in batch_state]
+            # if len(batch_state) < (self.seq_len * self.minibatch_size):
+            #     zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
+            #     zero_tensor1[:batch_state.shape[0], :] = batch_state
+            #     batch_state = zero_tensor1
+            # batch_state = torch.split(batch_state, self.seq_len, dim=0)
+            # batch_state = [t.squeeze(0) for t in batch_state]
             
-            batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
-            if len(batch_actions) < (self.seq_len * self.minibatch_size):
-                zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
-                zero_tensor2[:batch_actions.shape[0], :] = batch_actions
-                batch_actions = zero_tensor2
+            batch_actions = nn.utils.rnn.pad_sequence(demo_batch_actions, batch_first=True, padding_value=0)
+            # if len(batch_actions) < (self.seq_len * self.minibatch_size):
+            #     zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
+            #     zero_tensor2[:batch_actions.shape[0], :] = batch_actions
+            #     batch_actions = zero_tensor2
             batch_actions = torch.split(batch_actions, self.seq_len, dim=0)
             batch_actions = [t.squeeze(0) for t in batch_actions]
                       
             batch_next_actions = nn.utils.rnn.pad_sequence(batch_next_actions, batch_first=True, padding_value=0)
-            if len(batch_next_actions) < (self.seq_len * self.minibatch_size):
-                zero_tensor3 = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_actions.shape[1])).to(self.device)
-                zero_tensor3[:batch_next_actions.shape[0], :] = batch_next_actions
-                batch_next_actions = zero_tensor3
+            # if len(batch_next_actions) < (self.seq_len * self.minibatch_size):
+            #     zero_tensor3 = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_actions.shape[1])).to(self.device)
+            #     zero_tensor3[:batch_next_actions.shape[0], :] = batch_next_actions
+            #     batch_next_actions = zero_tensor3
             batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
             batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
             
             batch_input_state = [torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32) for batch_state, batch_actions in zip(batch_state, batch_actions)]
             # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
             
-            batch_rewards1 = batch_rewards1[self.ndcsAA]            
-            batch_discount1 = batch_discount1[self.ndcsAA]            
-            batch_terminal1 = batch_terminal1[self.ndcsAA]
+            # batch_rewards1 = batch_rewards1[self.ndcsAA]            
+            # batch_discount1 = batch_discount1[self.ndcsAA]            
+            # batch_terminal1 = batch_terminal1[self.ndcsAA]
             
             batch_actions1 = batch_actions
             batch_actions1 = [batch_actions1[1:,:] for batch_actions1 in batch_actions1]
@@ -802,7 +801,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 #     aaa = next_actions1[i].unsqueeze(0)            
                 #     ele = torch.cat((ele, aaa), dim=0) 
                                 
-                batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]                
+                # batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]                
                 batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
                 
                 self.target_q_func_shared.flatten_parameters()
@@ -871,29 +870,29 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         ep_len_actual = [len(tensor) for tensor in batch_state]
 
         batch_state = torch.cat(batch_state)
-        batch_state = batch_state[self.indicesAA]
+        # batch_state = batch_state[self.indicesAA]
         
         demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
         demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
         demo_batch_actions = [torch.cat((torch.zeros(1,27).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
         demo_batch_actions = torch.cat(demo_batch_actions)
 
-        batch_actions = demo_batch_actions[self.indicesAA]
+        # batch_actions = demo_batch_actions[self.indicesAA]
         # batch_next_actions = batch_next_actions[self.indicesAA]      
       
         batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
-        if len(batch_state) < (self.seq_len * self.minibatch_size):
-            zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
-            zero_tensor1[:batch_state.shape[0], :] = batch_state
-            batch_state = zero_tensor1        
+        # if len(batch_state) < (self.seq_len * self.minibatch_size):
+        #     zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
+        #     zero_tensor1[:batch_state.shape[0], :] = batch_state
+        #     batch_state = zero_tensor1        
         batch_state = torch.split(batch_state, self.seq_len, dim=0)
         batch_state = [t.squeeze(0) for t in batch_state]
         
         batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
-        if len(batch_actions) < (self.seq_len * self.minibatch_size):
-            zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
-            zero_tensor2[:batch_actions.shape[0], :] = batch_actions
-            batch_actions = zero_tensor2        
+        # if len(batch_actions) < (self.seq_len * self.minibatch_size):
+        #     zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
+        #     zero_tensor2[:batch_actions.shape[0], :] = batch_actions
+        #     batch_actions = zero_tensor2        
         batch_actions = torch.split(batch_actions, self.seq_len, dim=0)        
         batch_actions = [t.squeeze(0) for t in batch_actions]      
         
