@@ -170,6 +170,8 @@ def pack_and_forward(rnn, sequences, recurrent_state):
         object: New batched recurrent state.
     """
     pack = pack_sequences_recursive(sequences)
+    print(pack.shape)
+    print(recurrent_state.shape)
     y, recurrent_state = rnn(pack, recurrent_state)
     return unwrap_packed_sequences_recursive(y), recurrent_state
 
