@@ -588,6 +588,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             n_times_update=1,
             replay_start_size=replay_start_size,
             update_interval=update_interval,
+            episodic_update_len=seq_len,
         )
         self.max_grad_norm = max_grad_norm
         self.batch_states = batch_states
@@ -684,7 +685,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_recurrent_state_actor = batch["recurrent_state_actor"]            
             batch_next_state = [tensor.to(self.device) for tensor in batch_next_state]
             batch_state = [tensor.to(self.device) for tensor in batch_state]
-            
+            print(len(batch_next_state))
+            print(batch_next_state[0].shape)
             ep_len_actual = [len(tensor) for tensor in batch_state]
             ep_len_actual_sum1 = np.cumsum(ep_len_actual)
             ep_len_actual_sum2 = [ep_len_actual_sum - ep_len_actual for ep_len_actual_sum, ep_len_actual in zip(ep_len_actual_sum1, ep_len_actual)]
