@@ -759,7 +759,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             #     batch_next_actions = zero_tensor3
             batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
             batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
-            
+            print(len(batch_state))
+            print(batch_state[0].shape)
+            print(len(batch_actions))
+            print(batch_actions[0].shape)
             batch_input_state = [torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32) for batch_state, batch_actions in zip(batch_state, batch_actions)]
             # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
             
