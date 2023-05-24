@@ -850,24 +850,19 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 self.q_func2_loss_T1_record.append(float(loss2_T1))
             
             self.shared_q_optimizer_critic.zero_grad()
-            self.scaler.scale(loss).backward(retain_graph=True)
-            self.scaler.unscale_(self.shared_q_optimizer_critic)
-            self.scaler.step(self.shared_q_optimizer_critic)
-            # self.shared_q_optimizer_critic.step()
-            # xm.mark_step()
-            
             self.q_func1_optimizer1.zero_grad()
-            self.scaler.scale(loss1_T1).backward()
-            # loss1_T1.backward()
-            self.scaler.step(self.q_func1_optimizer1)
-            # self.q_func1_optimizer1.step()            
-            # xm.mark_step()
-
             self.q_func2_optimizer1.zero_grad()
-            self.scaler.scale(loss2_T1).backward()
-            self.scaler.step(self.q_func2_optimizer1)
-            # xm.mark_step()
             
+            self.scaler.scale(loss).backward(retain_graph=True)
+            self.scaler.scale(loss1_T1).backward()
+            self.scaler.scale(loss2_T1).backward()
+            
+            self.scaler.unscale_(self.shared_q_optimizer_critic)
+            
+            self.scaler.step(self.shared_q_optimizer_critic)
+            self.scaler.step(self.q_func1_optimizer1)
+            self.scaler.step(self.q_func2_optimizer1)
+                        
             self.scaler.update()
 
     def update_temperature(self, log_prob1):        
