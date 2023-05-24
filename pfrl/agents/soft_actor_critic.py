@@ -835,16 +835,17 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.shared_q_optimizer_critic.zero_grad()
             self.q_func1_optimizer1.zero_grad()
             self.q_func2_optimizer1.zero_grad()            
-                                        
-            predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
-            predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
-            loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
-            loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)          
+            
+            with torch.cuda.amp.autocast():
+                predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
+                predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
+                loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
+                loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)          
 
-            #### NOT USED for Sep Optimizer 1, used for Sep Optimizer 2 and Shared Q ####
-            loss1 = (loss1_T1)
-            loss2 = (loss2_T1)
-            loss = (loss1 + loss2) / 2.0
+                #### NOT USED for Sep Optimizer 1, used for Sep Optimizer 2 and Shared Q ####
+                loss1 = (loss1_T1)
+                loss2 = (loss2_T1)
+                loss = (loss1 + loss2) / 2.0
             
             # Update stats
             if batch_input_state1.numel() > 0:
