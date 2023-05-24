@@ -855,7 +855,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.scaler.scale(loss1_T1).backward()
             self.scaler.scale(loss2_T1).backward()
             
-            self.scaler.unscale_(self.shared_q_optimizer_critic)
+            # self.scaler.unscale_(self.shared_q_optimizer_critic)
             
             self.scaler.step(self.shared_q_optimizer_critic)
             self.scaler.step(self.q_func1_optimizer1)
