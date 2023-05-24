@@ -25,6 +25,8 @@ from pfrl.utils.recurrent import (
     recurrent_state_as_numpy,
     recurrent_state_from_numpy
 )
+import torch_xla
+import torch_xla.core.xla_model as xm
 
 
 def _mean_or_nan(xs):
@@ -558,7 +560,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         if gpu is not None and gpu >= 0:
             assert torch.cuda.is_available()
-            self.device = torch.device("cuda:{}".format(gpu))
+            # self.device = torch.device("cuda:{}".format(gpu))
+            self.device = xm.xla_device()
             self.policy1.to(self.device)            
             self.shared_q_critic.to(self.device)
             self.shared_layer_critic.to(self.device)
@@ -844,14 +847,17 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.shared_q_optimizer_critic.zero_grad()
             loss.backward(retain_graph=True)
             self.shared_q_optimizer_critic.step()
+            xm.mark_step()
             
             self.q_func1_optimizer1.zero_grad()
             loss1_T1.backward()
             self.q_func1_optimizer1.step()
+            xm.mark_step()
 
             self.q_func2_optimizer1.zero_grad()
             loss2_T1.backward()
-            self.q_func2_optimizer1.step()         
+            self.q_func2_optimizer1.step()
+            xm.mark_step()
 
     def update_temperature(self, log_prob1):        
         assert not log_prob1.requires_grad
@@ -861,7 +867,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         loss1.backward()
         if self.max_grad_norm is not None:
             clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
-        self.temperature_optimizer1.step()        
+        self.temperature_optimizer1.step()
+        xm.mark_step()
 
     def update_policy_and_temperature(self, batch):        
         """Compute loss for actor."""
@@ -934,6 +941,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.shared_q_optimizer_actor.zero_grad()
         loss1.backward()
         self.shared_q_optimizer_actor.step()
+        xm.mark_step()
 
         self.n_policy_updates += 1
 
