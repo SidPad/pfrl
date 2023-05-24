@@ -267,25 +267,25 @@ def batch_recurrent_experiences(
         ),
         "recurrent_state_critic": recurrent_state_from_numpy(
             concatenate_recurrent_states(
-                [ep[0]["recurrent_state_critic"] for ep in experiences]
+                [ep[-1]["recurrent_state_critic"] for ep in experiences]
             ),
             device,
         ),
         "next_recurrent_state_critic": recurrent_state_from_numpy(
             concatenate_recurrent_states(
-                [ep[0]["next_recurrent_state_critic"] for ep in experiences]
+                [ep[-1]["next_recurrent_state_critic"] for ep in experiences]
             ),
             device,
         ),
         "recurrent_state_actor": recurrent_state_from_numpy(
             concatenate_recurrent_states(
-                [ep[0]["recurrent_state_actor"] for ep in experiences]
+                [ep[-1]["recurrent_state_actor"] for ep in experiences]
             ),
             device,
         ),
         "next_recurrent_state_actor": recurrent_state_from_numpy(
             concatenate_recurrent_states(
-                [ep[0]["next_recurrent_state_actor"] for ep in experiences]
+                [ep[-1]["next_recurrent_state_actor"] for ep in experiences]
             ),
             device,
         ),
