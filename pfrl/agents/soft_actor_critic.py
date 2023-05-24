@@ -851,17 +851,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 self.q_func1_loss_T1_record.append(float(loss1_T1))
                 self.q_func2_loss_T1_record.append(float(loss2_T1))                      
             
-            self.scaler.scale(loss).backward(retain_graph=True)
-            self.scaler.scale(loss1_T1).backward()
-            self.scaler.scale(loss2_T1).backward()
+            loss.backward(retain_graph=True)
+            loss1_T1.backward()
+            loss2_T1.backward()                        
             
-            self.scaler.unscale_(self.shared_q_optimizer_critic)
-            
-            self.scaler.step(self.shared_q_optimizer_critic)
-            self.scaler.step(self.q_func1_optimizer1)
-            self.scaler.step(self.q_func2_optimizer1)
-                        
-            self.scaler.update()
+            self.shared_q_optimizer_critic.step()
+            self.q_func1_optimizer1.step()
+            self.q_func2_optimizer1.step()            
 
     def update_temperature(self, log_prob1):        
         assert not log_prob1.requires_grad
