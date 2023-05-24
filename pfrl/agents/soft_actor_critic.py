@@ -687,7 +687,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_next_recurrent_state_critic = batch["next_recurrent_state_critic"]
             batch_next_recurrent_state_actor = batch["next_recurrent_state_actor"]
             batch_recurrent_state_critic = batch["recurrent_state_critic"]
-            batch_recurrent_state_actor = batch["recurrent_state_actor"]            
+            batch_recurrent_state_actor = batch["recurrent_state_actor"]
+            
+            batch_next_recurrent_state_critic = batch_next_recurrent_state_critic.to(torch.float16)
+            batch_next_recurrent_state_actor = batch_next_recurrent_state_actor.to(torch.float16)
+            batch_recurrent_state_critic = batch_recurrent_state_critic.to(torch.float16)
+            batch_recurrent_state_actor = batch_recurrent_state_actor.to(torch.float16)
+            
             batch_next_state = [tensor.to(self.device) for tensor in batch_next_state]
             batch_state = [tensor.to(self.device) for tensor in batch_state]
             
