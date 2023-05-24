@@ -831,7 +831,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 ) * torch.flatten(next_qT1 - entropy_term_1)            
                 
             n = 1
-            
+            self.shared_q_optimizer_critic.zero_grad()
+            self.q_func1_optimizer1.zero_grad()
+            self.q_func2_optimizer1.zero_grad()
             with torch.cuda.amp.autocast():
                 predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
                 predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
@@ -847,11 +849,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 self.q1_record_T1.extend(predict_q1_T1.detach().cpu().numpy())
                 self.q2_record_T1.extend(predict_q2_T1.detach().cpu().numpy())
                 self.q_func1_loss_T1_record.append(float(loss1_T1))
-                self.q_func2_loss_T1_record.append(float(loss2_T1))
-            
-            self.shared_q_optimizer_critic.zero_grad()
-            self.q_func1_optimizer1.zero_grad()
-            self.q_func2_optimizer1.zero_grad()
+                self.q_func2_loss_T1_record.append(float(loss2_T1))                      
             
             self.scaler.scale(loss).backward(retain_graph=True)
             self.scaler.scale(loss1_T1).backward()
