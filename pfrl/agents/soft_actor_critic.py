@@ -979,56 +979,53 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         
             if self.recurrent:
                 if self.training:  
-                    self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
-                    with torch.cuda.amp.autocast():
-                        self.shared_q_actor.flatten_parameters()
-                        _, self.train_recurrent_states_actor = one_step_forward(
-                            self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
-                        )                                        
+                    self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor                    
+                    self.shared_q_actor.flatten_parameters()
+                    _, self.train_recurrent_states_actor = one_step_forward(
+                        self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
+                    )                                        
 
-                        batch_input_actor = self.shared_layer_actor(self.train_recurrent_states_actor[-1])
+                    batch_input_actor = self.shared_layer_actor(self.train_recurrent_states_actor[-1])
 
-                        policy_out1 = self.policy1(batch_input_actor)
+                    policy_out1 = self.policy1(batch_input_actor)
 
-                        if deterministic:
-                            batch_action = mode_of_distribution(policy_out1).cpu().numpy()                
-                        else:
-                            batch_action = policy_out1.sample().cpu().numpy()                
+                    if deterministic:
+                        batch_action = mode_of_distribution(policy_out1).cpu().numpy()                
+                    else:
+                        batch_action = policy_out1.sample().cpu().numpy()                
 
-                        action = torch.tensor(batch_action)
-                        action = action.to('cuda:0')
+                    action = torch.tensor(batch_action)
+                    action = action.to('cuda:0')
 
-                        batch_input = torch.cat((batch_xs, action), dim=1)
-                        self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
-                        self.shared_q_critic.flatten_parameters()
-                        _, self.train_recurrent_states_critic = one_step_forward(
-                            self.shared_q_critic, batch_input, self.train_recurrent_states_critic
-                        )
-                                        
+                    batch_input = torch.cat((batch_xs, action), dim=1)
+                    self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
+                    self.shared_q_critic.flatten_parameters()
+                    _, self.train_recurrent_states_critic = one_step_forward(
+                        self.shared_q_critic, batch_input, self.train_recurrent_states_critic
+                    )                                        
                 else:                    
-                    with torch.cuda.amp.autocast():
-                        self.shared_q_actor.flatten_parameters()
-                        _, self.test_recurrent_states_actor = one_step_forward(
-                            self.shared_q_actor, batch_xs, self.test_recurrent_states_actor
-                        )                                       
+                    self.shared_q_actor.flatten_parameters()
+                    _, self.test_recurrent_states_actor = one_step_forward(
+                        self.shared_q_actor, batch_xs, self.test_recurrent_states_actor
+                    )                                       
 
-                        batch_input_actor = self.shared_layer_actor(self.test_recurrent_states_actor[-1])
+                    batch_input_actor = self.shared_layer_actor(self.test_recurrent_states_actor[-1])
 
-                        policy_out1 = self.policy1(batch_input_actor)
+                    policy_out1 = self.policy1(batch_input_actor)
 
-                        if deterministic:
-                            batch_action = mode_of_distribution(policy_out1).cpu().numpy()                
-                        else:
-                            batch_action = policy_out1.sample().cpu().numpy()                
+                    if deterministic:
+                        batch_action = mode_of_distribution(policy_out1).cpu().numpy()                
+                    else:
+                        batch_action = policy_out1.sample().cpu().numpy()                
 
-                        action = torch.tensor(batch_action)
-                        action = action.to('cuda:0')
+                    action = torch.tensor(batch_action)
+                    action = action.to('cuda:0')
 
-                        batch_input = torch.cat((batch_xs, action), dim=1)
-                        self.shared_q_critic.flatten_parameters()
-                        _, self.test_recurrent_states_critic = one_step_forward(
-                            self.shared_q_critic, batch_input, self.test_recurrent_states_critic
-                        )
+                    batch_input = torch.cat((batch_xs, action), dim=1)
+                    self.shared_q_critic.flatten_parameters()
+                    _, self.test_recurrent_states_critic = one_step_forward(
+                        self.shared_q_critic, batch_input, self.test_recurrent_states_critic
+                    )
                                         
         return batch_action
 
@@ -1079,19 +1076,17 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     
                     batch_axs = self.batch_states(batch_action, self.device, self.phi)
                     batch_input = torch.cat((batch_xs, batch_axs), dim=1)
-                    self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
-                    with torch.cuda.amp.autocast():
-                        self.shared_q_critic.flatten_parameters()
-                        _, self.train_recurrent_states_critic = one_step_forward(
-                            self.shared_q_critic, batch_input, self.train_recurrent_states_critic
-                        )                                       
+                    self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic                    
+                    self.shared_q_critic.flatten_parameters()
+                    _, self.train_recurrent_states_critic = one_step_forward(
+                        self.shared_q_critic, batch_input, self.train_recurrent_states_critic
+                    )                                       
 
-                        self.shared_q_actor.flatten_parameters()
-                        self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor                    
-                        _, self.train_recurrent_states_actor = one_step_forward(
-                            self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
-                        )                   
-                    
+                    self.shared_q_actor.flatten_parameters()
+                    self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor                    
+                    _, self.train_recurrent_states_actor = one_step_forward(
+                        self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
+                    )                    
             else:
                 batch_action = self.batch_select_greedy_action(batch_obs, batch_acts)
             self.batch_last_obs = list(batch_obs)
