@@ -27,6 +27,7 @@ from pfrl.utils.recurrent import (
 )
 # import torch_xla
 # import torch_xla.core.xla_model as xm
+import torch.autocast as autocast
 
 
 def _mean_or_nan(xs):
