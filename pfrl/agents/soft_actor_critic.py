@@ -569,12 +569,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.shared_layer_actor.to(self.device)
             self.q_func1_T1.to(self.device)
             self.q_func2_T1.to(self.device)
-            
-            
-            self.policy1 = torch.compile(self.policy1)            
-            self.shared_q_actor = torch.compile(self.shared_q_actor)
-            self.shared_layer_actor = torch.compile(self.shared_layer_actor)
-            
+                        
         else:
             self.device = torch.device("cpu")
 
@@ -841,8 +836,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             self.shared_q_optimizer_critic.zero_grad()
             self.q_func1_optimizer1.zero_grad()
-            self.q_func2_optimizer1.zero_grad()
-            
+            self.q_func2_optimizer1.zero_grad()            
             
             predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
             predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
