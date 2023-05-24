@@ -562,13 +562,22 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             assert torch.cuda.is_available()
             self.device = torch.device("cuda:{}".format(gpu))
             # self.device = xm.xla_device()
-            self.policy1.to(self.device)            
+            self.policy1.to(self.device)
             self.shared_q_critic.to(self.device)
             self.shared_layer_critic.to(self.device)
             self.shared_q_actor.to(self.device)
             self.shared_layer_actor.to(self.device)
             self.q_func1_T1.to(self.device)
-            self.q_func2_T1.to(self.device)            
+            self.q_func2_T1.to(self.device)
+            
+            
+            self.policy1 = torch.compile(self.policy1)
+            self.shared_q_critic = torch.compile(self.shared_q_critic)
+            self.shared_layer_critic = torch.compile(self.shared_layer_critic)
+            self.shared_q_actor = torch.compile(self.shared_q_actor)
+            self.shared_layer_actor = torch.compile(self.shared_layer_actor)
+            self.q_func1_T1 = torch.compile(self.q_func1_T1)
+            self.q_func2_T1 = torch.compile(self.q_func2_T1)
         else:
             self.device = torch.device("cpu")
 
