@@ -637,7 +637,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.seq_len = seq_len
         self.minibatch_size = minibatch_size
         
-        self.scaler = GradScaler()
+        self.scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
 
     @property
     def temperature(self):
