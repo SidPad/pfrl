@@ -560,8 +560,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         if gpu is not None and gpu >= 0:
             assert torch.cuda.is_available()
-            # self.device = torch.device("cuda:{}".format(gpu))
-            self.device = xm.xla_device()
+            self.device = torch.device("cuda:{}".format(gpu))
+            # self.device = xm.xla_device()
             self.policy1.to(self.device)            
             self.shared_q_critic.to(self.device)
             self.shared_layer_critic.to(self.device)
