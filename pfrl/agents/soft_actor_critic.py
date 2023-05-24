@@ -724,10 +724,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             # ndcsAA = torch.split(self.indicesAA, splitter)
             # self.ndcsAA = torch.tensor([ndcsAA[-1] for ndcsAA in ndcsAA])            
 
-            batch_next_state = torch.cat(batch_next_state).half()
+            batch_next_state = torch.cat(batch_next_state).to(torch.float16)
             # batch_next_state = batch_next_state[self.indicesAA]
 
-            batch_state = torch.cat(batch_state).half()
+            batch_state = torch.cat(batch_state).to(torch.float16)
             # batch_state = batch_state[self.indicesAA]
             
             # batch_actions = demo_batch_actions[self.indicesAA]
@@ -765,8 +765,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
             batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
             
-            batch_input_state = [torch.cat((batch_state, batch_actions), dim = 1).half() for batch_state, batch_actions in zip(batch_state, batch_actions)]
-            # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
+            batch_input_state = [torch.cat((batch_state, batch_actions), dim = 1).to(torch.float16) for batch_state, batch_actions in zip(batch_state, batch_actions)]
+            # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float16) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
             
             # batch_rewards1 = batch_rewards1[self.ndcsAA]
             # batch_discount1 = batch_discount1[self.ndcsAA]
@@ -811,7 +811,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     #     ele = torch.cat((ele, aaa), dim=0) 
 
                     # batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]                
-                    batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).half() for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]                                        
+                    batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float16) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]                                        
                     
                     self.target_q_func_shared.flatten_parameters()
                     _, next_critic_recurrent_state = pack_and_forward(self.target_q_func_shared, batch_input_next_state, batch_next_recurrent_state_critic)                
