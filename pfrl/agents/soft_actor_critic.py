@@ -791,6 +791,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             ), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(
                 self.shared_q_critic), pfrl.utils.evaluating(self.shared_q_actor
             ), pfrl.utils.evaluating(self.shared_layer_critic), pfrl.utils.evaluating(self.shared_layer_actor):
+                self.shared_q_optimizer_critic.zero_grad()
+                self.q_func1_optimizer1.zero_grad()
+                self.q_func2_optimizer1.zero_grad()
                 with torch.cuda.amp.autocast():
 
                     self.shared_q_actor.flatten_parameters()                
@@ -831,9 +834,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 ) * torch.flatten(next_qT1 - entropy_term_1)            
                 
             n = 1
-            self.shared_q_optimizer_critic.zero_grad()
-            self.q_func1_optimizer1.zero_grad()
-            self.q_func2_optimizer1.zero_grad()
+            
             with torch.cuda.amp.autocast():
                 predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
                 predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
