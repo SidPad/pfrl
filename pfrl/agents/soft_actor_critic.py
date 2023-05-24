@@ -825,7 +825,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float16) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]                                        
                     
                     with torch.cuda.amp.autocast():
-                        self.target_q_func_shared.flatten_parameters()
+                        # self.target_q_func_shared.flatten_parameters()
                         _, next_critic_recurrent_state = pack_and_forward(self.target_q_func_shared, batch_input_next_state, batch_next_recurrent_state_critic)                
                         batch_input_next_state_critic1 = self.target_q_func_shared_layer(next_critic_recurrent_state[-1])
 
