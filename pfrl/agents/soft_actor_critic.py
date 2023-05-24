@@ -791,7 +791,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             ), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(
                 self.shared_q_critic), pfrl.utils.evaluating(self.shared_q_actor
             ), pfrl.utils.evaluating(self.shared_layer_critic), pfrl.utils.evaluating(self.shared_layer_actor):
-                with torch.autocast(device_type='cuda', dtype=torch.float16):
+                with torch.cuda.amp.autocast(device_type='cuda', dtype=torch.float16):
 
                     self.shared_q_actor.flatten_parameters()                
                     _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_next_state, batch_next_recurrent_state_actor)                
@@ -832,7 +832,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 
             n = 1
             
-            with torch.autocast(device_type='cuda', dtype=torch.float16):
+            with torch.cuda.amp.autocast(device_type='cuda', dtype=torch.float16):
                 predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
                 predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
                 loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
@@ -873,7 +873,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     def update_temperature(self, log_prob1):        
         assert not log_prob1.requires_grad
         
-        with torch.autocast(device_type='cuda', dtype=torch.float16):
+        with torch.cuda.amp.autocast(device_type='cuda', dtype=torch.float16):
             loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
         self.temperature_optimizer1.zero_grad()
         self.scaler.scale(loss1).backward()
@@ -920,7 +920,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = torch.split(batch_actions, self.seq_len, dim=0)        
         batch_actions = [t.squeeze(0) for t in batch_actions]      
         
-        with torch.autocast(device_type='cuda', dtype=torch.float16):
+        with torch.cuda.amp.autocast(device_type='cuda', dtype=torch.float16):
             self.shared_q_actor.flatten_parameters()
             _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)                
             batch_input_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])        
@@ -938,7 +938,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                                 
         batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]
         
-        with torch.autocast(device_type='cuda', dtype=torch.float16):
+        with torch.cuda.amp.autocast(device_type='cuda', dtype=torch.float16):
             self.shared_q_critic.flatten_parameters()
             _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
             batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])       
@@ -989,7 +989,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.recurrent:
                 if self.training:  
                     self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor
-                    with torch.autocast(device_type='cuda', dtype=torch.float16):
+                    with torch.cuda.amp.autocast(device_type='cuda', dtype=torch.float16):
                         self.shared_q_actor.flatten_parameters()
                         _, self.train_recurrent_states_actor = one_step_forward(
                             self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
@@ -1015,7 +1015,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         )
                                         
                 else:                    
-                    with torch.autocast(device_type='cuda', dtype=torch.float16):
+                    with torch.cuda.amp.autocast(device_type='cuda', dtype=torch.float16):
                         self.shared_q_actor.flatten_parameters()
                         _, self.test_recurrent_states_actor = one_step_forward(
                             self.shared_q_actor, batch_xs, self.test_recurrent_states_actor
@@ -1089,7 +1089,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     batch_axs = self.batch_states(batch_action, self.device, self.phi)
                     batch_input = torch.cat((batch_xs, batch_axs), dim=1)
                     self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
-                    with torch.autocast(device_type='cuda', dtype=torch.float16):
+                    with torch.cuda.amp.autocast(device_type='cuda', dtype=torch.float16):
                         self.shared_q_critic.flatten_parameters()
                         _, self.train_recurrent_states_critic = one_step_forward(
                             self.shared_q_critic, batch_input, self.train_recurrent_states_critic
