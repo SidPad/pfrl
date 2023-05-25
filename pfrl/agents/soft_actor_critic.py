@@ -552,10 +552,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.q_func1_T1 = q_func1_T1
         self.q_func2_T1 = q_func2_T1
         
-        self.target_q_func_shared = target_q_func_shared
-        self.target_q_func_shared_layer = target_q_func_shared_layer        
-        self.target_q_func1_T1 = target_q_func1_T1
-        self.target_q_func2_T1 = target_q_func2_T1
+        # self.target_q_func_shared = target_q_func_shared
+        # self.target_q_func_shared_layer = target_q_func_shared_layer        
+        # self.target_q_func1_T1 = target_q_func1_T1
+        # self.target_q_func2_T1 = target_q_func2_T1
         
         self.countuh = 0
         self.recurrent = True
@@ -580,10 +580,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func1_T1.to(self.device)
             self.q_func2_T1.to(self.device)
             
-            self.target_q_func_shared.to(self.device).eval().requires_grad_(False)
-            self.target_q_func_shared_layer.to(self.device).eval().requires_grad_(False)       
-            self.target_q_func1_T1.to(self.device).eval().requires_grad_(False)
-            self.target_q_func2_T1.to(self.device).eval().requires_grad_(False)
+            # self.target_q_func_shared.to(self.device).eval().requires_grad_(False)
+            # self.target_q_func_shared_layer.to(self.device).eval().requires_grad_(False)       
+            # self.target_q_func1_T1.to(self.device).eval().requires_grad_(False)
+            # self.target_q_func2_T1.to(self.device).eval().requires_grad_(False)
             
             self.policy1 = torch.compile(self.policy1)
             self.shared_q_critic = torch.compile(self.shared_q_critic)
@@ -593,10 +593,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func1_T1 = torch.compile(self.q_func1_T1)
             self.q_func1_T1 = torch.compile(self.q_func1_T1)
             
-            self.target_q_func_shared = torch.compile(self.target_q_func_shared)
-            self.target_q_func_shared_layer = torch.compile(self.target_q_func_shared_layer)            
-            self.target_q_func1_T1 = torch.compile(self.target_q_func1_T1)
-            self.target_q_func2_T1 = torch.compile(self.target_q_func2_T1)
+            # self.target_q_func_shared = torch.compile(self.target_q_func_shared)
+            # self.target_q_func_shared_layer = torch.compile(self.target_q_func_shared_layer)            
+            # self.target_q_func1_T1 = torch.compile(self.target_q_func1_T1)
+            # self.target_q_func2_T1 = torch.compile(self.target_q_func2_T1)
                         
         else:
             self.device = torch.device("cpu")
@@ -649,11 +649,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.t = 0
 
         # Target model
-        # self.target_q_func_shared = copy.deepcopy(self.shared_q_critic).eval().requires_grad_(False)
-        # self.target_q_func_shared_layer = copy.deepcopy(self.shared_layer_critic).eval().requires_grad_(False)        
+        self.target_q_func_shared = copy.deepcopy(self.shared_q_critic).eval().requires_grad_(False)
+        self.target_q_func_shared_layer = copy.deepcopy(self.shared_layer_critic).eval().requires_grad_(False)        
 
-        # self.target_q_func1_T1 = copy.deepcopy(self.q_func1_T1).eval().requires_grad_(False)        
-        # self.target_q_func2_T1 = copy.deepcopy(self.q_func2_T1).eval().requires_grad_(False)
+        self.target_q_func1_T1 = copy.deepcopy(self.q_func1_T1).eval().requires_grad_(False)        
+        self.target_q_func2_T1 = copy.deepcopy(self.q_func2_T1).eval().requires_grad_(False)
 
         # Statistics
         self.q1_record_T1 = collections.deque(maxlen=1000)        
