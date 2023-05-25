@@ -516,10 +516,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         shared_layer_actor,
         q_func1_T1,
         q_func2_T1,
-        target_shared_q_critic,
-        target_shared_layer_critic,
-        target_shared_q_actor,
-        target_shared_layer_actor,
+        target_q_func_shared,
+        target_q_func_shared_layer,        
         target_q_func1_T1,
         target_q_func2_T1,
         policy_optimizer1,        
@@ -554,10 +552,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.q_func1_T1 = q_func1_T1
         self.q_func2_T1 = q_func2_T1
         
-        self.target_shared_q_critic = target_shared_q_critic
-        self.target_shared_layer_critic = target_shared_layer_critic
-        self.target_shared_q_actor = target_shared_q_actor
-        self.target_shared_layer_actor = target_shared_layer_actor
+        self.target_q_func_shared = target_q_func_shared
+        self.target_q_func_shared_layer = target_q_func_shared_layer        
         self.target_q_func1_T1 = target_q_func1_T1
         self.target_q_func2_T1 = target_q_func2_T1
         
@@ -584,10 +580,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func1_T1.to(self.device)
             self.q_func2_T1.to(self.device)
             
-            self.target_shared_q_critic.to(self.device)
-            self.target_shared_layer_critic.to(self.device)
-            self.target_shared_q_actor.to(self.device)
-            self.target_shared_layer_actor.to(self.device)
+            self.target_q_func_shared.to(self.device)
+            self.target_q_func_shared_layer.to(self.device)            
             self.target_q_func1_T1.to(self.device)
             self.target_q_func2_T1.to(self.device)
             
@@ -599,10 +593,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func1_T1 = torch.compile(self.q_func1_T1)
             self.q_func1_T1 = torch.compile(self.q_func1_T1)
             
-            self.target_shared_q_critic = torch.compile(self.target_shared_q_critic)
-            self.target_shared_layer_critic = torch.compile(self.target_shared_layer_critic)
-            self.target_shared_q_actor = torch.compile(self.target_shared_q_actor)
-            self.target_shared_layer_actor = torch.compile(self.target_shared_layer_actor)
+            self.target_q_func_shared = torch.compile(self.target_q_func_shared)
+            self.target_q_func_shared_layer = torch.compile(self.target_q_func_shared_layer)            
             self.target_q_func1_T1 = torch.compile(self.target_q_func1_T1)
             self.target_q_func2_T1 = torch.compile(self.target_q_func2_T1)
                         
