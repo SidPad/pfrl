@@ -515,7 +515,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         shared_q_actor,
         shared_layer_actor,
         q_func1_T1,
-        q_func2_T1,        
+        q_func2_T1,
+        target_shared_q_critic,
+        target_shared_layer_critic,
+        target_shared_q_actor,
+        target_shared_layer_actor,
+        target_q_func1_T1,
+        target_q_func2_T1,
         policy_optimizer1,        
         shared_q_optimizer_critic,
         shared_q_optimizer_actor,
@@ -546,7 +552,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.shared_q_actor = shared_q_actor
         self.shared_layer_actor = shared_layer_actor
         self.q_func1_T1 = q_func1_T1
-        self.q_func2_T1 = q_func2_T1        
+        self.q_func2_T1 = q_func2_T1
+        
+        self.target_shared_q_critic = target_shared_q_critic
+        self.target_shared_layer_critic = target_shared_layer_critic
+        self.target_shared_q_actor = target_shared_q_actor
+        self.target_shared_layer_actor = target_shared_layer_actor
+        self.target_q_func1_T1 = target_q_func1_T1
+        self.target_q_func2_T1 = target_q_func2_T1
+        
         self.countuh = 0
         self.recurrent = True
 
@@ -569,6 +583,28 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.shared_layer_actor.to(self.device)
             self.q_func1_T1.to(self.device)
             self.q_func2_T1.to(self.device)
+            
+            self.target_shared_q_critic.to(self.device)
+            self.target_shared_layer_critic.to(self.device)
+            self.target_shared_q_actor.to(self.device)
+            self.target_shared_layer_actor.to(self.device)
+            self.target_q_func1_T1.to(self.device)
+            self.target_q_func2_T1.to(self.device)
+            
+            self.policy1 = torch.compile(self.policy1)
+            self.shared_q_critic = torch.compile(self.shared_q_critic)
+            self.shared_layer_critic = torch.compile(self.shared_layer_critic)
+            self.shared_q_actor = torch.compile(self.shared_q_actor)
+            self.shared_layer_actor = torch.compile(self.shared_layer_actor)
+            self.q_func1_T1 = torch.compile(self.q_func1_T1)
+            self.q_func1_T1 = torch.compile(self.q_func1_T1)
+            
+            self.target_shared_q_critic = torch.compile(self.target_shared_q_critic)
+            self.target_shared_layer_critic = torch.compile(self.target_shared_layer_critic)
+            self.target_shared_q_actor = torch.compile(self.target_shared_q_actor)
+            self.target_shared_layer_actor = torch.compile(self.target_shared_layer_actor)
+            self.target_q_func1_T1 = torch.compile(self.target_q_func1_T1)
+            self.target_q_func2_T1 = torch.compile(self.target_q_func2_T1)
                         
         else:
             self.device = torch.device("cpu")
@@ -621,11 +657,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.t = 0
 
         # Target model
-        self.target_q_func_shared = copy.deepcopy(self.shared_q_critic).eval().requires_grad_(False)
-        self.target_q_func_shared_layer = copy.deepcopy(self.shared_layer_critic).eval().requires_grad_(False)        
+        # self.target_q_func_shared = copy.deepcopy(self.shared_q_critic).eval().requires_grad_(False)
+        # self.target_q_func_shared_layer = copy.deepcopy(self.shared_layer_critic).eval().requires_grad_(False)        
 
-        self.target_q_func1_T1 = copy.deepcopy(self.q_func1_T1).eval().requires_grad_(False)        
-        self.target_q_func2_T1 = copy.deepcopy(self.q_func2_T1).eval().requires_grad_(False)
+        # self.target_q_func1_T1 = copy.deepcopy(self.q_func1_T1).eval().requires_grad_(False)        
+        # self.target_q_func2_T1 = copy.deepcopy(self.q_func2_T1).eval().requires_grad_(False)
 
         # Statistics
         self.q1_record_T1 = collections.deque(maxlen=1000)        
@@ -792,19 +828,18 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             ), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(
                 self.shared_q_critic), pfrl.utils.evaluating(self.shared_q_actor
             ), pfrl.utils.evaluating(self.shared_layer_critic), pfrl.utils.evaluating(self.shared_layer_actor):                                       
-                    with torch.cuda.amp.autocast():   
-                        self.shared_q_actor.flatten_parameters()                
-                        _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_next_state, batch_next_recurrent_state_actor)                
-                        batch_input_next_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])
+                    
+                    self.shared_q_actor.flatten_parameters()
+                    _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_next_state, batch_next_recurrent_state_actor)                
+                    batch_input_next_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])
 
-                        self.shared_q_critic.flatten_parameters()
-                        _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)                
-                        batch_input_state1 = self.shared_layer_critic(critic_recurrent_state[-1])
+                    self.shared_q_critic.flatten_parameters()
+                    _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)                
+                    batch_input_state1 = self.shared_layer_critic(critic_recurrent_state[-1])
 
                     temp1 = self.temperature          
-                    
-                    with torch.cuda.amp.autocast():   
-                        next_action_distrib1 = self.policy1(batch_input_next_state_actor1)
+                                        
+                    next_action_distrib1 = self.policy1(batch_input_next_state_actor1)
                     next_actions1 = next_action_distrib1.sample()
                     next_log_prob1 = next_action_distrib1.log_prob(next_actions1)                               
 
@@ -816,13 +851,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     # batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]                
                     batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]                                       
                     
-                    with torch.cuda.amp.autocast():                    
-                        self.target_q_func_shared.flatten_parameters()
-                        _, next_critic_recurrent_state = pack_and_forward(self.target_q_func_shared, batch_input_next_state, batch_next_recurrent_state_critic)                
-                        batch_input_next_state_critic1 = self.target_q_func_shared_layer(next_critic_recurrent_state[-1])
+                    
+                    self.target_q_func_shared.flatten_parameters()
+                    _, next_critic_recurrent_state = pack_and_forward(self.target_q_func_shared, batch_input_next_state, batch_next_recurrent_state_critic)                
+                    batch_input_next_state_critic1 = self.target_q_func_shared_layer(next_critic_recurrent_state[-1])
 
-                        next_q1T1 = self.target_q_func1_T1((batch_input_next_state_critic1, next_actions1))
-                        next_q2T1 = self.target_q_func2_T1((batch_input_next_state_critic1, next_actions1))
+                    next_q1T1 = self.target_q_func1_T1((batch_input_next_state_critic1, next_actions1))
+                    next_q2T1 = self.target_q_func2_T1((batch_input_next_state_critic1, next_actions1))
 
                     next_qT1 = torch.min(next_q1T1, next_q2T1)
                     entropy_term_1 = temp1 * next_log_prob1[..., None]
@@ -838,16 +873,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func1_optimizer1.zero_grad()
             self.q_func2_optimizer1.zero_grad()            
             
-            with torch.cuda.amp.autocast():
-                predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
-                predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
-                loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
-                loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)          
+            predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
+            predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
+            loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
+            loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)          
 
-                #### NOT USED for Sep Optimizer 1, used for Sep Optimizer 2 and Shared Q ####
-                loss1 = (loss1_T1)
-                loss2 = (loss2_T1)
-                loss = (loss1 + loss2) / 2.0
+            #### NOT USED for Sep Optimizer 1, used for Sep Optimizer 2 and Shared Q ####
+            loss1 = (loss1_T1)
+            loss2 = (loss2_T1)
+            loss = (loss1 + loss2) / 2.0
             
             # Update stats
             if batch_input_state1.numel() > 0:
@@ -867,14 +901,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     def update_temperature(self, log_prob1):        
         assert not log_prob1.requires_grad
         
-        with torch.cuda.amp.autocast():
-            loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
+        # with torch.cuda.amp.autocast():
+        loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
         self.temperature_optimizer1.zero_grad()
-        self.scaler.scale(loss1).backward()
+        # self.scaler.scale(loss1).backward()
+        loss1.backward()
         if self.max_grad_norm is not None:
             clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
-        self.scaler.step(self.temperature_optimizer1)
-        self.scaler.update()
+        self.temperature_optimizer1.step()
+        # self.scaler.update()
         # xm.mark_step()
 
     def update_policy_and_temperature(self, batch):        
@@ -914,16 +949,16 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = torch.split(batch_actions, self.seq_len, dim=0)        
         batch_actions = [t.squeeze(0) for t in batch_actions]      
         
-        with torch.cuda.amp.autocast():
-            self.shared_q_actor.flatten_parameters()
-            _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)                
-            batch_input_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])        
-            temp1 = self.temperature
-            n = 1
+        
+        self.shared_q_actor.flatten_parameters()
+        _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)                
+        batch_input_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])        
+        temp1 = self.temperature
+        n = 1
 
-            action_distrib1 = self.policy1(batch_input_state_actor1)
-            actions1 = action_distrib1.rsample()
-            log_prob1 = action_distrib1.log_prob(actions1).to(self.device)        
+        action_distrib1 = self.policy1(batch_input_state_actor1)
+        actions1 = action_distrib1.rsample()
+        log_prob1 = action_distrib1.log_prob(actions1).to(self.device)        
         
         # for i, ele in zip(range(len(actions1)), batch_actions):
         #     ele = ele[:-1, :]
@@ -931,26 +966,25 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         #     ele = torch.cat((ele, aaa), dim=0)       
                                 
         batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]
-        
-        with torch.cuda.amp.autocast():
-            self.shared_q_critic.flatten_parameters()
-            _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
-            batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])       
+                
+        self.shared_q_critic.flatten_parameters()
+        _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
+        batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])       
 
-            # actions = torch.cat(batch_actions).to(self.device)
-            # actions = actions[(self.seq_len - 1)::self.seq_len]
+        # actions = torch.cat(batch_actions).to(self.device)
+        # actions = actions[(self.seq_len - 1)::self.seq_len]
 
-            q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
-            q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
-            q_T1 = torch.min(q1_T1, q2_T1)
-            entropy_term1 = temp1 * log_prob1[..., None]
-            assert q_T1.shape == entropy_term1.shape
-            loss1 = torch.mean(entropy_term1 - q_T1)
+        q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
+        q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
+        q_T1 = torch.min(q1_T1, q2_T1)
+        entropy_term1 = temp1 * log_prob1[..., None]
+        assert q_T1.shape == entropy_term1.shape
+        loss1 = torch.mean(entropy_term1 - q_T1)
             
         self.shared_q_optimizer_actor.zero_grad()
-        self.scaler.scale(loss1).backward()
-        self.scaler.step(self.shared_q_optimizer_actor)
-        self.scaler.update()
+        loss1.backward()
+        self.shared_q_optimizer_actor.step()
+        # self.scaler.update()
         # xm.mark_step()
 
         self.n_policy_updates += 1
