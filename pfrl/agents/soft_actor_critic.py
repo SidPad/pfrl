@@ -580,10 +580,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func1_T1.to(self.device)
             self.q_func2_T1.to(self.device)
             
-            self.target_q_func_shared.to(self.device)
-            self.target_q_func_shared_layer.to(self.device)            
-            self.target_q_func1_T1.to(self.device)
-            self.target_q_func2_T1.to(self.device)
+            self.target_q_func_shared.to(self.device).eval().requires_grad_(False)
+            self.target_q_func_shared_layer.to(self.device).eval().requires_grad_(False)       
+            self.target_q_func1_T1.to(self.device).eval().requires_grad_(False)
+            self.target_q_func2_T1.to(self.device).eval().requires_grad_(False)
             
             self.policy1 = torch.compile(self.policy1)
             self.shared_q_critic = torch.compile(self.shared_q_critic)
