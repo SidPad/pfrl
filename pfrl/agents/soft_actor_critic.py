@@ -648,12 +648,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.target_q_func2_T1 = copy.deepcopy(self.q_func2_T1).eval().requires_grad_(False)
         
         self.policy1 = torch.compile(self.policy1)
-        self.shared_q_critic = torch.compile(self.shared_q_critic)
-        self.shared_layer_critic = torch.compile(self.shared_layer_critic)
+        # self.shared_q_critic = torch.compile(self.shared_q_critic)
+        # self.shared_layer_critic = torch.compile(self.shared_layer_critic)
         self.shared_q_actor = torch.compile(self.shared_q_actor)
         self.shared_layer_actor = torch.compile(self.shared_layer_actor)
-        self.q_func1_T1 = torch.compile(self.q_func1_T1)
-        self.q_func1_T1 = torch.compile(self.q_func1_T1)
+        # self.q_func1_T1 = torch.compile(self.q_func1_T1)
+        # self.q_func1_T1 = torch.compile(self.q_func1_T1)
 
         # Statistics
         self.q1_record_T1 = collections.deque(maxlen=1000)        
