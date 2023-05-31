@@ -696,7 +696,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             ep_len_actual = [len(tensor) for tensor in batch_state]
             # ep_len_actual_sum1 = np.cumsum(ep_len_actual)
             # ep_len_actual_sum2 = [ep_len_actual_sum - ep_len_actual for ep_len_actual_sum, ep_len_actual in zip(ep_len_actual_sum1, ep_len_actual)]
-                        
+            print(batch_actions[0][1].shape)
             demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
             demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
             demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
