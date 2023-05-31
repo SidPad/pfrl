@@ -696,10 +696,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             ep_len_actual = [len(tensor) for tensor in batch_state]
             # ep_len_actual_sum1 = np.cumsum(ep_len_actual)
             # ep_len_actual_sum2 = [ep_len_actual_sum - ep_len_actual for ep_len_actual_sum, ep_len_actual in zip(ep_len_actual_sum1, ep_len_actual)]
-            print(batch_actions[0][1].shape)
+            
             demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
             demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
-            demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
+            demo_batch_actions = [torch.cat((torch.zeros(1,1).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
             demo_batch_actions = torch.cat(demo_batch_actions)            
             
             # get the indices for episodes for each task
@@ -892,7 +892,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
         demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
-        demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
+        demo_batch_actions = [torch.cat((torch.zeros(1,1).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
         demo_batch_actions = torch.cat(demo_batch_actions)
 
         # batch_actions = demo_batch_actions[self.indicesAA]
@@ -1075,7 +1075,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     if batch_acts[0].all() == 0:
                         batch_acts = []
                         for b in range(6):
-                            batch_acts.append(np.zeros(23))
+                            batch_acts.append(np.zeros(1))
                     
                     batch_axs = self.batch_states(batch_action, self.device, self.phi)
                     batch_input = torch.cat((batch_xs, batch_axs), dim=1)
