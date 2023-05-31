@@ -592,7 +592,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             n_times_update=1,
             replay_start_size=replay_start_size,
             update_interval=update_interval,
-            episodic_update_len=10,
+            episodic_update_len=16,
         )
         self.max_grad_norm = max_grad_norm
         self.batch_states = batch_states
