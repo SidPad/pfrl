@@ -699,7 +699,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
             demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
-            demo_batch_actions = [torch.cat((torch.zeros(1,1).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
+            demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
             demo_batch_actions = torch.cat(demo_batch_actions)            
             
             # get the indices for episodes for each task
@@ -894,7 +894,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
         demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
-        demo_batch_actions = [torch.cat((torch.zeros(1,1).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
+        demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
         demo_batch_actions = torch.cat(demo_batch_actions)
 
         # batch_actions = demo_batch_actions[self.indicesAA]
@@ -1072,7 +1072,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     if batch_acts[0].all() == 0:
                         batch_acts = []
                         for b in range(6):
-                            batch_acts.append(np.zeros(1))
+                            batch_acts.append(np.zeros(23))
                     
                     batch_axs = self.batch_states(batch_acts, self.device, self.phi)
                     batch_axs = batch_axs.to(torch.float32)
