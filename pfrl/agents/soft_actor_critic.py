@@ -790,8 +790,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(
                 self.target_q_func1_T1
             ), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(
-                self.shared_q_critic), pfrl.utils.evaluating(self.shared_q_actor
-            ), pfrl.utils.evaluating(self.shared_layer_critic), pfrl.utils.evaluating(self.shared_layer_actor):                                       
+                self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
                     # with torch.cuda.amp.autocast():   
                     # self.shared_q_actor.flatten_parameters()                
                     # _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_next_state, batch_next_recurrent_state_actor)                
