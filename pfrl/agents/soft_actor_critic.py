@@ -1076,7 +1076,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     
                     batch_axs = self.batch_states(batch_acts, self.device, self.phi)
                     batch_input = torch.cat((batch_xs, batch_axs), dim=1)
-                    self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic                    
+                    
+                    print(type(batch_xs))
+                    print(type(batch_axs))
+                    print(type(batch_input))
+                    
+                    self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
+                    print(type(self.train_recurrent_states_critic))
                     self.shared_q_critic.flatten_parameters()
                     _, self.train_recurrent_states_critic = one_step_forward(
                         self.shared_q_critic, batch_input, self.train_recurrent_states_critic
