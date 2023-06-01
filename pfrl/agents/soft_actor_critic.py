@@ -951,9 +951,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             assert q_T1.shape == entropy_term1.shape
             loss1 = torch.mean(entropy_term1 - q_T1)
             
-        self.shared_q_optimizer_actor.zero_grad()
+        self.policy_optimizer1.zero_grad()
         self.scaler.scale(loss1).backward()
-        self.scaler.step(self.shared_q_optimizer_actor)
+        self.scaler.step(self.policy_optimizer1)
         self.scaler.update()
         # xm.mark_step()
 
