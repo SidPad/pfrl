@@ -869,14 +869,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     def update_temperature(self, log_prob1):        
         assert not log_prob1.requires_grad
         
-        with torch.cuda.amp.autocast():
-            loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
+        # with torch.cuda.amp.autocast():
+        loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
         self.temperature_optimizer1.zero_grad()
-        self.scaler.scale(loss1).backward()
+        loss1.backward()
         if self.max_grad_norm is not None:
             clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
-        self.scaler.step(self.temperature_optimizer1)
-        self.scaler.update()
+        self.temperature_optimizer1.step()
+        # self.scaler.update()
         # xm.mark_step()
 
     def update_policy_and_temperature(self, batch):        
@@ -927,33 +927,32 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         #     ele = torch.cat((ele, aaa), dim=0)       
                                 
         batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]        
-        with torch.cuda.amp.autocast():
-            with torch.no_grad(), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
-                self.shared_q_critic.flatten_parameters()
-                _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
-                batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])
-            
-            temp1 = self.temperature
-            n = 1
+        # with torch.cuda.amp.autocast():
+        with torch.no_grad(), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
+            self.shared_q_critic.flatten_parameters()
+            _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
+            batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])
 
-            action_distrib1 = self.policy1(batch_input_state_critic1)
-            actions1 = action_distrib1.rsample()
-            log_prob1 = action_distrib1.log_prob(actions1).to(self.device)
+        temp1 = self.temperature
+        n = 1
 
-            # actions = torch.cat(batch_actions).to(self.device)
-            # actions = actions[(self.seq_len - 1)::self.seq_len]
+        action_distrib1 = self.policy1(batch_input_state_critic1)
+        actions1 = action_distrib1.rsample()
+        log_prob1 = action_distrib1.log_prob(actions1).to(self.device)
 
-            q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
-            q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
-            q_T1 = torch.min(q1_T1, q2_T1)
-            entropy_term1 = temp1 * log_prob1[..., None]
-            assert q_T1.shape == entropy_term1.shape
-            loss1 = torch.mean(entropy_term1 - q_T1)
+        # actions = torch.cat(batch_actions).to(self.device)
+        # actions = actions[(self.seq_len - 1)::self.seq_len]
+
+        q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
+        q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
+        q_T1 = torch.min(q1_T1, q2_T1)
+        entropy_term1 = temp1 * log_prob1[..., None]
+        assert q_T1.shape == entropy_term1.shape
+        loss1 = torch.mean(entropy_term1 - q_T1)
             
         self.policy_optimizer1.zero_grad()
-        self.scaler.scale(loss1).backward()
-        self.scaler.step(self.policy_optimizer1)
-        self.scaler.update()
+        loss1.backward()
+        self.policy_optimizer1.step()        
         # xm.mark_step()
 
         self.n_policy_updates += 1
