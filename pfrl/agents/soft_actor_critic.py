@@ -982,7 +982,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):#, pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
             batch_xs = self.batch_states(batch_obs, self.device, self.phi)
             batch_axs = self.batch_states(batch_acts, self.device, self.phi)
-            
+            batch_axs = batch_axs.to(torch.float32)
             if self.recurrent:
                 if self.training:  
                     # self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor                    
