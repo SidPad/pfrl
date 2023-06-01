@@ -1065,7 +1065,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
     def _batch_act_train(self, batch_obs, batch_acts):        
         assert self.training
-        with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.shared_q_actor), pfrl.utils.evaluating(self.shared_layer_actor):
+        with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.shared_q_critic):
             if self.burnin_action_func is not None and self.n_policy_updates == 0:
                 batch_action = [self.burnin_action_func() for _ in range(len(batch_obs))]
                 if self.recurrent:
