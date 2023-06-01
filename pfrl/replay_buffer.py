@@ -277,18 +277,18 @@ def batch_recurrent_experiences(
             ),
             device,
         ),
-        "recurrent_state_actor": recurrent_state_from_numpy(
-            concatenate_recurrent_states(
-                [ep[-1]["recurrent_state_actor"] for ep in experiences]
-            ),
-            device,
-        ),
-        "next_recurrent_state_actor": recurrent_state_from_numpy(
-            concatenate_recurrent_states(
-                [ep[-1]["next_recurrent_state_actor"] for ep in experiences]
-            ),
-            device,
-        ),
+        # "recurrent_state_actor": recurrent_state_from_numpy(
+        #     concatenate_recurrent_states(
+        #         [ep[-1]["recurrent_state_actor"] for ep in experiences]
+        #     ),
+        #     device,
+        # ),
+        # "next_recurrent_state_actor": recurrent_state_from_numpy(
+        #     concatenate_recurrent_states(
+        #         [ep[-1]["next_recurrent_state_actor"] for ep in experiences]
+        #     ),
+        #     device,
+        # ),
     }
     # Batch next actions only when all the transitions have them
     if all(transition["next_action"] is not None for transition in flat_transitions):
