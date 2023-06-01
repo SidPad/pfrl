@@ -1016,7 +1016,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         self.shared_q_critic, batch_input, self.test_recurrent_states_actor
                     )                                       
 
-                    batch_input_actor = self.shared_layer_actor(self.test_recurrent_states_critic[-1])
+                    batch_input_actor = self.shared_layer_critic(self.test_recurrent_states_critic[-1])
 
                     policy_out1 = self.policy1(batch_input_actor)
 
