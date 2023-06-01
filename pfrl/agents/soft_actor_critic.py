@@ -982,7 +982,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):#, pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
             batch_xs = self.batch_states(batch_obs, self.device, self.phi)
             batch_axs = self.batch_states(batch_acts, self.device, self.phi)
-            batch_input = torch.cat((batch_xs, batch_axs), dim=1)
+            print("NOW")
+            print(batch_xs.shape)
+            print(batch_axs.shape)
             if self.recurrent:
                 if self.training:  
                     # self.train_prev_recurrent_states_actor = self.train_recurrent_states_actor                    
@@ -990,7 +992,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     # _, self.train_recurrent_states_actor = one_step_forward(
                     #     self.shared_q_actor, batch_xs, self.train_recurrent_states_actor
                     # )                    
-                                        
+                    batch_input = torch.cat((batch_xs, batch_axs), dim=1)
+                    print("TRAIN")
+                    print(batch_input.shape)
                     self.train_prev_recurrent_states_critic = self.train_recurrent_states_critic
                     self.shared_q_critic.flatten_parameters()
                     _, self.train_recurrent_states_critic = one_step_forward(
@@ -1009,7 +1013,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     action = torch.tensor(batch_action)
                     action = action.to('cuda:0')                    
                     
-                else:                    
+                else:
+                    batch_input = torch.cat((batch_xs, batch_axs), dim=1)
+                    print("TEST")
+                    print(batch_input.shape)
                     self.shared_q_critic.flatten_parameters()
                     _, self.test_recurrent_states_critic = one_step_forward(
                         self.shared_q_critic, batch_input, self.test_recurrent_states_actor
