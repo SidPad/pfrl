@@ -867,113 +867,114 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.shared_q_optimizer_critic.step()
         # print(prof)
 
-    def update_temperature(self, log_prob1):
-        with torch.autograd.profiler.profile(use_cuda=True) as prof:
-            assert not log_prob1.requires_grad
+    def update_temperature(self, log_prob1):        
+        assert not log_prob1.requires_grad
 
-            with torch.cuda.amp.autocast():
-                loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
-            self.temperature_optimizer1.zero_grad()
-            self.scaler.scale(loss1).backward()
-            if self.max_grad_norm is not None:
-                clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
-            self.scaler.step(self.temperature_optimizer1)
-            self.scaler.update()
-            # xm.mark_step()
-        print(prof)
+        with torch.cuda.amp.autocast():
+            loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
+        self.temperature_optimizer1.zero_grad()
+        self.scaler.scale(loss1).backward()
+        if self.max_grad_norm is not None:
+            clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
+        self.scaler.step(self.temperature_optimizer1)
+        self.scaler.update()
+        # xm.mark_step()
+        
 
     def update_policy_and_temperature(self, batch):        
         """Compute loss for actor."""
-        batch_state = batch["state"]
-        batch_actions = batch["action"]        
-        batch_recurrent_state_critic = batch["recurrent_state_critic"]
-        # batch_recurrent_state_actor = batch["recurrent_state_actor"]
-        batch_rewards = batch["reward"]
-        
-        ep_len_actual = [len(tensor) for tensor in batch_state]
+        with torch.autograd.profiler.profile(use_cuda=True) as prof:
+            batch_state = batch["state"]
+            batch_actions = batch["action"]        
+            batch_recurrent_state_critic = batch["recurrent_state_critic"]
+            # batch_recurrent_state_actor = batch["recurrent_state_actor"]
+            batch_rewards = batch["reward"]
 
-        batch_state = torch.cat(batch_state)
-        # batch_state = batch_state[self.indicesAA]
-        
-        demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
-        demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
-        demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
-        demo_batch_actions = torch.cat(demo_batch_actions)
+            ep_len_actual = [len(tensor) for tensor in batch_state]
 
-        # batch_actions = demo_batch_actions[self.indicesAA]
-        # batch_next_actions = batch_next_actions[self.indicesAA]      
-      
-        batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
-        # if len(batch_state) < (self.seq_len * self.minibatch_size):
-        #     zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
-        #     zero_tensor1[:batch_state.shape[0], :] = batch_state
-        #     batch_state = zero_tensor1        
-        batch_state = torch.split(batch_state, self.seq_len, dim=0)
-        batch_state = [t.squeeze(0) for t in batch_state]
-        
-        batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
-        # if len(batch_actions) < (self.seq_len * self.minibatch_size):
-        #     zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
-        #     zero_tensor2[:batch_actions.shape[0], :] = batch_actions
-        #     batch_actions = zero_tensor2        
-        batch_actions = torch.split(batch_actions, self.seq_len, dim=0)        
-        batch_actions = [t.squeeze(0) for t in batch_actions]      
-        
-        # with torch.cuda.amp.autocast():
-        #     self.shared_q_actor.flatten_parameters()
-        #     _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)                
-        #     batch_input_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])                    
-        
-        # for i, ele in zip(range(len(actions1)), batch_actions):
-        #     ele = ele[:-1, :]
-        #     aaa = actions1[i].unsqueeze(0)            
-        #     ele = torch.cat((ele, aaa), dim=0)       
-                                
-        batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]        
-        with torch.cuda.amp.autocast():
-            with torch.no_grad(), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
-                self.shared_q_critic.flatten_parameters()
-                _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
-                batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])
+            batch_state = torch.cat(batch_state)
+            # batch_state = batch_state[self.indicesAA]
 
-        temp1 = self.temperature
-        n = 1
-        
-        with torch.cuda.amp.autocast():
-            action_distrib1 = self.policy1(batch_input_state_critic1)
-            actions1 = action_distrib1.rsample()
-            log_prob1 = action_distrib1.log_prob(actions1).to(self.device)
+            demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
+            demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
+            demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
+            demo_batch_actions = torch.cat(demo_batch_actions)
 
-        # actions = torch.cat(batch_actions).to(self.device)
-        # actions = actions[(self.seq_len - 1)::self.seq_len]
+            # batch_actions = demo_batch_actions[self.indicesAA]
+            # batch_next_actions = batch_next_actions[self.indicesAA]      
 
-            q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
-            q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
-            q_T1 = torch.min(q1_T1, q2_T1)
-            entropy_term1 = temp1 * log_prob1[..., None]
-            assert q_T1.shape == entropy_term1.shape
-            loss1 = torch.mean(entropy_term1 - q_T1)
-            
-        self.policy_optimizer1.zero_grad()
-        self.scaler.scale(loss1).backward()
-        self.scaler.step(self.policy_optimizer1)
-        self.scaler.update()
-        # xm.mark_step()
+            batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
+            # if len(batch_state) < (self.seq_len * self.minibatch_size):
+            #     zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
+            #     zero_tensor1[:batch_state.shape[0], :] = batch_state
+            #     batch_state = zero_tensor1        
+            batch_state = torch.split(batch_state, self.seq_len, dim=0)
+            batch_state = [t.squeeze(0) for t in batch_state]
 
-        self.n_policy_updates += 1
+            batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
+            # if len(batch_actions) < (self.seq_len * self.minibatch_size):
+            #     zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
+            #     zero_tensor2[:batch_actions.shape[0], :] = batch_actions
+            #     batch_actions = zero_tensor2        
+            batch_actions = torch.split(batch_actions, self.seq_len, dim=0)        
+            batch_actions = [t.squeeze(0) for t in batch_actions]      
 
-        if self.entropy_target is not None:
-            self.update_temperature(log_prob1.detach())
+            # with torch.cuda.amp.autocast():
+            #     self.shared_q_actor.flatten_parameters()
+            #     _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)                
+            #     batch_input_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])                    
 
-        # Record entropy
-        with torch.no_grad():
-            try:                
-                self.entropy_record1.extend(
-                    action_distrib1.entropy().detach().cpu().numpy()
-                )                
-            except NotImplementedError:
-                # Record - log p(x) instead
-                self.entropy_record1.extend(-log_prob1.detach().cpu().numpy())                
+            # for i, ele in zip(range(len(actions1)), batch_actions):
+            #     ele = ele[:-1, :]
+            #     aaa = actions1[i].unsqueeze(0)            
+            #     ele = torch.cat((ele, aaa), dim=0)       
+
+            batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]        
+            with torch.cuda.amp.autocast():
+                with torch.no_grad(), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
+                    self.shared_q_critic.flatten_parameters()
+                    _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
+                    batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])
+
+            temp1 = self.temperature
+            n = 1
+
+            with torch.cuda.amp.autocast():
+                action_distrib1 = self.policy1(batch_input_state_critic1)
+                actions1 = action_distrib1.rsample()
+                log_prob1 = action_distrib1.log_prob(actions1).to(self.device)
+
+            # actions = torch.cat(batch_actions).to(self.device)
+            # actions = actions[(self.seq_len - 1)::self.seq_len]
+
+                q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
+                q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
+                q_T1 = torch.min(q1_T1, q2_T1)
+                entropy_term1 = temp1 * log_prob1[..., None]
+                assert q_T1.shape == entropy_term1.shape
+                loss1 = torch.mean(entropy_term1 - q_T1)
+
+            self.policy_optimizer1.zero_grad()
+            self.scaler.scale(loss1).backward()
+            self.scaler.step(self.policy_optimizer1)
+            self.scaler.update()
+            # xm.mark_step()
+
+            self.n_policy_updates += 1
+
+            if self.entropy_target is not None:
+                self.update_temperature(log_prob1.detach())
+
+            # Record entropy
+            with torch.no_grad():
+                try:                
+                    self.entropy_record1.extend(
+                        action_distrib1.entropy().detach().cpu().numpy()
+                    )                
+                except NotImplementedError:
+                    # Record - log p(x) instead
+                    self.entropy_record1.extend(-log_prob1.detach().cpu().numpy())
+        print(prof)
 
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
