@@ -732,16 +732,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # batch_state = batch_state[self.indicesAA]
 
         # batch_actions = demo_batch_actions[self.indicesAA]
-        # batch_next_actions = batch_next_actions[self.indicesAA]
-        for batch_s, batch_a in zip(batch_state, batch_actions):
-            seq_length = batch_s.size(0)
-            print(seq_length)
+        # batch_next_actions = batch_next_actions[self.indicesAA]        
             
         batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
         # if len(batch_next_state) < (self.seq_len * self.minibatch_size):
         #     zero_tensor = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_state.shape[1])).to(self.device)
         #     zero_tensor[:batch_next_state.shape[0], :] = batch_next_state
         #     batch_next_state = zero_tensor
+        print(batch_next_state.shape)
         batch_next_state = torch.split(batch_next_state, self.seq_len, dim=0)
         batch_next_state = [t.squeeze(0) for t in batch_next_state]
 
@@ -766,6 +764,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         #     zero_tensor3 = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_actions.shape[1])).to(self.device)
         #     zero_tensor3[:batch_next_actions.shape[0], :] = batch_next_actions
         #     batch_next_actions = zero_tensor3
+        print(batch_next_actions.shape)
         batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
         batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
 
@@ -780,8 +779,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_discount1 = batch_discount1[(self.seq_len - 1)::self.seq_len]
         batch_terminal1 = batch_terminal1[(self.seq_len - 1)::self.seq_len]
 
-        batch_actions1 = batch_actions
-        batch_actions1 = [batch_actions1[1:,:] for batch_actions1 in batch_actions1]
+        # batch_actions1 = batch_actions
+        # batch_actions1 = [batch_actions1[1:,:] for batch_actions1 in batch_actions1]
 
         # batch_actions = batch_actions[(self.seq_len - 1)::self.seq_len]
         # batch_actions1 = batch_actions.clone().detach().to(self.device)
