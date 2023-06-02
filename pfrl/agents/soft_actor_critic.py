@@ -791,7 +791,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # batch_actions = batch_actions[(self.seq_len - 1)::self.seq_len]
         # batch_actions1 = batch_actions.clone().detach().to(self.device)
         # last_action = torch.cat(batch_actions).to(self.device)
-        last_action = last_action[(self.seq_len - 1)::self.seq_len]
+        last_action = batch_actions[(self.seq_len - 1)::self.seq_len]
 
         #### TASK 1 #### Figure out what pfrl.utils.evaluating does                       
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(
