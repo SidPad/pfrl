@@ -864,7 +864,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss2_T1.backward()                        
             self.q_func2_optimizer1.step()
             
-            self.shared_q_optimizer_critic.step()            
+            self.shared_q_optimizer_critic.step()
+        print(prof)
 
     def update_temperature(self, log_prob1):        
         assert not log_prob1.requires_grad
