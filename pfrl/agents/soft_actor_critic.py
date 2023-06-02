@@ -705,7 +705,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         demo_batch_actions = [batch_actions[:length] for length in ep_len_actual]
         print(demo_batch_actions[0].shape)
         demo_batch_actions = [torch.cat((torch.zeros(1, 23).to(self.device), actions)) for actions in demo_batch_actions]
-        print(demo_batch_actions.shape)
+        print(demo_batch_actions[0].shape)
         demo_batch_actions = torch.cat(demo_batch_actions, dim=0)
         print(demo_batch_actions.shape)
 
