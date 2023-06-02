@@ -677,194 +677,194 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
     def update_q_func(self, batch):        
         """Compute loss for a given Q-function."""
-        with torch.autograd.profiler.profile(use_cuda=True) as prof:
-            batch_next_state = batch["next_state"]
-            batch_rewards1 = batch["reward"]
-            batch_terminal1 = batch["is_state_terminal"]
-            batch_state = batch["state"]
-            batch_actions = batch["action"]
-            batch_next_actions = batch_actions
-            batch_discount1 = batch["discount"]
-            batch_next_recurrent_state_critic = batch["next_recurrent_state_critic"]
-            # batch_next_recurrent_state_actor = batch["next_recurrent_state_actor"]
-            batch_recurrent_state_critic = batch["recurrent_state_critic"]
-            # batch_recurrent_state_actor = batch["recurrent_state_actor"]                        
-            
-            batch_next_state = [tensor.to(self.device) for tensor in batch_next_state]
-            batch_state = [tensor.to(self.device) for tensor in batch_state]
-            
-            ep_len_actual = [len(tensor) for tensor in batch_state]
-            # ep_len_actual_sum1 = np.cumsum(ep_len_actual)
-            # ep_len_actual_sum2 = [ep_len_actual_sum - ep_len_actual for ep_len_actual_sum, ep_len_actual in zip(ep_len_actual_sum1, ep_len_actual)]
-            
-            demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
-            demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
-            demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
-            demo_batch_actions = torch.cat(demo_batch_actions)            
-            
-            # get the indices for episodes for each task
-            # indicesA = [i for i, tensor in enumerate(batch_next_state)]            
-            
-            # get indices for every step in each episode and get 30 indices that are in order anywhere within the episode length from each episode
-            # indicesAA = []            
-            # splitter = []
-            
-            # for j in range(len(ep_len_actual_sum2)): 
-            #     if j in indicesA:
-            #         if (ep_len_actual_sum1[j] - self.seq_len) > ep_len_actual_sum2[j]:
-            #             random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - self.seq_len)
-            #             numbers = [i for i in range(random_indexA, random_indexA + self.seq_len)]
-            #             indicesAA = np.append(indicesAA, numbers)
-            #         else:
-            #             random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j])
-            #             numbers = [i for i in range(random_indexA, ep_len_actual_sum1[j])]
-            #             indicesAA = np.append(indicesAA, numbers)
-            #         splitter = np.append(splitter, len(numbers))                
-            # splitter = [int(splitter) for splitter in splitter]
-            # self.indicesAA = torch.tensor(indicesAA, dtype=torch.long).to(self.device)
-            # splitter = tuple(splitter)
-            # ndcsAA = torch.split(self.indicesAA, splitter)
-            # self.ndcsAA = torch.tensor([ndcsAA[-1] for ndcsAA in ndcsAA])            
+        # with torch.autograd.profiler.profile(use_cuda=True) as prof:
+        batch_next_state = batch["next_state"]
+        batch_rewards1 = batch["reward"]
+        batch_terminal1 = batch["is_state_terminal"]
+        batch_state = batch["state"]
+        batch_actions = batch["action"]
+        batch_next_actions = batch_actions
+        batch_discount1 = batch["discount"]
+        batch_next_recurrent_state_critic = batch["next_recurrent_state_critic"]
+        # batch_next_recurrent_state_actor = batch["next_recurrent_state_actor"]
+        batch_recurrent_state_critic = batch["recurrent_state_critic"]
+        # batch_recurrent_state_actor = batch["recurrent_state_actor"]                        
 
-            batch_next_state = torch.cat(batch_next_state)
-            # batch_next_state = batch_next_state[self.indicesAA]
+        batch_next_state = [tensor.to(self.device) for tensor in batch_next_state]
+        batch_state = [tensor.to(self.device) for tensor in batch_state]
 
-            batch_state = torch.cat(batch_state)
-            # batch_state = batch_state[self.indicesAA]
-            
-            # batch_actions = demo_batch_actions[self.indicesAA]
-            # batch_next_actions = batch_next_actions[self.indicesAA]
-                              
-            batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
-            # if len(batch_next_state) < (self.seq_len * self.minibatch_size):
-            #     zero_tensor = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_state.shape[1])).to(self.device)
-            #     zero_tensor[:batch_next_state.shape[0], :] = batch_next_state
-            #     batch_next_state = zero_tensor
-            batch_next_state = torch.split(batch_next_state, self.seq_len, dim=0)
-            batch_next_state = [t.squeeze(0) for t in batch_next_state]
-                
-            batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
-            # if len(batch_state) < (self.seq_len * self.minibatch_size):
-            #     zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
-            #     zero_tensor1[:batch_state.shape[0], :] = batch_state
-            #     batch_state = zero_tensor1
-            batch_state = torch.split(batch_state, self.seq_len, dim=0)
-            batch_state = [t.squeeze(0) for t in batch_state]
-            
-            batch_actions = nn.utils.rnn.pad_sequence(demo_batch_actions, batch_first=True, padding_value=0)
-            # if len(batch_actions) < (self.seq_len * self.minibatch_size):
-            #     zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
-            #     zero_tensor2[:batch_actions.shape[0], :] = batch_actions
-            #     batch_actions = zero_tensor2
-            batch_actions = torch.split(batch_actions, self.seq_len, dim=0)
-            batch_actions = [t.squeeze(0) for t in batch_actions]
-                      
-            batch_next_actions = nn.utils.rnn.pad_sequence(batch_next_actions, batch_first=True, padding_value=0)
-            # if len(batch_next_actions) < (self.seq_len * self.minibatch_size):
-            #     zero_tensor3 = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_actions.shape[1])).to(self.device)
-            #     zero_tensor3[:batch_next_actions.shape[0], :] = batch_next_actions
-            #     batch_next_actions = zero_tensor3
-            batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
-            batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
-            
-            batch_input_state = [torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32) for batch_state, batch_actions in zip(batch_state, batch_actions)]
-            # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float16) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
-            
-            # batch_rewards1 = batch_rewards1[self.ndcsAA]
-            # batch_discount1 = batch_discount1[self.ndcsAA]
-            # batch_terminal1 = batch_terminal1[self.ndcsAA]
-            
-            batch_rewards1 = batch_rewards1[(self.seq_len - 1)::self.seq_len]
-            batch_discount1 = batch_discount1[(self.seq_len - 1)::self.seq_len]
-            batch_terminal1 = batch_terminal1[(self.seq_len - 1)::self.seq_len]
-            
-            batch_actions1 = batch_actions
-            batch_actions1 = [batch_actions1[1:,:] for batch_actions1 in batch_actions1]
-            
-            # batch_actions = batch_actions[(self.seq_len - 1)::self.seq_len]
-            # batch_actions1 = batch_actions.clone().detach().to(self.device)
-            last_action = torch.cat(batch_actions).to(self.device)
-            last_action = last_action[(self.seq_len - 1)::self.seq_len]
-            
-            #### TASK 1 #### Figure out what pfrl.utils.evaluating does                       
-            with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(
-                self.target_q_func1_T1
-            ), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(
-                self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
-                    
-                    # self.shared_q_actor.flatten_parameters()                
-                    # _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_next_state, batch_next_recurrent_state_actor)                
-                    # batch_input_next_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])
-                    
-                    # with torch.cuda.amp.autocast():
-                    self.shared_q_critic.flatten_parameters()
-                    _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)                
-                    batch_input_state1 = self.shared_layer_critic(critic_recurrent_state[-1])
-                    
-                    # batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]                
-                    batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]                                       
-                    
-                    # with torch.cuda.amp.autocast():
-                    self.target_q_func_shared.flatten_parameters()
-                    _, next_critic_recurrent_state = pack_and_forward(self.target_q_func_shared, batch_input_next_state, batch_next_recurrent_state_critic)                
-                    batch_input_next_state_critic1 = self.target_q_func_shared_layer(next_critic_recurrent_state[-1])
+        ep_len_actual = [len(tensor) for tensor in batch_state]
+        # ep_len_actual_sum1 = np.cumsum(ep_len_actual)
+        # ep_len_actual_sum2 = [ep_len_actual_sum - ep_len_actual for ep_len_actual_sum, ep_len_actual in zip(ep_len_actual_sum1, ep_len_actual)]
 
-                    temp1 = self.temperature          
-                    
-                    # with torch.cuda.amp.autocast():
-                    next_action_distrib1 = self.policy1(batch_input_next_state_critic1)
-                    next_actions1 = next_action_distrib1.sample()
-                    next_log_prob1 = next_action_distrib1.log_prob(next_actions1)                               
+        demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
+        demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
+        demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
+        demo_batch_actions = torch.cat(demo_batch_actions)            
 
-                    # for i, ele in zip(range(len(batch_actions1)), batch_actions1):
-                    #     ele = ele[1:, :]
-                    #     aaa = next_actions1[i].unsqueeze(0)            
-                    #     ele = torch.cat((ele, aaa), dim=0) 
-                    
-                    # with torch.cuda.amp.autocast():                    
+        # get the indices for episodes for each task
+        # indicesA = [i for i, tensor in enumerate(batch_next_state)]            
 
-                    next_q1T1 = self.target_q_func1_T1((batch_input_next_state_critic1, next_actions1))
-                    next_q2T1 = self.target_q_func2_T1((batch_input_next_state_critic1, next_actions1))
+        # get indices for every step in each episode and get 30 indices that are in order anywhere within the episode length from each episode
+        # indicesAA = []            
+        # splitter = []
 
-                    next_qT1 = torch.min(next_q1T1, next_q2T1)
-                    entropy_term_1 = temp1 * next_log_prob1[..., None]
-                    assert next_qT1.shape == entropy_term_1.shape
-                    
-                    target_q_T1 = batch_rewards1 + batch_discount1 * (
-                        1.0 - batch_terminal1
-                    ) * torch.flatten(next_qT1 - entropy_term_1)            
+        # for j in range(len(ep_len_actual_sum2)): 
+        #     if j in indicesA:
+        #         if (ep_len_actual_sum1[j] - self.seq_len) > ep_len_actual_sum2[j]:
+        #             random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j] - self.seq_len)
+        #             numbers = [i for i in range(random_indexA, random_indexA + self.seq_len)]
+        #             indicesAA = np.append(indicesAA, numbers)
+        #         else:
+        #             random_indexA = random.randint(ep_len_actual_sum2[j], ep_len_actual_sum1[j])
+        #             numbers = [i for i in range(random_indexA, ep_len_actual_sum1[j])]
+        #             indicesAA = np.append(indicesAA, numbers)
+        #         splitter = np.append(splitter, len(numbers))                
+        # splitter = [int(splitter) for splitter in splitter]
+        # self.indicesAA = torch.tensor(indicesAA, dtype=torch.long).to(self.device)
+        # splitter = tuple(splitter)
+        # ndcsAA = torch.split(self.indicesAA, splitter)
+        # self.ndcsAA = torch.tensor([ndcsAA[-1] for ndcsAA in ndcsAA])            
 
-            n = 1
-                                    
-            # with torch.cuda.amp.autocast():
-            predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
-            predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
-            loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
-            loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)          
+        batch_next_state = torch.cat(batch_next_state)
+        # batch_next_state = batch_next_state[self.indicesAA]
 
-            #### NOT USED for Sep Optimizer 1, used for Sep Optimizer 2 and Shared Q ####
-            loss1 = (loss1_T1)
-            loss2 = (loss2_T1)
-            # loss = (loss1 + loss2) / 2.0
-            
-            # Update stats
-            if batch_input_state1.numel() > 0:
-                self.q1_record_T1.extend(predict_q1_T1.detach().cpu().numpy())
-                self.q2_record_T1.extend(predict_q2_T1.detach().cpu().numpy())
-                self.q_func1_loss_T1_record.append(float(loss1_T1))
-                self.q_func2_loss_T1_record.append(float(loss2_T1))                      
-            
-            self.shared_q_optimizer_critic.zero_grad()
-            self.q_func1_optimizer1.zero_grad()
-            self.q_func2_optimizer1.zero_grad()            
-            
-            loss1_T1.backward(retain_graph=True)
-            self.q_func1_optimizer1.step()
-            
-            loss2_T1.backward()                        
-            self.q_func2_optimizer1.step()
-            
-            self.shared_q_optimizer_critic.step()
+        batch_state = torch.cat(batch_state)
+        # batch_state = batch_state[self.indicesAA]
+
+        # batch_actions = demo_batch_actions[self.indicesAA]
+        # batch_next_actions = batch_next_actions[self.indicesAA]
+
+        batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
+        # if len(batch_next_state) < (self.seq_len * self.minibatch_size):
+        #     zero_tensor = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_state.shape[1])).to(self.device)
+        #     zero_tensor[:batch_next_state.shape[0], :] = batch_next_state
+        #     batch_next_state = zero_tensor
+        batch_next_state = torch.split(batch_next_state, self.seq_len, dim=0)
+        batch_next_state = [t.squeeze(0) for t in batch_next_state]
+
+        batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
+        # if len(batch_state) < (self.seq_len * self.minibatch_size):
+        #     zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
+        #     zero_tensor1[:batch_state.shape[0], :] = batch_state
+        #     batch_state = zero_tensor1
+        batch_state = torch.split(batch_state, self.seq_len, dim=0)
+        batch_state = [t.squeeze(0) for t in batch_state]
+
+        batch_actions = nn.utils.rnn.pad_sequence(demo_batch_actions, batch_first=True, padding_value=0)
+        # if len(batch_actions) < (self.seq_len * self.minibatch_size):
+        #     zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
+        #     zero_tensor2[:batch_actions.shape[0], :] = batch_actions
+        #     batch_actions = zero_tensor2
+        batch_actions = torch.split(batch_actions, self.seq_len, dim=0)
+        batch_actions = [t.squeeze(0) for t in batch_actions]
+
+        batch_next_actions = nn.utils.rnn.pad_sequence(batch_next_actions, batch_first=True, padding_value=0)
+        # if len(batch_next_actions) < (self.seq_len * self.minibatch_size):
+        #     zero_tensor3 = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_actions.shape[1])).to(self.device)
+        #     zero_tensor3[:batch_next_actions.shape[0], :] = batch_next_actions
+        #     batch_next_actions = zero_tensor3
+        batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
+        batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
+
+        batch_input_state = [torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32) for batch_state, batch_actions in zip(batch_state, batch_actions)]
+        # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float16) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
+
+        # batch_rewards1 = batch_rewards1[self.ndcsAA]
+        # batch_discount1 = batch_discount1[self.ndcsAA]
+        # batch_terminal1 = batch_terminal1[self.ndcsAA]
+
+        batch_rewards1 = batch_rewards1[(self.seq_len - 1)::self.seq_len]
+        batch_discount1 = batch_discount1[(self.seq_len - 1)::self.seq_len]
+        batch_terminal1 = batch_terminal1[(self.seq_len - 1)::self.seq_len]
+
+        batch_actions1 = batch_actions
+        batch_actions1 = [batch_actions1[1:,:] for batch_actions1 in batch_actions1]
+
+        # batch_actions = batch_actions[(self.seq_len - 1)::self.seq_len]
+        # batch_actions1 = batch_actions.clone().detach().to(self.device)
+        last_action = torch.cat(batch_actions).to(self.device)
+        last_action = last_action[(self.seq_len - 1)::self.seq_len]
+
+        #### TASK 1 #### Figure out what pfrl.utils.evaluating does                       
+        with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(
+            self.target_q_func1_T1
+        ), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(
+            self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
+
+                # self.shared_q_actor.flatten_parameters()                
+                # _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_next_state, batch_next_recurrent_state_actor)                
+                # batch_input_next_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])
+
+                # with torch.cuda.amp.autocast():
+                self.shared_q_critic.flatten_parameters()
+                _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)                
+                batch_input_state1 = self.shared_layer_critic(critic_recurrent_state[-1])
+
+                # batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]                
+                batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]                                       
+
+                # with torch.cuda.amp.autocast():
+                self.target_q_func_shared.flatten_parameters()
+                _, next_critic_recurrent_state = pack_and_forward(self.target_q_func_shared, batch_input_next_state, batch_next_recurrent_state_critic)                
+                batch_input_next_state_critic1 = self.target_q_func_shared_layer(next_critic_recurrent_state[-1])
+
+                temp1 = self.temperature          
+
+                # with torch.cuda.amp.autocast():
+                next_action_distrib1 = self.policy1(batch_input_next_state_critic1)
+                next_actions1 = next_action_distrib1.sample()
+                next_log_prob1 = next_action_distrib1.log_prob(next_actions1)                               
+
+                # for i, ele in zip(range(len(batch_actions1)), batch_actions1):
+                #     ele = ele[1:, :]
+                #     aaa = next_actions1[i].unsqueeze(0)            
+                #     ele = torch.cat((ele, aaa), dim=0) 
+
+                # with torch.cuda.amp.autocast():                    
+
+                next_q1T1 = self.target_q_func1_T1((batch_input_next_state_critic1, next_actions1))
+                next_q2T1 = self.target_q_func2_T1((batch_input_next_state_critic1, next_actions1))
+
+                next_qT1 = torch.min(next_q1T1, next_q2T1)
+                entropy_term_1 = temp1 * next_log_prob1[..., None]
+                assert next_qT1.shape == entropy_term_1.shape
+
+                target_q_T1 = batch_rewards1 + batch_discount1 * (
+                    1.0 - batch_terminal1
+                ) * torch.flatten(next_qT1 - entropy_term_1)            
+
+        n = 1
+
+        # with torch.cuda.amp.autocast():
+        predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
+        predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
+        loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
+        loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)          
+
+        #### NOT USED for Sep Optimizer 1, used for Sep Optimizer 2 and Shared Q ####
+        loss1 = (loss1_T1)
+        loss2 = (loss2_T1)
+        # loss = (loss1 + loss2) / 2.0
+
+        # Update stats
+        if batch_input_state1.numel() > 0:
+            self.q1_record_T1.extend(predict_q1_T1.detach().cpu().numpy())
+            self.q2_record_T1.extend(predict_q2_T1.detach().cpu().numpy())
+            self.q_func1_loss_T1_record.append(float(loss1_T1))
+            self.q_func2_loss_T1_record.append(float(loss2_T1))                      
+
+        self.shared_q_optimizer_critic.zero_grad()
+        self.q_func1_optimizer1.zero_grad()
+        self.q_func2_optimizer1.zero_grad()            
+
+        loss1_T1.backward(retain_graph=True)
+        self.q_func1_optimizer1.step()
+
+        loss2_T1.backward()                        
+        self.q_func2_optimizer1.step()
+
+        self.shared_q_optimizer_critic.step()
         # print(prof)
 
     def update_temperature(self, log_prob1):        
@@ -883,106 +883,108 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
     def update_policy_and_temperature(self, batch):        
         """Compute loss for actor."""
-        with torch.autograd.profiler.profile(use_cuda=True) as prof:
-            batch_state = batch["state"]
-            batch_actions = batch["action"]        
-            batch_recurrent_state_critic = batch["recurrent_state_critic"]
-            # batch_recurrent_state_actor = batch["recurrent_state_actor"]
-            batch_rewards = batch["reward"]
+        # with torch.autograd.profiler.profile(use_cuda=True) as prof:
+        batch_state = batch["state"]
+        batch_actions = batch["action"]        
+        batch_recurrent_state_critic = batch["recurrent_state_critic"]
+        # batch_recurrent_state_actor = batch["recurrent_state_actor"]
+        batch_rewards = batch["reward"]
 
-            ep_len_actual = [len(tensor) for tensor in batch_state]
+        ep_len_actual = [len(tensor) for tensor in batch_state]
 
-            batch_state = torch.cat(batch_state)
-            # batch_state = batch_state[self.indicesAA]
+        batch_state = torch.cat(batch_state)
+        # batch_state = batch_state[self.indicesAA]
 
-            demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
-            demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
-            demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
-            demo_batch_actions = torch.cat(demo_batch_actions)
+        demo_batch_actions = torch.split(batch_actions, ep_len_actual, dim=0)
+        demo_batch_actions = [demo_batch_actions[:-1] for demo_batch_actions in demo_batch_actions]
+        demo_batch_actions = [torch.cat((torch.zeros(1,23).to(self.device), demo_batch_actions), dim=0) for demo_batch_actions in demo_batch_actions]
+        demo_batch_actions = torch.cat(demo_batch_actions)
 
-            # batch_actions = demo_batch_actions[self.indicesAA]
-            # batch_next_actions = batch_next_actions[self.indicesAA]      
+        # batch_actions = demo_batch_actions[self.indicesAA]
+        # batch_next_actions = batch_next_actions[self.indicesAA]      
 
-            batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
-            # if len(batch_state) < (self.seq_len * self.minibatch_size):
-            #     zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
-            #     zero_tensor1[:batch_state.shape[0], :] = batch_state
-            #     batch_state = zero_tensor1        
-            batch_state = torch.split(batch_state, self.seq_len, dim=0)
-            batch_state = [t.squeeze(0) for t in batch_state]
+        batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
+        # if len(batch_state) < (self.seq_len * self.minibatch_size):
+        #     zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
+        #     zero_tensor1[:batch_state.shape[0], :] = batch_state
+        #     batch_state = zero_tensor1        
+        batch_state = torch.split(batch_state, self.seq_len, dim=0)
+        batch_state = [t.squeeze(0) for t in batch_state]
 
-            batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
-            # if len(batch_actions) < (self.seq_len * self.minibatch_size):
-            #     zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
-            #     zero_tensor2[:batch_actions.shape[0], :] = batch_actions
-            #     batch_actions = zero_tensor2        
-            batch_actions = torch.split(batch_actions, self.seq_len, dim=0)        
-            batch_actions = [t.squeeze(0) for t in batch_actions]      
+        batch_actions = nn.utils.rnn.pad_sequence(batch_actions, batch_first=True, padding_value=0)
+        # if len(batch_actions) < (self.seq_len * self.minibatch_size):
+        #     zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
+        #     zero_tensor2[:batch_actions.shape[0], :] = batch_actions
+        #     batch_actions = zero_tensor2        
+        batch_actions = torch.split(batch_actions, self.seq_len, dim=0)        
+        batch_actions = [t.squeeze(0) for t in batch_actions]      
 
-            # with torch.cuda.amp.autocast():
-            #     self.shared_q_actor.flatten_parameters()
-            #     _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)                
-            #     batch_input_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])                    
+        # with torch.cuda.amp.autocast():
+        #     self.shared_q_actor.flatten_parameters()
+        #     _, actor_recurrent_state = pack_and_forward(self.shared_q_actor, batch_state, batch_recurrent_state_actor)                
+        #     batch_input_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])                    
 
-            # for i, ele in zip(range(len(actions1)), batch_actions):
-            #     ele = ele[:-1, :]
-            #     aaa = actions1[i].unsqueeze(0)            
-            #     ele = torch.cat((ele, aaa), dim=0)       
+        # for i, ele in zip(range(len(actions1)), batch_actions):
+        #     ele = ele[:-1, :]
+        #     aaa = actions1[i].unsqueeze(0)            
+        #     ele = torch.cat((ele, aaa), dim=0)       
 
-            batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]        
-            with torch.cuda.amp.autocast():
-                with torch.no_grad(), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
-                    self.shared_q_critic.flatten_parameters()
-                    _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
-                    batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])
+        batch_input_state = [torch.cat((batch_s, batch_a), dim = 1).to(torch.float32) for batch_s, batch_a in zip(batch_state, batch_actions)]        
+        with torch.cuda.amp.autocast():
+            with torch.no_grad(), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
+                self.shared_q_critic.flatten_parameters()
+                _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
+                batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])
 
-            temp1 = self.temperature
-            n = 1
+        temp1 = self.temperature
+        n = 1
 
-            with torch.cuda.amp.autocast():
-                action_distrib1 = self.policy1(batch_input_state_critic1)
-                actions1 = action_distrib1.rsample()
-                log_prob1 = action_distrib1.log_prob(actions1).to(self.device)
+        with torch.cuda.amp.autocast():
+            action_distrib1 = self.policy1(batch_input_state_critic1)
+            actions1 = action_distrib1.rsample()
+            log_prob1 = action_distrib1.log_prob(actions1).to(self.device)
 
-            # actions = torch.cat(batch_actions).to(self.device)
-            # actions = actions[(self.seq_len - 1)::self.seq_len]
+        # actions = torch.cat(batch_actions).to(self.device)
+        # actions = actions[(self.seq_len - 1)::self.seq_len]
 
-                q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
-                q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
-                q_T1 = torch.min(q1_T1, q2_T1)
-                entropy_term1 = temp1 * log_prob1[..., None]
-                assert q_T1.shape == entropy_term1.shape
-                loss1 = torch.mean(entropy_term1 - q_T1)
+            q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
+            q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
+            q_T1 = torch.min(q1_T1, q2_T1)
+            entropy_term1 = temp1 * log_prob1[..., None]
+            assert q_T1.shape == entropy_term1.shape
+            loss1 = torch.mean(entropy_term1 - q_T1)
 
-            self.policy_optimizer1.zero_grad()
-            self.scaler.scale(loss1).backward()
-            self.scaler.step(self.policy_optimizer1)
-            self.scaler.update()
-            # xm.mark_step()
+        self.policy_optimizer1.zero_grad()
+        self.scaler.scale(loss1).backward()
+        self.scaler.step(self.policy_optimizer1)
+        self.scaler.update()
+        # xm.mark_step()
 
-            self.n_policy_updates += 1
+        self.n_policy_updates += 1
 
-            if self.entropy_target is not None:
-                self.update_temperature(log_prob1.detach())
+        if self.entropy_target is not None:
+            self.update_temperature(log_prob1.detach())
 
-            # Record entropy
-            with torch.no_grad():
-                try:                
-                    self.entropy_record1.extend(
-                        action_distrib1.entropy().detach().cpu().numpy()
-                    )                
-                except NotImplementedError:
-                    # Record - log p(x) instead
-                    self.entropy_record1.extend(-log_prob1.detach().cpu().numpy())
+        # Record entropy
+        with torch.no_grad():
+            try:                
+                self.entropy_record1.extend(
+                    action_distrib1.entropy().detach().cpu().numpy()
+                )                
+            except NotImplementedError:
+                # Record - log p(x) instead
+                self.entropy_record1.extend(-log_prob1.detach().cpu().numpy())
         # print(prof)
 
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
         # experiences = sorted(experiences, key=len, reverse=True)
-        batch = batch_recurrent_experiences(experiences, self.device, self.phi, self.gamma)
-        self.update_q_func(batch)
-        self.update_policy_and_temperature(batch)
-        self.sync_target_network()        
+        with torch.autograd.profiler.profile(use_cuda=True) as prof:
+            batch = batch_recurrent_experiences(experiences, self.device, self.phi, self.gamma)
+            self.update_q_func(batch)
+            self.update_policy_and_temperature(batch)
+            self.sync_target_network()
+        print(prof)
 
     def batch_select_greedy_action(self, batch_obs, batch_acts, deterministic=False):        
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):#, pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
