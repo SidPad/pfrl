@@ -738,37 +738,38 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # if len(batch_next_state) < (self.seq_len * self.minibatch_size):
         #     zero_tensor = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_state.shape[1])).to(self.device)
         #     zero_tensor[:batch_next_state.shape[0], :] = batch_next_state
-        #     batch_next_state = zero_tensor
-        print(batch_next_state.shape)
-        batch_next_state = torch.split(batch_next_state, self.seq_len, dim=0)
-        batch_next_state = [t.squeeze(0) for t in batch_next_state]
+        #     batch_next_state = zero_tensor        
+        # batch_next_state = torch.split(batch_next_state, self.seq_len, dim=0)
+        # batch_next_state = [t.squeeze(0) for t in batch_next_state]
 
         batch_state = nn.utils.rnn.pad_sequence(batch_state, batch_first=True, padding_value=0)
         # if len(batch_state) < (self.seq_len * self.minibatch_size):
         #     zero_tensor1 = torch.zeros(((self.seq_len * self.minibatch_size), batch_state.shape[1])).to(self.device)
         #     zero_tensor1[:batch_state.shape[0], :] = batch_state
         #     batch_state = zero_tensor1
-        batch_state = torch.split(batch_state, self.seq_len, dim=0)
-        batch_state = [t.squeeze(0) for t in batch_state]
+        # batch_state = torch.split(batch_state, self.seq_len, dim=0)
+        # batch_state = [t.squeeze(0) for t in batch_state]
 
         batch_actions = nn.utils.rnn.pad_sequence(demo_batch_actions, batch_first=True, padding_value=0)
         # if len(batch_actions) < (self.seq_len * self.minibatch_size):
         #     zero_tensor2 = torch.zeros(((self.seq_len * self.minibatch_size), batch_actions.shape[1])).to(self.device)
         #     zero_tensor2[:batch_actions.shape[0], :] = batch_actions
         #     batch_actions = zero_tensor2
-        batch_actions = torch.split(batch_actions, self.seq_len, dim=0)
-        batch_actions = [t.squeeze(0) for t in batch_actions]
+        # batch_actions = torch.split(batch_actions, self.seq_len, dim=0)
+        # batch_actions = [t.squeeze(0) for t in batch_actions]
 
         batch_next_actions = nn.utils.rnn.pad_sequence(batch_next_actions, batch_first=True, padding_value=0)
         # if len(batch_next_actions) < (self.seq_len * self.minibatch_size):
         #     zero_tensor3 = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_actions.shape[1])).to(self.device)
         #     zero_tensor3[:batch_next_actions.shape[0], :] = batch_next_actions
-        #     batch_next_actions = zero_tensor3
-        print(batch_next_actions.shape)
-        batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
-        batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
+        #     batch_next_actions = zero_tensor3        
+        # batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
+        # batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
 
-        batch_input_state = [torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32) for batch_state, batch_actions in zip(batch_state, batch_actions)]
+        batch_input_state = torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32)
+        batch_input_next_state = torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32)
+        print(batch_input_state.shape)
+        print(batch_input_next_state.shape)
         # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float16) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
 
         # batch_rewards1 = batch_rewards1[self.ndcsAA]
@@ -803,7 +804,6 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 batch_input_state1 = self.shared_layer_critic(critic_recurrent_state[-1])
 
                 # batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]                
-                batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]                                       
 
                 # with torch.cuda.amp.autocast():
                 self.target_q_func_shared.flatten_parameters()
