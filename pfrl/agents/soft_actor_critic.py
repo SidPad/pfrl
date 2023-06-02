@@ -733,7 +733,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         # batch_actions = demo_batch_actions[self.indicesAA]
         # batch_next_actions = batch_next_actions[self.indicesAA]
-
+        for batch_s, batch_a in zip(batch_state, batch_actions):
+            seq_length = batch_s.size(0)
+            print(seq_length)
+            
         batch_next_state = nn.utils.rnn.pad_sequence(batch_next_state, batch_first=True, padding_value=0)
         # if len(batch_next_state) < (self.seq_len * self.minibatch_size):
         #     zero_tensor = torch.zeros(((self.seq_len * self.minibatch_size), batch_next_state.shape[1])).to(self.device)
@@ -982,7 +985,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.update_q_func(batch)
             self.update_policy_and_temperature(batch)
             self.sync_target_network()
-        # print(prof)
+        print(prof)
 
     def batch_select_greedy_action(self, batch_obs, batch_acts, deterministic=False):        
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):#, pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
