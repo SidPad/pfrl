@@ -992,7 +992,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.update_q_func(batch)
             self.update_policy_and_temperature(batch)
             self.sync_target_network()
-        print(prof)
+        # print(prof)
 
     def batch_select_greedy_action(self, batch_obs, batch_acts, deterministic=False):        
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):#, pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
