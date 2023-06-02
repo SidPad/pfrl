@@ -772,7 +772,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_input_state = torch.split(batch_input_state, self.seq_len, dim=0)
         batch_input_state = [t.squeeze(0) for t in batch_input_state]
         
-        batch_input_next_state = torch.split(batch_input_state, self.seq_len, dim=0)
+        batch_input_next_state = torch.split(batch_input_next_state, self.seq_len, dim=0)
         batch_input_next_state = [t.squeeze(0) for t in batch_input_next_state]
         
         # batch_input_next_state = [torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float16) for batch_next_state, batch_next_actions in zip(batch_next_state, batch_next_actions)]
