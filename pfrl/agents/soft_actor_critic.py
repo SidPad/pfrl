@@ -865,20 +865,22 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func2_optimizer1.step()
             
             self.shared_q_optimizer_critic.step()
-        print(prof)
+        # print(prof)
 
-    def update_temperature(self, log_prob1):        
-        assert not log_prob1.requires_grad
-        
-        with torch.cuda.amp.autocast():
-            loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
-        self.temperature_optimizer1.zero_grad()
-        self.scaler.scale(loss1).backward()
-        if self.max_grad_norm is not None:
-            clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
-        self.scaler.step(self.temperature_optimizer1)
-        self.scaler.update()
-        # xm.mark_step()
+    def update_temperature(self, log_prob1):
+        with torch.autograd.profiler.profile(use_cuda=True) as prof:
+            assert not log_prob1.requires_grad
+
+            with torch.cuda.amp.autocast():
+                loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
+            self.temperature_optimizer1.zero_grad()
+            self.scaler.scale(loss1).backward()
+            if self.max_grad_norm is not None:
+                clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
+            self.scaler.step(self.temperature_optimizer1)
+            self.scaler.update()
+            # xm.mark_step()
+        print(prof)
 
     def update_policy_and_temperature(self, batch):        
         """Compute loss for actor."""
