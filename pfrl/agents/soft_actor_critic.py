@@ -727,12 +727,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         batch_next_state = torch.cat(batch_next_state)
         
-        last_batch_next_state = batch_next_state[(ep_len_actual[i] - 1)::ep_len_actual[i+1] for i in range(len(ep_len_actual) - 1)]
+        last_batch_next_state = [batch_next_state[(ep_len_actual[i] - 1)::ep_len_actual[i+1]] for i in range(len(ep_len_actual) - 1)]
+        last_batch_next_state = torch.cat(last_batch_next_state, dim=0)
         # batch_next_state = batch_next_state[self.indicesAA]
 
         batch_state = torch.cat(batch_state)
         
-        last_batch_state = batch_state[(ep_len_actual[i] - 1)::ep_len_actual[i+1] for i in range(len(ep_len_actual) - 1)]
+        last_batch_state = [batch_state[(ep_len_actual[i] - 1)::ep_len_actual[i+1]] for i in range(len(ep_len_actual) - 1)]
+        last_batch_state = torch.cat(last_batch_state, dim=0)
         # batch_state = batch_state[self.indicesAA]
 
         # batch_actions = demo_batch_actions[self.indicesAA]
@@ -905,7 +907,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
             batch_state = torch.cat(batch_state)
             
-            last_batch_state = batch_state[(ep_len_actual[i] - 1)::ep_len_actual[i+1] for i in range(len(ep_len_actual) - 1)]
+            last_batch_state = batch_state[(ep_len_actual[i] - 1)::ep_len_actual[i+1]] for i in range(len(ep_len_actual) - 1)]
+            last_batch_state = torch.cat(last_batch_state, dim=0)
             # batch_state = batch_state[self.indicesAA]       
 
             demo_batch_actions = [batch_actions[:(length-1)] for length in ep_len_actual]        
