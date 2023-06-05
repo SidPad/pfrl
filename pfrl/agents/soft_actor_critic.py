@@ -665,18 +665,18 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             method="soft",
             tau=self.soft_update_tau,
         )        
-        synchronize_parameters(
-            src=self.shared_q_critic,
-            dst=self.target_q_func_shared,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
-        synchronize_parameters(
-            src=self.shared_layer_critic,
-            dst=self.target_q_func_shared_layer,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
+        # synchronize_parameters(
+        #     src=self.shared_q_critic,
+        #     dst=self.target_q_func_shared,
+        #     method="soft",
+        #     tau=self.soft_update_tau,
+        #)
+        # synchronize_parameters(
+        #     src=self.shared_layer_critic,
+        #     dst=self.target_q_func_shared_layer,
+        #     method="soft",
+        #     tau=self.soft_update_tau,
+        #)
 
     def update_q_func(self, batch):        
         """Compute loss for a given Q-function."""
