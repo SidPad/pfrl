@@ -839,7 +839,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 #     ele = torch.cat((ele, aaa), dim=0) 
 
                 # with torch.cuda.amp.autocast():                    
-
+                print(last_batch_next_state.shape)
+                print(next_actions1.shape)
+                
                 next_q1T1 = self.target_q_func1_T1((last_batch_next_state, next_actions1))
                 next_q2T1 = self.target_q_func2_T1((last_batch_next_state, next_actions1))
 
