@@ -621,8 +621,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.t = 0
 
         # Target model
-        self.target_q_func_shared = copy.deepcopy(self.shared_q_critic).eval().requires_grad_(False)
-        self.target_q_func_shared_layer = copy.deepcopy(self.shared_layer_critic).eval().requires_grad_(False)        
+        # self.target_q_func_shared = copy.deepcopy(self.shared_q_critic).eval().requires_grad_(False)
+        # self.target_q_func_shared_layer = copy.deepcopy(self.shared_layer_critic).eval().requires_grad_(False)        
 
         self.target_q_func1_T1 = copy.deepcopy(self.q_func1_T1).eval().requires_grad_(False)        
         self.target_q_func2_T1 = copy.deepcopy(self.q_func2_T1).eval().requires_grad_(False)
@@ -726,9 +726,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # self.ndcsAA = torch.tensor([ndcsAA[-1] for ndcsAA in ndcsAA])            
 
         batch_next_state = torch.cat(batch_next_state)
+        
+        last_batch_next_state = batch_next_state[(ep_len_actual[i] - 1)::ep_len_actual[i+1] for i in range(len(ep_len_actual) - 1)]
         # batch_next_state = batch_next_state[self.indicesAA]
 
         batch_state = torch.cat(batch_state)
+        
+        last_batch_state = batch_state[(ep_len_actual[i] - 1)::ep_len_actual[i+1] for i in range(len(ep_len_actual) - 1)]
         # batch_state = batch_state[self.indicesAA]
 
         # batch_actions = demo_batch_actions[self.indicesAA]
@@ -766,11 +770,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # batch_next_actions = torch.split(batch_next_actions, self.seq_len, dim=0)
         # batch_next_actions = [t.squeeze(0) for t in batch_next_actions]
 
-        batch_input_state = torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32)
+        # batch_input_state = torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32)
         batch_input_next_state = torch.cat((batch_next_state, batch_next_actions), dim = 1).to(torch.float32)
         
-        batch_input_state = torch.split(batch_input_state, self.seq_len, dim=0)
-        batch_input_state = [t.squeeze(0) for t in batch_input_state]
+        # batch_input_state = torch.split(batch_input_state, self.seq_len, dim=0)
+        # batch_input_state = [t.squeeze(0) for t in batch_input_state]
         
         batch_input_next_state = torch.split(batch_input_next_state, self.seq_len, dim=0)
         batch_input_next_state = [t.squeeze(0) for t in batch_input_next_state]
@@ -799,8 +803,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         # with torch.cuda.amp.autocast():
         self.shared_q_critic.flatten_parameters()
-        _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)                
-        batch_input_state1 = self.shared_layer_critic(critic_recurrent_state[-1])
+        # _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)                
+        # batch_input_state1 = self.shared_layer_critic(critic_recurrent_state[-1])
 
         #### TASK 1 #### Figure out what pfrl.utils.evaluating does                       
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(
@@ -829,8 +833,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
                 # with torch.cuda.amp.autocast():                    
 
-                next_q1T1 = self.target_q_func1_T1((batch_input_next_state_critic1, next_actions1))
-                next_q2T1 = self.target_q_func2_T1((batch_input_next_state_critic1, next_actions1))
+                next_q1T1 = self.target_q_func1_T1((last_batch_next_state, next_actions1))
+                next_q2T1 = self.target_q_func2_T1((last_batch_next_state, next_actions1))
 
                 next_qT1 = torch.min(next_q1T1, next_q2T1)
                 entropy_term_1 = temp1 * next_log_prob1[..., None]
@@ -843,8 +847,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         n = 1
 
         # with torch.cuda.amp.autocast():
-        predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
-        predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
+        predict_q1_T1 = torch.flatten(self.q_func1_T1((last_batch_state, last_action)))
+        predict_q2_T1 = torch.flatten(self.q_func2_T1((last_batch_state, last_action)))
         loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
         loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)          
 
@@ -900,6 +904,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             ep_len_actual = [len(tensor) for tensor in batch_state]
 
             batch_state = torch.cat(batch_state)
+            
+            last_batch_state = batch_state[(ep_len_actual[i] - 1)::ep_len_actual[i+1] for i in range(len(ep_len_actual) - 1)]
             # batch_state = batch_state[self.indicesAA]       
 
             demo_batch_actions = [batch_actions[:(length-1)] for length in ep_len_actual]        
@@ -934,7 +940,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             #     ele = ele[:-1, :]
             #     aaa = actions1[i].unsqueeze(0)            
             #     ele = torch.cat((ele, aaa), dim=0)       
-
+            
             batch_input_state = torch.cat((batch_state, batch_actions), dim = 1).to(torch.float32)
             batch_input_state = torch.split(batch_input_state, self.seq_len, dim=0)
             batch_input_state = [t.squeeze(0) for t in batch_input_state]       
@@ -955,8 +961,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # actions = torch.cat(batch_actions).to(self.device)
         # actions = actions[(self.seq_len - 1)::self.seq_len]
 
-            q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
-            q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
+            q1_T1 = self.q_func1_T1((last_batch_state, actions1))
+            q2_T1 = self.q_func2_T1((last_batch_state, actions1))
             q_T1 = torch.min(q1_T1, q2_T1)
             entropy_term1 = temp1 * log_prob1[..., None]
             assert q_T1.shape == entropy_term1.shape
