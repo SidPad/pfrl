@@ -730,7 +730,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         print(len(batch_next_state))
         print(batch_next_state[0].shape)
-        last_batch_next_state = [batch_next_state[-1] for batch_next_state in batch_next_state]
+        last_batch_next_state = [batch_next_state[:-1, :] for batch_next_state in batch_next_state]
         last_batch_next_state = torch.cat(last_batch_next_state, dim=0)
         print(last_batch_next_state.shape)
         batch_next_state = torch.cat(batch_next_state)
