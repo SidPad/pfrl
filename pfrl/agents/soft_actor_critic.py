@@ -572,7 +572,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         
         else:
             self.device = torch.device("cpu")
-
+        
+        self.shared_q_critic = torch.compile(self.shared_q_critic)
+        self.shared_layer_critic = torch.compile(self.shared_layer_critic)
+        
         self.replay_buffer = replay_buffer
         self.gamma = gamma
         self.gpu = gpu
@@ -806,7 +809,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # batch_input_next_state_actor1 = self.shared_layer_actor(actor_recurrent_state[-1])
 
         # with torch.cuda.amp.autocast():
-        self.shared_q_critic.flatten_parameters()
+        # self.shared_q_critic.flatten_parameters()
         # _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)                
         # batch_input_state1 = self.shared_layer_critic(critic_recurrent_state[-1])
 
@@ -819,7 +822,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 # batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]                
 
                 # with torch.cuda.amp.autocast():
-                self.target_q_func_shared.flatten_parameters()
+                self.shared_q_critic.flatten_parameters()
                 _, next_critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_next_state, batch_next_recurrent_state_critic)                
                 batch_input_next_state_critic1 = self.shared_layer_critic(next_critic_recurrent_state[-1])
 
