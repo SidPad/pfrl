@@ -843,8 +843,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         n = 1
 
         # with torch.cuda.amp.autocast():
-        predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_input_state1, last_action)))
-        predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_input_state1, last_action)))
+        predict_q1_T1 = torch.flatten(self.q_func1_T1((self.batch_input_state1, last_action)))
+        predict_q2_T1 = torch.flatten(self.q_func2_T1((self.batch_input_state1, last_action)))
         loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
         loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)          
 
@@ -955,8 +955,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # actions = torch.cat(batch_actions).to(self.device)
         # actions = actions[(self.seq_len - 1)::self.seq_len]
 
-            q1_T1 = self.q_func1_T1((batch_input_state_critic1, actions1))
-            q2_T1 = self.q_func2_T1((batch_input_state_critic1, actions1))
+            q1_T1 = self.q_func1_T1((self.batch_input_state1, actions1))
+            q2_T1 = self.q_func2_T1((self.batch_input_state1, actions1))
             q_T1 = torch.min(q1_T1, q2_T1)
             entropy_term1 = temp1 * log_prob1[..., None]
             assert q_T1.shape == entropy_term1.shape
