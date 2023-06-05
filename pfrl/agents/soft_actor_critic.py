@@ -728,9 +728,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # ndcsAA = torch.split(self.indicesAA, splitter)
         # self.ndcsAA = torch.tensor([ndcsAA[-1] for ndcsAA in ndcsAA])            
 
-        last_batch_next_state = [batch_next_state[-1] for batch_next_state in batch_next_state]
+        last_batch_next_state = [batch_next_state[:-1] for batch_next_state in batch_next_state]
         last_batch_next_state = torch.cat(last_batch_next_state, dim=0)
-        
+        print(last_batch_next_state.shape)
         batch_next_state = torch.cat(batch_next_state)
                 
         # batch_next_state = batch_next_state[self.indicesAA]
@@ -838,9 +838,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 #     aaa = next_actions1[i].unsqueeze(0)            
                 #     ele = torch.cat((ele, aaa), dim=0) 
 
-                # with torch.cuda.amp.autocast():                    
-                print(last_batch_next_state.shape)
-                print(next_actions1.shape)
+                # with torch.cuda.amp.autocast():                                    
                 
                 next_q1T1 = self.target_q_func1_T1((last_batch_next_state, next_actions1))
                 next_q2T1 = self.target_q_func2_T1((last_batch_next_state, next_actions1))
