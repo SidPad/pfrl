@@ -867,7 +867,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func1_loss_T1_record.append(float(loss1_T1))
             self.q_func2_loss_T1_record.append(float(loss2_T1))                      
 
-        self.shared_q_optimizer_critic.zero_grad()
+        # self.shared_q_optimizer_critic.zero_grad()
         self.q_func1_optimizer1.zero_grad()
         self.q_func2_optimizer1.zero_grad()            
 
@@ -877,7 +877,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         loss2_T1.backward()                        
         self.q_func2_optimizer1.step()
 
-        self.shared_q_optimizer_critic.step()
+        # self.shared_q_optimizer_critic.step()
         # print(prof)
 
     def update_temperature(self, log_prob1):        
@@ -970,9 +970,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             assert q_T1.shape == entropy_term1.shape
             loss1 = torch.mean(entropy_term1 - q_T1)
 
+        self.shared_q_optimizer_critic.zero_grad()
         self.policy_optimizer1.zero_grad()
         self.scaler.scale(loss1).backward()
         self.scaler.step(self.policy_optimizer1)
+        self.scaler.step(self.shared_q_optimizer_critic)
         self.scaler.update()
         # xm.mark_step()
 
