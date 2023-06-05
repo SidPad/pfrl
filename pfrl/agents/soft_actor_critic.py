@@ -814,14 +814,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(
             self.target_q_func1_T1
         ), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(
-            self.target_q_func_shared), pfrl.utils.evaluating(self.target_q_func_shared_layer):               
+            self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):               
 
                 # batch_actions1 = [torch.cat((batch_actions1, next_actions1[i].unsqueeze(0)), dim=0) for batch_actions1,i in zip(batch_actions1, range(len(next_actions1)))]                
 
                 # with torch.cuda.amp.autocast():
                 self.target_q_func_shared.flatten_parameters()
-                _, next_critic_recurrent_state = pack_and_forward(self.target_q_func_shared, batch_input_next_state, batch_next_recurrent_state_critic)                
-                batch_input_next_state_critic1 = self.target_q_func_shared_layer(next_critic_recurrent_state[-1])
+                _, next_critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_next_state, batch_next_recurrent_state_critic)                
+                batch_input_next_state_critic1 = self.shared_layer_critic(next_critic_recurrent_state[-1])
 
                 temp1 = self.temperature          
 
@@ -950,10 +950,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_input_state = torch.split(batch_input_state, self.seq_len, dim=0)
             batch_input_state = [t.squeeze(0) for t in batch_input_state]       
         
-            with torch.no_grad(), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
-                self.shared_q_critic.flatten_parameters()
-                _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
-                batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])
+            # with torch.no_grad(), pfrl.utils.evaluating(self.shared_q_critic), pfrl.utils.evaluating(self.shared_layer_critic):
+            self.shared_q_critic.flatten_parameters()
+            _, critic_recurrent_state = pack_and_forward(self.shared_q_critic, batch_input_state, batch_recurrent_state_critic)        
+            batch_input_state_critic1 = self.shared_layer_critic(critic_recurrent_state[-1])
 
         temp1 = self.temperature
         n = 1
