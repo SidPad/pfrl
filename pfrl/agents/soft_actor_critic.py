@@ -854,7 +854,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # loss = (loss1 + loss2) / 2.0
 
         # Update stats
-        if batch_input_state1.numel() > 0:
+        if self.batch_input_state1.numel() > 0:
             self.q1_record_T1.extend(predict_q1_T1.detach().cpu().numpy())
             self.q2_record_T1.extend(predict_q2_T1.detach().cpu().numpy())
             self.q_func1_loss_T1_record.append(float(loss1_T1))
