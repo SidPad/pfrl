@@ -524,6 +524,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     )
 
     def __init__(
+        self,
         policy1,
         policy2,
         policy3,
