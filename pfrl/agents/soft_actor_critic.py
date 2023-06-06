@@ -1153,30 +1153,37 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
         with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
             batch_xs = self.batch_states(batch_obs, self.device, self.phi)            
-            if self.recurrent:
-                if self.training:
-                    batch_input_actor = self.shared_layer_critic(self.train_recurrent_states_critic[-1])
-                    policy_out1 = self.policy1(batch_input_actor)
-
-                    if deterministic:
-                        batch_action = mode_of_distribution(policy_out1).cpu().numpy()                
-                    else:
-                        batch_action = policy_out1.sample().cpu().numpy()
-
-                    action = torch.tensor(batch_action)
-                    action = action.to('cuda:0')                    
-                    
-                else:                    
-                    batch_input_actor = self.shared_layer_critic(self.test_recurrent_states_critic[-1])
-                    policy_out1 = self.policy1(batch_input_actor)
-
-                    if deterministic:
-                        batch_action = mode_of_distribution(policy_out1).cpu().numpy()                
-                    else:
-                        batch_action = policy_out1.sample().cpu().numpy()                
-
-                    action = torch.tensor(batch_action)
-                    action = action.to('cuda:0')                    
+            shared_policy_out = self.shared_policy(batch_xs)
+            
+            mask1 = torch.all(batch_xs[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
+            mask2 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
+            mask3 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
+            
+            shared_policy_out1 = shared_policy_out.clone().detach()
+            shared_policy_out2 = shared_policy_out.clone().detach()
+            shared_policy_out3 = shared_policy_out.clone().detach()
+            
+            shared_policy_out1[~mask1] = 0
+            shared_policy_out2[~mask2] = 0
+            shared_policy_out3[~mask3] = 0
+            
+            policy_out1 = self.policy1(shared_policy_out1)
+            policy_out2 = self.policy2(shared_policy_out2)
+            policy_out3 = self.policy3(shared_policy_out3)
+            
+            if deterministic:
+                batch_action1 = mode_of_distribution(policy_out1).cpu().numpy()
+                batch_action2 = mode_of_distribution(policy_out2).cpu().numpy()
+                batch_action3 = mode_of_distribution(policy_out3).cpu().numpy()
+            else:
+                batch_action1 = policy_out1.sample().cpu().numpy()
+                batch_action2 = policy_out2.sample().cpu().numpy()
+                batch_action3 = policy_out3.sample().cpu().numpy()
+            
+            batch_action = np.concatenate(batch_action1, batch_action2, batch_action3, axis=0)            
+            action = torch.tensor(batch_action)
+            action = action.to('cuda:0')
+            print(action.shape)
                                         
         return batch_action
 
