@@ -880,6 +880,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 ) * torch.flatten(next_q_T3 - entropy_term3)
                 
                 N += 1
+        print("OOPS")
         print(batch_state1.dtype)
         print(batch_actions1.dtype)
         if batch_next_state1.numel() > 0:
