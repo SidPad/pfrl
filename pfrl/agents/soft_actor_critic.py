@@ -880,9 +880,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 ) * torch.flatten(next_q_T3 - entropy_term3)
                 
                 N += 1
-        print("OOPS")
-        print(batch_state1.dtype)
-        print(batch_actions1.dtype)
+        
         if batch_next_state1.numel() > 0:
             predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_state1, batch_actions1)))
             predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_state1, batch_actions1)))
@@ -1170,8 +1168,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 elif torch.any(indicesC == index):
                     batch_action[index] = batch_action3[index%9]
                         
-            action = torch.tensor(batch_action)
-            action = action.to(torch.float32)
+            action = torch.tensor(batch_action)            
             action = action.to('cuda:0')            
                                         
         return batch_action
@@ -1199,6 +1196,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 batch_action = [self.burnin_action_func() for _ in range(len(batch_obs))]
             else:
                 batch_action = self.batch_select_greedy_action(batch_obs)
+            batch_action = batch_action.to(torch.float32)
             self.batch_last_obs = list(batch_obs)
             self.batch_last_action = list(batch_action)
         return batch_action
