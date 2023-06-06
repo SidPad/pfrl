@@ -1128,6 +1128,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             mask2 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
             mask3 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
             
+            indicesA = torch.where(mask1)[0]
+            otherindicesA = torch.where(~mask1)
+            indicesB = torch.where(mask2)[0]
+            otherindicesB = torch.where(~mask2)
+            indicesC = torch.where(mask3)[0]
+            otherindicesC = torch.where(~mask3)
+            
             shared_policy_out1 = shared_policy_out.clone().detach()
             shared_policy_out2 = shared_policy_out.clone().detach()
             shared_policy_out3 = shared_policy_out.clone().detach()
@@ -1140,6 +1147,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             policy_out2 = self.policy2(shared_policy_out2)
             policy_out3 = self.policy3(shared_policy_out3)
             
+            batch_action = np.empty((6,23))
             if deterministic:
                 batch_action1 = mode_of_distribution(policy_out1).cpu().numpy()
                 batch_action2 = mode_of_distribution(policy_out2).cpu().numpy()
@@ -1149,26 +1157,21 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 batch_action2 = policy_out2.sample().cpu().numpy()
                 batch_action3 = policy_out3.sample().cpu().numpy()
                 
-            action1 = torch.tensor(batch_action1)
-            action1 = action1.to('cuda:0')
-            
-            action2 = torch.tensor(batch_action2)
-            action2 = action2.to('cuda:0')
-            
-            action3 = torch.tensor(batch_action3)
-            action3 = action3.to('cuda:0')
+            for index in range(6):
+                if torch.any(indicesA == index):
+                    batch_action[index] = batch_action1[index%6]
+                elif torch.any(indicesB == index):
+                    batch_action[index] = batch_action2[index%6]
+                elif torch.any(indicesC == index):
+                    batch_action[index] = batch_action3[index%6]            
             
             print("Mask")
-            print(mask1)
-            print(mask2)
-            print(mask3)
-            
-            action1 = action1[mask1]
-            action2 = action2[mask2]
-            action3 = action3[mask3]            
-            
-            action = torch.cat((action1, action2, action3), dim=0)            
-            
+            print(indicesA)
+            print(indicesB)
+            print(indicesC)            
+                       
+            action = torch.tensor(batch_action)
+            action = action.to('cuda:0')
             print(action.shape)
                                         
         return action
