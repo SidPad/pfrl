@@ -1128,12 +1128,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             mask2 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
             mask3 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
             
-            indicesA = torch.where(mask1)[0]
-            otherindicesA = torch.where(~mask1)
-            indicesB = torch.where(mask2)[0]
-            otherindicesB = torch.where(~mask2)
-            indicesC = torch.where(mask3)[0]
-            otherindicesC = torch.where(~mask3)
+            indicesA = torch.where(mask1)[0]            
+            indicesB = torch.where(mask2)[0]            
+            indicesC = torch.where(mask3)[0]            
             
             shared_policy_out1 = shared_policy_out.clone().detach()
             shared_policy_out2 = shared_policy_out.clone().detach()
@@ -1147,7 +1144,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             policy_out2 = self.policy2(shared_policy_out2)
             policy_out3 = self.policy3(shared_policy_out3)
             
-            batch_action = np.empty((6,23))
+            batch_action = np.empty((9,23))
+            
             if deterministic:
                 batch_action1 = mode_of_distribution(policy_out1).cpu().numpy()
                 batch_action2 = mode_of_distribution(policy_out2).cpu().numpy()
@@ -1157,13 +1155,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 batch_action2 = policy_out2.sample().cpu().numpy()
                 batch_action3 = policy_out3.sample().cpu().numpy()
                 
-            for index in range(6):
+            for index in range(9):
                 if torch.any(indicesA == index):
-                    batch_action[index] = batch_action1[index%6]
+                    batch_action[index] = batch_action1[index%9]
                 elif torch.any(indicesB == index):
-                    batch_action[index] = batch_action2[index%6]
+                    batch_action[index] = batch_action2[index%9]
                 elif torch.any(indicesC == index):
-                    batch_action[index] = batch_action3[index%6]            
+                    batch_action[index] = batch_action3[index%9]            
             
             print("Mask")
             print(indicesA)
