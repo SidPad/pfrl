@@ -822,7 +822,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_discount3[~self.mask3] = 0
         
         print("Q_function_revised")
-        print(batch_next_state)        
+        print(batch_next_state1)        
 
         with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T1), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(self.target_q_func1_T2), pfrl.utils.evaluating(self.target_q_func2_T2), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):            
             temp1, temp2, temp3 = self.temperature
@@ -1003,12 +1003,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         batch_state_shared1[~self.mask1] = 0
         batch_state_shared2[~self.mask2] = 0
-        batch_state_shared3[~self.mask3] = 0
-        
-        print("ActorShared")
-        print(batch_state_shared1.shape)
-        print(batch_state_shared2.shape)
-        print(batch_state_shared3.shape)
+        batch_state_shared3[~self.mask3] = 0       
         
         temp1, temp2, temp3 = self.temperature
         
