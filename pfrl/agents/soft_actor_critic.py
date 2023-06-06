@@ -544,17 +544,23 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         q_func2_optimizer1,
         q_func2_optimizer2,
         q_func2_optimizer3,
-        rbuf,
-        gamma=args.discount,
-        update_interval=args.update_interval,
-        replay_start_size=args.replay_start_size,
-        gpu=args.gpu,
-        minibatch_size=args.batch_size,        
-        burnin_action_func=burnin_action_func,
-        entropy_target=-action_size,
-        temperature_optimizer_lr=args.lr,
+        replay_buffer,
+        gamma,
+        update_interval=1,
+        replay_start_size=10000,
+        gpu=None,
+        phi=lambda x: x,
+        minibatch_size,
+        soft_update_tau=5e-3,
+        max_grad_norm=None,
+        logger=getLogger(__name__),
+        batch_states=batch_states,
+        burnin_action_func=None,
+        initial_temperature=1.0,
+        entropy_target=None,
+        temperature_optimizer_lr,
         act_deterministically=True,
-    ):
+    ):    
 
         self.policy1 = policy1
         self.policy2 = policy2
