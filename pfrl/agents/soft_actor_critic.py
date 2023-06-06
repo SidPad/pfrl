@@ -1167,13 +1167,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             action2 = action2[mask2]
             action3 = action3[mask3]            
             
-            batch_action = torch.cat((action1, action2, action3), dim=0)
+            action = torch.cat((action1, action2, action3), dim=0)            
             
-            action = torch.tensor(batch_action)
-            action = action.to('cuda:0')
             print(action.shape)
                                         
-        return batch_action
+        return action
 
     def batch_act(self, batch_obs, batch_acts):        
         if self.training:
