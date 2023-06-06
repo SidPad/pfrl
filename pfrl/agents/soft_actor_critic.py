@@ -797,13 +797,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_rewards2 = batch_rewards.clone().detach()
         batch_rewards3 = batch_rewards.clone().detach()
         
-        batch_terminal1 = batch_terminal.clone.detach()
-        batch_terminal2 = batch_terminal.clone.detach()
-        batch_terminal3 = batch_terminal.clone.detach()
+        batch_terminal1 = batch_terminal.clone().detach()
+        batch_terminal2 = batch_terminal.clone().detach()
+        batch_terminal3 = batch_terminal.clone().detach()
         
-        batch_discount1 = batch_discount.clone.detach()
-        batch_discount2 = batch_discount.clone.detach()
-        batch_discount3 = batch_discount.clone.detach()
+        batch_discount1 = batch_discount.clone().detach()
+        batch_discount2 = batch_discount.clone().detach()
+        batch_discount3 = batch_discount.clone().detach()
         
         batch_next_state1[~self.mask1] = 0
         batch_next_state2[~self.mask2] = 0
