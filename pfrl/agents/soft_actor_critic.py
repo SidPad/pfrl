@@ -768,6 +768,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = batch["action"]
         batch_discount = batch["discount"]        
         
+        batch_actions = batch_actions.to(torch.float32)
+        
         ##### Divide into three #####
         self.mask1 = torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
         self.mask2 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
@@ -1195,8 +1197,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.burnin_action_func is not None and self.n_policy_updates1 == 0 and self.n_policy_updates2 == 0 and self.n_policy_updates3 == 0:
                 batch_action = [self.burnin_action_func() for _ in range(len(batch_obs))]
             else:
-                batch_action = self.batch_select_greedy_action(batch_obs)
-            batch_action = batch_action.to(torch.float32)
+                batch_action = self.batch_select_greedy_action(batch_obs)            
             self.batch_last_obs = list(batch_obs)
             self.batch_last_action = list(batch_action)
         return batch_action
