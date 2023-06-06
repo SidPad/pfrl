@@ -840,7 +840,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_q1_T1 = self.target_q_func1_T1((batch_next_state1, next_actions1))
                 next_q2_T1 = self.target_q_func2_T1((batch_next_state1, next_actions1))
                 next_q_T1 = torch.min(next_q1_T1, next_q2_T1)
-                entropy_term1 = temp2 * next_log_prob1[..., None]
+                entropy_term1 = temp1 * next_log_prob1[..., None]
                 assert next_q_T1.shape == entropy_term1.shape
 
                 target_q_T1 = batch_rewards1 + batch_discount1 * (
@@ -1111,16 +1111,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
-        with torch.autograd.profiler.profile(use_cuda=True) as prof:
-            print("1")
-            batch = batch_experiences(experiences, self.device, self.phi, self.gamma)
-            print("2")
-            self.update_q_func(batch)
-            print("3")
-            self.update_policy_and_temperature(batch)
-            print("4")
-            self.sync_target_network()
-            print("5")
+        with torch.autograd.profiler.profile(use_cuda=True) as prof:            
+            batch = batch_experiences(experiences, self.device, self.phi, self.gamma)            
+            self.update_q_func(batch)            
+            self.update_policy_and_temperature(batch)            
+            self.sync_target_network()            
         # print(prof)
 
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
@@ -1198,7 +1193,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         assert self.training
         with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
             if self.burnin_action_func is not None and (self.n_policy_updates1 == 0 or self.n_policy_updates2 == 0 or self.n_policy_updates3 == 0):
-                batch_action = [self.burnin_action_func() for _ in range(len(batch_obs))]                
+                batch_action = [self.burnin_action_func() for _ in range(len(batch_obs))]
             else:                
                 batch_action = self.batch_select_greedy_action(batch_obs)            
             self.batch_last_obs = list(batch_obs)
