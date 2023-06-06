@@ -880,7 +880,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 ) * torch.flatten(next_q_T3 - entropy_term3)
                 
                 N += 1
-        
+        print(batch_state1.dtype)
+        print(batch_actions1.dtype)
         if batch_next_state1.numel() > 0:
             predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_state1, batch_actions1)))
             predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_state1, batch_actions1)))
