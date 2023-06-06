@@ -1169,7 +1169,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 elif torch.any(indicesC == index):
                     batch_action[index] = batch_action3[index%9]
                     
-            batch_action = np.concatenate((batch_action1, batch_action2, batch_action3), axis=0)
+            # batch_action = np.concatenate((batch_action1, batch_action2, batch_action3), axis=0)
             action = torch.tensor(batch_action)
             action = action.to('cuda:0')
             print(action.shape)
