@@ -845,9 +845,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_next_state_shared2 = batch_next_state_shared.clone().detach()
             batch_next_state_shared3 = batch_next_state_shared.clone().detach()
             
-            batch_next_state_shared1[~mask1] = 0
-            batch_next_state_shared2[~mask2] = 0
-            batch_next_state_shared3[~mask3] = 0
+            batch_next_state_shared1[~self.mask1] = 0
+            batch_next_state_shared2[~self.mask2] = 0
+            batch_next_state_shared3[~self.mask3] = 0
             
             print("QShared")
             print(batch_next_state_shared1.shape)
@@ -1024,9 +1024,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state_shared2 = batch_state_shared.clone().detach()
         batch_state_shared3 = batch_state_shared.clone().detach()
 
-        batch_state_shared1[~mask1] = 0
-        batch_state_shared2[~mask2] = 0
-        batch_state_shared3[~mask3] = 0
+        batch_state_shared1[~self.mask1] = 0
+        batch_state_shared2[~self.mask2] = 0
+        batch_state_shared3[~self.mask3] = 0
         
         print("ActorShared")
         print(batch_state_shared1.shape)
