@@ -1196,7 +1196,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_obs, deterministic=self.act_deterministically
         )
 
-    def _batch_act_train(self, batch_obs, batch_acts):        
+    def _batch_act_train(self, batch_obs):
         assert self.training
         with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
             if self.burnin_action_func is not None and self.n_policy_updates1 == 0 and self.n_policy_updates2 == 0 and self.n_policy_updates3 == 0:
