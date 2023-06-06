@@ -777,9 +777,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         print(batch_discount.shape)
         
         ##### Divide into three #####
-        mask1 = torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]), dim=1)
-        mask2 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]), dim=1)
-        mask3 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]), dim=1)
+        self.mask1 = torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0].to(self.device)), dim=1)
+        self.mask2 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0].to(self.device)), dim=1)
+        self.mask3 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1].to(self.device)), dim=1)
 
         batch_next_state1 = batch_next_state.clone().detach()
         batch_next_state2 = batch_next_state.clone().detach()
@@ -805,29 +805,29 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_discount2 = batch_discount.clone.detach()
         batch_discount3 = batch_discount.clone.detach()
         
-        batch_next_state1[~mask1] = 0
-        batch_next_state2[~mask2] = 0
-        batch_next_state3[~mask3] = 0
+        batch_next_state1[~self.mask1] = 0
+        batch_next_state2[~self.mask2] = 0
+        batch_next_state3[~self.mask3] = 0
         
-        batch_state1[~mask1] = 0
-        batch_state2[~mask2] = 0
-        batch_state3[~mask3] = 0
+        batch_state1[~self.mask1] = 0
+        batch_state2[~self.mask2] = 0
+        batch_state3[~self.mask3] = 0
         
-        batch_actions1[~mask1] = 0
-        batch_actions2[~mask2] = 0
-        batch_actions3[~mask3] = 0
+        batch_actions1[~self.mask1] = 0
+        batch_actions2[~self.mask2] = 0
+        batch_actions3[~self.mask3] = 0
         
-        batch_rewards1[~mask1] = 0
-        batch_rewards2[~mask2] = 0
-        batch_rewards3[~mask3] = 0
+        batch_rewards1[~self.mask1] = 0
+        batch_rewards2[~self.mask2] = 0
+        batch_rewards3[~self.mask3] = 0
         
-        batch_terminal1[~mask1] = 0
-        batch_terminal2[~mask2] = 0
-        batch_terminal3[~mask3] = 0
+        batch_terminal1[~self.mask1] = 0
+        batch_terminal2[~self.mask2] = 0
+        batch_terminal3[~self.mask3] = 0
         
-        batch_discount1[~mask1] = 0
-        batch_discount2[~mask2] = 0
-        batch_discount3[~mask3] = 0
+        batch_discount1[~self.mask1] = 0
+        batch_discount2[~self.mask2] = 0
+        batch_discount3[~self.mask3] = 0
         
         print("Q_function_revised")
         print(batch_next_state.shape)
@@ -1009,9 +1009,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state2 = batch_state.clone().detach()
         batch_state3 = batch_state.clone().detach()
         
-        batch_state1[~mask1] = 0
-        batch_state2[~mask2] = 0
-        batch_state3[~mask3] = 0
+        batch_state1[~self.mask1] = 0
+        batch_state2[~self.mask2] = 0
+        batch_state3[~self.mask3] = 0
         
         print("Actor")
         print(batch_state1.shape)
