@@ -759,6 +759,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         )        
 
     def update_q_func(self, batch):
+        print("1")
         """Compute loss for a given Q-function."""
 
         batch_next_state = batch["next_state"]
@@ -949,8 +950,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func2_T3.parameters(), self.max_grad_norm)
             self.q_func2_optimizer3.step()
+            print("2")
 
     def update_temperature(self, log_prob1, log_prob2, log_prob3):
+        print("3")
         assert not log_prob1.requires_grad
         assert not log_prob2.requires_grad
         assert not log_prob3.requires_grad
@@ -978,10 +981,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder3.parameters(), self.max_grad_norm)
             self.temperature_optimizer3.step()
+        print("4")
 
     def update_policy_and_temperature(self, batch):
         """Compute loss for actor."""
-
+        print("5")
         batch_state = batch["state"]
         #### Divide into three ####
         batch_state1 = batch_state.clone().detach()
@@ -1109,6 +1113,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     self.entropy_record2.extend(-log_prob2.detach().cpu().numpy())
                 if batch_state3.numel() > 0:
                     self.entropy_record3.extend(-log_prob3.detach().cpu().numpy())
+        print("6")
 
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
@@ -1119,7 +1124,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.sync_target_network()
         # print(prof)
 
-    def batch_select_greedy_action(self, batch_obs, deterministic=False):        
+    def batch_select_greedy_action(self, batch_obs, deterministic=False):
+        print("7")
         with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
             batch_xs = self.batch_states(batch_obs, self.device, self.phi)            
             shared_policy_out = self.shared_policy(batch_xs)
@@ -1176,8 +1182,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
     def batch_act(self, batch_obs, batch_acts):        
         if self.training:
+            print("8")
             return self._batch_act_train(batch_obs)
         else:
+            print("9")
             return self._batch_act_eval(batch_obs)
 
     def batch_observe(self, batch_obs, batch_acts, batch_reward, batch_done, batch_reset):        
@@ -1195,8 +1203,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
             if self.burnin_action_func is not None and self.n_policy_updates1 == 0 and self.n_policy_updates2 == 0 and self.n_policy_updates3 == 0:
                 batch_action = [self.burnin_action_func() for _ in range(len(batch_obs))]
+                print("11")
             else:
+                print("10")
                 batch_action = self.batch_select_greedy_action(batch_obs)
+            print("12")
             self.batch_last_obs = list(batch_obs)
             self.batch_last_action = list(batch_action)
         return batch_action
