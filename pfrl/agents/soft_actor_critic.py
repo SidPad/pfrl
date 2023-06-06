@@ -1149,9 +1149,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             policy_out1 = self.policy1(shared_policy_out1)
             policy_out2 = self.policy2(shared_policy_out2)
             policy_out3 = self.policy3(shared_policy_out3)
-            
-            print(batch_xs.shape)
-            batch_action = np.empty((9,23))            
+                        
+            batch_action = np.empty((9,23)).to(torch.float32)
             if deterministic:
                 batch_action1 = mode_of_distribution(policy_out1).cpu().numpy()
                 batch_action2 = mode_of_distribution(policy_out2).cpu().numpy()
@@ -1168,11 +1167,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     batch_action[index] = batch_action2[index%9]
                 elif torch.any(indicesC == index):
                     batch_action[index] = batch_action3[index%9]
-                    
-            # batch_action = np.concatenate((batch_action1, batch_action2, batch_action3), axis=0)
+                        
             action = torch.tensor(batch_action)
-            action = action.to('cuda:0')
-            print(action.shape)
+            action = action.to('cuda:0')            
                                         
         return batch_action
 
