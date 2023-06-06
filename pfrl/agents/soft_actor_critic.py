@@ -819,10 +819,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         batch_discount1[~self.mask1] = 0
         batch_discount2[~self.mask2] = 0
-        batch_discount3[~self.mask3] = 0
-        
-        print("Q_function_revised")
-        print(batch_next_state1)        
+        batch_discount3[~self.mask3] = 0             
 
         with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T1), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(self.target_q_func1_T2), pfrl.utils.evaluating(self.target_q_func2_T2), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):            
             temp1, temp2, temp3 = self.temperature
@@ -1139,9 +1136,6 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             shared_policy_out2[~mask2] = 0
             shared_policy_out3[~mask3] = 0
             
-            print("Action")
-            print(shared_policy_out1)
-            
             policy_out1 = self.policy1(shared_policy_out1)
             policy_out2 = self.policy2(shared_policy_out2)
             policy_out3 = self.policy3(shared_policy_out3)
@@ -1154,6 +1148,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 batch_action1 = policy_out1.sample().cpu().numpy()
                 batch_action2 = policy_out2.sample().cpu().numpy()
                 batch_action3 = policy_out3.sample().cpu().numpy()
+                
+            print("Mask")
+            print(mask1)
+            print(mask2)
+            print(mask3)
+            
+            batch_action1 = batch_action1[mask1]
+            batch_action2 = batch_action2[mask2]
+            batch_action3 = batch_action3[mask3]            
             
             batch_action = np.concatenate((batch_action1, batch_action2, batch_action3), axis=0)
             action = torch.tensor(batch_action)
