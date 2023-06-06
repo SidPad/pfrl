@@ -551,7 +551,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         replay_start_size=10000,
         gpu=None,
         phi=lambda x: x,
-        minibatch_size,
+        minibatch_size=100,
         soft_update_tau=5e-3,
         max_grad_norm=None,
         logger=getLogger(__name__),
@@ -559,7 +559,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         burnin_action_func=None,
         initial_temperature=1.0,
         entropy_target=None,
-        temperature_optimizer_lr,
+        temperature_optimizer_lr=None,
         act_deterministically=True,
     ):    
 
