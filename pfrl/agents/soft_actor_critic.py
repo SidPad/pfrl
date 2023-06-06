@@ -1149,16 +1149,26 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 batch_action2 = policy_out2.sample().cpu().numpy()
                 batch_action3 = policy_out3.sample().cpu().numpy()
                 
+            action1 = torch.tensor(batch_action1)
+            action1 = action1.to('cuda:0')
+            
+            action2 = torch.tensor(batch_action2)
+            action2 = action2.to('cuda:0')
+            
+            action3 = torch.tensor(batch_action3)
+            action3 = action3.to('cuda:0')
+            
             print("Mask")
             print(mask1)
             print(mask2)
             print(mask3)
             
-            batch_action1 = batch_action1[mask1]
-            batch_action2 = batch_action2[mask2]
-            batch_action3 = batch_action3[mask3]            
+            action1 = action1[mask1]
+            action2 = action2[mask2]
+            action3 = action3[mask3]            
             
-            batch_action = np.concatenate((batch_action1, batch_action2, batch_action3), axis=0)
+            batch_action = torch.cat((action1, action2, action3), dim=0)
+            
             action = torch.tensor(batch_action)
             action = action.to('cuda:0')
             print(action.shape)
