@@ -664,7 +664,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     self.temperature_holder3.parameters()
                 )
             if gpu is not None and gpu >= 0:
-                self.temperature_holder1.to(self.device)                
+                self.temperature_holder1.to(self.device)
+                self.temperature_holder2.to(self.device)
+                self.temperature_holder3.to(self.device)
         else:
             self.temperature_holder1 = None
             self.temperature_optimizer1 = None
