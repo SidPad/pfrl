@@ -868,7 +868,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 N += 1
             
             if batch_next_state3.numel() > 0:
-                next_action_distrib3 = self.policy1(batch_next_state_shared3)
+                next_action_distrib3 = self.policy3(batch_next_state_shared3)
                 next_actions3 = next_action_distrib3.sample()
                 next_log_prob3 = next_action_distrib3.log_prob(next_actions3)
                 next_q1_T3 = self.target_q_func1_T3((batch_next_state3, next_actions3))
