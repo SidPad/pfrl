@@ -1058,8 +1058,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             action_distrib3 = self.policy3(batch_state_shared3)
             actions3 = action_distrib3.rsample()
             log_prob3 = action_distrib3.log_prob(actions3)
-            q1_T3 = self.q_func1_T1((batch_state3, actions3))
-            q2_T3 = self.q_func2_T1((batch_state3, actions3))
+            q1_T3 = self.q_func1_T3((batch_state3, actions3))
+            q2_T3 = self.q_func2_T3((batch_state3, actions3))
             q_T3 = torch.min(q1_T3, q2_T3)
 
             entropy_term3 = temp3 * log_prob3[..., None]
@@ -1257,7 +1257,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             ("average_q2_T1", _mean_or_nan(self.q2_record_T1)),
             ("average_q_func1_loss_T1", _mean_or_nan(self.q_func1_loss_T1_record)),
             ("average_q_func2_loss_T1", _mean_or_nan(self.q_func2_loss_T1_record)),
-            ("n_updates2", self.n_policy_updates1),
+            ("n_updates1", self.n_policy_updates1),
             ("average_entropy1", _mean_or_nan(self.entropy_record1)),
             ("temperature1", temp1),
             ("average_q1_T2", _mean_or_nan(self.q1_record_T2)),
