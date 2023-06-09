@@ -1088,7 +1088,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.replay_updater.update_if_necessary(self.t)                     
 
     def get_statistics(self):
-        temp1, temp2, temp3 = self.temperature
+        temp1, temp2 = self.temperature
         return [
             ("average_q1_T1", _mean_or_nan(self.q1_record_T1)),
             ("average_q2_T1", _mean_or_nan(self.q2_record_T1)),
