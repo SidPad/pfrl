@@ -25,7 +25,7 @@ def _run_episodes(
     lengths = []
     terminate = False
     timestep = 0
-    empty_action = np.zeros(23)
+    empty_action = np.zeros(27)
     a = empty_action
     reset = True
     while not terminate:
