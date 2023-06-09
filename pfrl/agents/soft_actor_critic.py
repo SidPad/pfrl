@@ -995,7 +995,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             policy_out1 = self.policy1(shared_policy_out1)
             policy_out2 = self.policy2(shared_policy_out2)            
                         
-            batch_action = np.empty((6,23))
+            batch_action = np.empty((6,27))
             if deterministic:
                 batch_action1 = mode_of_distribution(policy_out1).cpu().numpy()
                 batch_action2 = mode_of_distribution(policy_out2).cpu().numpy()                
