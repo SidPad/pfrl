@@ -1019,8 +1019,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_xs1_d[~mask1] = 0
             batch_xs2_d[~mask2] = 0
             
-            policy_out1 = self.policy1(shared_policy_out1)
-            policy_out2 = self.policy2(shared_policy_out2)            
+            policy_out1 = self.policy1((shared_policy_out1, batch_xs1_d))
+            policy_out2 = self.policy2((shared_policy_out2, batch_xs2_d))
                         
             batch_action = np.empty((6,27))
             if deterministic:
