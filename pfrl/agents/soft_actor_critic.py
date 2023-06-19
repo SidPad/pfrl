@@ -851,7 +851,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             N = 0
             if batch_next_state1.numel() > 0:
-                next_action_distrib1 = self.policy1((batch_next_state_shared1_ind, batch_next_state1_d))
+                next_action_distrib1 = self.policy1((batch_next_state_shared1, batch_next_state1_d))
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
                 next_q1_T1 = self.target_q_func1_T1((batch_next_state1, next_actions1))
@@ -867,7 +867,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 N += 1
             
             if batch_next_state2.numel() > 0:
-                next_action_distrib2 = self.policy2((batch_next_state_shared2_ind, batch_next_state2_d))
+                next_action_distrib2 = self.policy2((batch_next_state_shared2, batch_next_state2_d))
                 next_actions2 = next_action_distrib2.sample()
                 next_log_prob2 = next_action_distrib2.log_prob(next_actions2)
                 next_q1_T2 = self.target_q_func1_T2((batch_next_state2, next_actions2))
@@ -883,7 +883,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 N += 1
             
             if batch_next_state3.numel() > 0:
-                next_action_distrib3 = self.policy3((batch_next_state_shared3_ind, batch_next_state3_d))
+                next_action_distrib3 = self.policy3((batch_next_state_shared3, batch_next_state3_d))
                 next_actions3 = next_action_distrib3.sample()
                 next_log_prob3 = next_action_distrib3.log_prob(next_actions3)
                 next_q1_T3 = self.target_q_func1_T3((batch_next_state3, next_actions3))
