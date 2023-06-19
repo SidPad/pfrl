@@ -762,7 +762,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
             batch_next_state_ind = batch_next_state[:, :56]
             batch_next_state_d = batch_next_state[:, -5:]            
-            batch_next_state_shared = self.shared_policy(batch_next_state)
+            batch_next_state_shared = self.shared_policy(batch_next_state_ind)
             ##### Divide into three #####
             batch_next_state_shared1 = batch_next_state_shared.clone().detach()
             batch_next_state_shared2 = batch_next_state_shared.clone().detach()            
