@@ -827,7 +827,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T1), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(self.target_q_func1_T2), pfrl.utils.evaluating(self.target_q_func2_T2), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):            
             temp1, temp2, temp3 = self.temperature
-            batch_next_state_shared = self.shared_policy(batch_next_state)            
+            
+            batch_next_state_ind = batch_next_state[:, :56]
+            batch_next_state_d = batch_next_state[:, -5:]            
+            batch_next_state_shared = self.shared_policy(batch_next_state_ind)
+            
             ##### Divide into three #####
             batch_next_state_shared1 = batch_next_state_shared.clone().detach()
             batch_next_state_shared2 = batch_next_state_shared.clone().detach()
@@ -835,10 +839,19 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             batch_next_state_shared1[~self.mask1] = 0
             batch_next_state_shared2[~self.mask2] = 0
-            batch_next_state_shared3[~self.mask3] = 0            
+            batch_next_state_shared3[~self.mask3] = 0
+
+            batch_next_state1_d = batch_next_state_d.clone().detach()
+            batch_next_state2_d = batch_next_state_d.clone().detach()
+            batch_next_state3_d = batch_next_state_d.clone().detach()
+
+            batch_next_state1_d[~self.mask1] = 0
+            batch_next_state2_d[~self.mask2] = 0
+            batch_next_state3_d[~self.mask3] = 0
+            
             N = 0
             if batch_next_state1.numel() > 0:
-                next_action_distrib1 = self.policy1(batch_next_state_shared1)
+                next_action_distrib1 = self.policy1((batch_next_state_shared1_ind, batch_next_state1_d))
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
                 next_q1_T1 = self.target_q_func1_T1((batch_next_state1, next_actions1))
@@ -854,7 +867,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 N += 1
             
             if batch_next_state2.numel() > 0:
-                next_action_distrib2 = self.policy2(batch_next_state_shared2)
+                next_action_distrib2 = self.policy2((batch_next_state_shared2_ind, batch_next_state2_d))
                 next_actions2 = next_action_distrib2.sample()
                 next_log_prob2 = next_action_distrib2.log_prob(next_actions2)
                 next_q1_T2 = self.target_q_func1_T2((batch_next_state2, next_actions2))
@@ -870,7 +883,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 N += 1
             
             if batch_next_state3.numel() > 0:
-                next_action_distrib3 = self.policy3(batch_next_state_shared3)
+                next_action_distrib3 = self.policy3((batch_next_state_shared3_ind, batch_next_state3_d))
                 next_actions3 = next_action_distrib3.sample()
                 next_log_prob3 = next_action_distrib3.log_prob(next_actions3)
                 next_q1_T3 = self.target_q_func1_T3((batch_next_state3, next_actions3))
@@ -993,16 +1006,26 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         """Compute loss for actor."""
 
         batch_state = batch["state"]
+        batch_state_ind = batch_state[:, :56]
+        batch_state_d = batch_state[:, -5:]
         #### Divide into three ####
         batch_state1 = batch_state.clone().detach()
         batch_state2 = batch_state.clone().detach()
         batch_state3 = batch_state.clone().detach()
+
+        batch_state1_d = batch_state_d.clone().detach()
+        batch_state2_d = batch_state_d.clone().detach()
+        batch_state3_d = batch_state_d.clone().detach()
+
+        batch_state1_d[~self.mask1] = 0
+        batch_state2_d[~self.mask2] = 0
+        batch_state3_d[~self.mask3] = 0
         
         batch_state1[~self.mask1] = 0
         batch_state2[~self.mask2] = 0
         batch_state3[~self.mask3] = 0        
         
-        batch_state_shared = self.shared_policy(batch_state)
+        batch_state_shared = self.shared_policy(batch_state_ind)
         #### Divide into three ####
         batch_state_shared1 = batch_state_shared.clone().detach()
         batch_state_shared2 = batch_state_shared.clone().detach()
@@ -1021,7 +1044,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         N = 0
         if batch_state1.numel() > 0:
-            action_distrib1 = self.policy1(batch_state_shared1)
+            action_distrib1 = self.policy1((batch_state_shared1, batch_state1_d))
             actions1 = action_distrib1.rsample()
             log_prob1 = action_distrib1.log_prob(actions1)
             q1_T1 = self.q_func1_T1((batch_state1, actions1))
@@ -1038,7 +1061,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob1 = torch.empty(1).to(self.device)
         
         if batch_state2.numel() > 0:
-            action_distrib2 = self.policy2(batch_state_shared2)
+            action_distrib2 = self.policy2((batch_state_shared2, batch_state2_d))
             actions2 = action_distrib2.rsample()
             log_prob2 = action_distrib2.log_prob(actions2)
             q1_T2 = self.q_func1_T2((batch_state2, actions2))
@@ -1055,7 +1078,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob2 = torch.empty(1).to(self.device)
         
         if batch_state3.numel() > 0:
-            action_distrib3 = self.policy3(batch_state_shared3)
+            action_distrib3 = self.policy3((batch_state_shared3, batch_state3_d))
             actions3 = action_distrib3.rsample()
             log_prob3 = action_distrib3.log_prob(actions3)
             q1_T3 = self.q_func1_T3((batch_state3, actions3))
