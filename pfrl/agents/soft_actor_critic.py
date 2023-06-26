@@ -1125,12 +1125,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             L_i_detached = L_i.detach()
         
             # Compute gradients of L_i_detached with respect to last_shared_params
-            # L_i_detached.backward(retain_graph=True)
+            L_i_detached.backward(retain_graph=True)
         
             # Access the gradients of last_shared_params
-            # dlidW = last_shared_params.grad
+            dlidW = last_shared_params.grad
             
-            dlidW = torch.autograd.grad(L_i, last_shared_params, retain_graph=True)[0]
+            # dlidW = torch.autograd.grad(L_i, last_shared_params, retain_graph=True)[0]
             norms.append(torch.norm(w_i * dlidW))
 
         norms = torch.stack(norms)
