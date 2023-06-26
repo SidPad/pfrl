@@ -1122,10 +1122,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.weights.requires_grad_(False)
         
             # Calculate L_i without including it in the computation graph
-            L_i_detached = L_i.detach()
+            # L_i_detached = L_i.detach()
         
             # Compute gradients of L_i_detached with respect to last_shared_params
-            L_i_detached.backward(retain_graph=True)
+            L_i.backward(retain_graph=True)
         
             # Access the gradients of last_shared_params
             dlidW = last_shared_params.grad
