@@ -1117,10 +1117,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         # compute grad norms
         norms = []        
-        for w_i, L_i in zip(self.weights, losses):
-            last_shared_params.requires_grad_(True)
-            self.weights.requires_grad_(False)
-        
+        for w_i, L_i in zip(self.weights, losses):            
             # Calculate L_i without including it in the computation graph
             # L_i_detached = L_i.detach()
         
@@ -1150,9 +1147,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # make sure sum_i w_i = T, where T is the number of tasks
         with torch.no_grad():
             renormalize_coeff = self.n_tasks / self.weights.sum()
-            self.weights *= renormalize_coeff
-        
-        
+            self.weights *= renormalize_coeff        
 
         if self.entropy_target is not None:
             self.update_temperature(log_prob1.detach(), log_prob2.detach(), log_prob3.detach())
