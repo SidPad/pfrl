@@ -1090,14 +1090,35 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         # compute and retain gradients
         total_weighted_loss.backward(retain_graph=True)
+
+        # loss = (loss_T1 + loss_T2 + loss_T3) / N
+        # loss.backward(retain_graph=True)
+        self.shared_policy_optimizer.step()
+        
+        loss_T1.backward()
+        if self.max_grad_norm is not None:
+            clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
+        self.policy_optimizer1.step()
+        self.n_policy_updates1 += 1
+        
+        loss_T2.backward()
+        if self.max_grad_norm is not None:
+            clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
+        self.policy_optimizer2.step()
+        self.n_policy_updates2 += 1
+        
+        loss_T3.backward()
+        if self.max_grad_norm is not None:
+            clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
+        self.policy_optimizer3.step()
+        self.n_policy_updates3 += 1
         
         # zero the w_i(t) gradients since we want to update the weights using gradnorm loss
         self.weights.grad = 0.0 * self.weights.grad
 
         # compute grad norms
         norms = []        
-        for w_i, L_i in zip(self.weights, losses):
-            losses.requires_grad_(False)
+        for w_i, L_i in zip(self.weights, losses):            
             dlidW = torch.autograd.grad(L_i, last_shared_params, retain_graph=True)[0]
             norms.append(torch.norm(w_i * dlidW))
 
@@ -1120,27 +1141,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             renormalize_coeff = self.n_tasks / self.weights.sum()
             self.weights *= renormalize_coeff
         
-        # loss = (loss_T1 + loss_T2 + loss_T3) / N
-        # loss.backward(retain_graph=True)
-        self.shared_policy_optimizer.step()
         
-        loss_T1.backward()
-        if self.max_grad_norm is not None:
-            clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
-        self.policy_optimizer1.step()
-        self.n_policy_updates1 += 1
-        
-        loss_T2.backward()
-        if self.max_grad_norm is not None:
-            clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
-        self.policy_optimizer2.step()
-        self.n_policy_updates2 += 1
-        
-        loss_T3.backward()
-        if self.max_grad_norm is not None:
-            clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
-        self.policy_optimizer3.step()
-        self.n_policy_updates3 += 1
 
         if self.entropy_target is not None:
             self.update_temperature(log_prob1.detach(), log_prob2.detach(), log_prob3.detach())
