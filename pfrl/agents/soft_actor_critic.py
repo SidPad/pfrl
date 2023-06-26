@@ -1009,6 +1009,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         batch_state_shared = self.shared_policy(batch_state)
         last_shared_params = self.shared_policy[-2].weight
+        print(last_shared_params)
         #### Divide into three ####
         batch_state_shared1 = batch_state_shared.clone().detach()
         batch_state_shared2 = batch_state_shared.clone().detach()
@@ -1094,11 +1095,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.weights.grad = 0.0 * self.weights.grad
 
         # compute grad norms
-        norms = []
-        print("losses", losses)
+        norms = []        
         for w_i, L_i in zip(self.weights, losses):
-            dlidW = torch.autograd.grad(L_i, last_shared_params, retain_graph=True, allow_unused=True)[0]
-            print("dlidW", dlidW)
+            dlidW = torch.autograd.grad(L_i, last_shared_params, retain_graph=True)[0]
             norms.append(torch.norm(w_i * dlidW))
 
         norms = torch.stack(norms)
