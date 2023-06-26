@@ -1008,7 +1008,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state3[~self.mask3] = 0        
         
         batch_state_shared = self.shared_policy(batch_state)
-        last_shared_params = self.shared_policy[-2].weight        
+        last_layer_params = self.shared_policy[-2].weight        
         #### Divide into three ####
         batch_state_shared1 = batch_state_shared.clone().detach()
         batch_state_shared2 = batch_state_shared.clone().detach()
@@ -1078,7 +1078,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob3 = torch.empty(1).to(self.device)              
                         
         losses = [loss_T1 ,loss_T2, loss_T3]
-        self.shared_backward(losses)
+        self.shared_backward(losses, last_layer_params)
 
         # loss = (loss_T1 + loss_T2 + loss_T3) / N
         # loss.backward(retain_graph=True)
