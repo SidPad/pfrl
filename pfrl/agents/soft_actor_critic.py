@@ -1008,7 +1008,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state3[~self.mask3] = 0        
         
         batch_state_shared = self.shared_policy(batch_state)
-        last_shared_params = self.shared_policy[-1].weights
+        last_shared_params = self.shared_policy[-2].weights
         #### Divide into three ####
         batch_state_shared1 = batch_state_shared.clone().detach()
         batch_state_shared2 = batch_state_shared.clone().detach()
