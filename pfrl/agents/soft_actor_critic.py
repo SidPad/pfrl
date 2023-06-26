@@ -1078,7 +1078,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob3 = torch.empty(1).to(self.device)              
                         
         losses = [loss_T1 ,loss_T2, loss_T3]
-        losses.shared_backward(self)
+        self.shared_backward(losses)
 
         # loss = (loss_T1 + loss_T2 + loss_T3) / N
         # loss.backward(retain_graph=True)
