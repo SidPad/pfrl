@@ -713,6 +713,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.minibatch_size = minibatch_size        
         self.scaler = torch.cuda.amp.GradScaler(enabled=True)
 
+        self.n_tasks = 3
+        self.alpha = 1.5
+        self.weights = torch.ones((n_tasks, ), requires_grad=True, device=self.device)
+        self.init_losses = None
+
     @property
     def temperature(self):
         if self.entropy_target is None:
@@ -1003,6 +1008,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state3[~self.mask3] = 0        
         
         batch_state_shared = self.shared_policy(batch_state)
+        last_shared_params = self.shared_policy[-1].weights
         #### Divide into three ####
         batch_state_shared1 = batch_state_shared.clone().detach()
         batch_state_shared2 = batch_state_shared.clone().detach()
@@ -1069,10 +1075,51 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             N += 1
         else:
             loss_T3 = torch.tensor([0.0], requires_grad = True).to(self.device)
-            log_prob3 = torch.empty(1).to(self.device)
+            log_prob3 = torch.empty(1).to(self.device)              
+                        
+        losses = [loss_T1 ,loss_T2, loss_T3]
+        if isinstance(losses, list):
+            losses = torch.stack(losses)
+
+        if self.init_losses is None:
+            self.init_losses = losses.detach().data
+
+        weighted_losses = self.weights * losses
+        total_weighted_loss = weighted_losses.sum()
         
-        loss = (loss_T1 + loss_T2 + loss_T3) / N        
-        loss.backward(retain_graph=True)
+        # compute and retain gradients
+        total_weighted_loss.backward(retain_graph=True)
+        
+        # zero the w_i(t) gradients since we want to update the weights using gradnorm loss
+        self.weights.grad = 0.0 * self.weights.grad
+
+        # compute grad norms
+        norms = []
+        for w_i, L_i in zip(self.weights, losses):
+            dlidW = torch.autograd.grad(L_i, last_shared_params, retain_graph=True)[0]
+            norms.append(torch.norm(w_i * dlidW))
+
+        norms = torch.stack(norms)
+
+        # compute the constant term without accumulating gradients
+        # as it should stay constant during back-propagation
+        with torch.no_grad():
+            # loss ratios
+            loss_ratios = losses / self.init_losses
+            # inverse training rate r(t)
+            inverse_train_rates = loss_ratios / loss_ratios.mean()
+            constant_term = norms.mean() * (inverse_train_rates ** self.alpha)
+
+        grad_norm_loss = (norms - constant_term).abs().sum()
+        self.weights.grad = torch.autograd.grad(grad_norm_loss, self.weights)[0]
+
+        # make sure sum_i w_i = T, where T is the number of tasks
+        with torch.no_grad():
+            renormalize_coeff = self.n_tasks / self.weights.sum()
+            self.weights *= renormalize_coeff
+        
+        # loss = (loss_T1 + loss_T2 + loss_T3) / N
+        # loss.backward(retain_graph=True)
         self.shared_policy_optimizer.step()
         
         loss_T1.backward()
