@@ -1118,7 +1118,18 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # compute grad norms
         norms = []        
         for w_i, L_i in zip(self.weights, losses):
-            losses.requires_grad_(True)
+            last_shared_params.requires_grad_(True)
+            self.weights.requires_grad_(False)
+        
+            # Calculate L_i without including it in the computation graph
+            L_i_detached = L_i.detach()
+        
+            # Compute gradients of L_i_detached with respect to last_shared_params
+            # L_i_detached.backward(retain_graph=True)
+        
+            # Access the gradients of last_shared_params
+            # dlidW = last_shared_params.grad
+            
             dlidW = torch.autograd.grad(L_i, last_shared_params, retain_graph=True)[0]
             norms.append(torch.norm(w_i * dlidW))
 
