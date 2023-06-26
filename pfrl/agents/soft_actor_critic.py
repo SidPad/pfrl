@@ -715,7 +715,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         self.n_tasks = 3
         self.alpha = 1.5
-        self.weights = torch.ones((n_tasks, ), requires_grad=True, device=self.device)
+        self.weights = torch.ones((self.n_tasks, ), requires_grad=True, device=self.device)
         self.init_losses = None
 
     @property
