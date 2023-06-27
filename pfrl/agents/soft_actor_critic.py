@@ -1141,7 +1141,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             losses = torch.stack(losses)
 
         if self.init_losses is None:
-            self.init_losses = losses.detach()
+            self.init_losses = losses.clone()
 
         weighted_losses = self.weights * losses
         total_weighted_loss = weighted_losses.sum()
