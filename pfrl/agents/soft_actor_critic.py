@@ -1019,7 +1019,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         temp1, temp2, temp3 = self.temperature
                 
-        self.shared_policy_optimizer.zero_grad()
+        # self.shared_policy_optimizer.zero_grad()
         self.policy_optimizer1.zero_grad()
         self.policy_optimizer2.zero_grad()
         self.policy_optimizer3.zero_grad()
@@ -1042,7 +1042,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss_T1 = torch.tensor([0.0], requires_grad = True).to(self.device)
             log_prob1 = torch.empty(1).to(self.device)
         loss_T1_clone = loss_T1.clone()
-        last_layer_params = self.shared_policy[-1].parameters()
+        last_layer_params = self.shared_policy[-2].parameters()
         dlidW = torch.autograd.grad(loss_T1_clone, last_layer_params, retain_graph=True)[0]
         print("YOYOY", dlidW)
         
