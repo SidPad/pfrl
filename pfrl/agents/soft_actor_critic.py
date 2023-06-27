@@ -1078,10 +1078,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob3 = torch.empty(1).to(self.device)              
                         
         losses = [loss_T1 ,loss_T2, loss_T3]
-        self.shared_backward(losses, last_layer_params)
+        # self.shared_backward(losses, last_layer_params)
 
-        # loss = (loss_T1 + loss_T2 + loss_T3) / N
-        # loss.backward(retain_graph=True)
+        loss = (loss_T1 + loss_T2 + loss_T3) / N
+        loss.backward(retain_graph=True)
         self.shared_policy_optimizer.step()
         
         loss_T1.backward()
@@ -1156,7 +1156,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         norms = []        
         for w_i, L_i in zip(self.weights, losses):
             dlidW = torch.autograd.backward(L_i, last_shared_params, retain_graph=True)[0]
-            print(dlidW)            
+            print(dlidW)
             norms.append(torch.norm(w_i * dlidW))
             
         norms = torch.stack(norms)
