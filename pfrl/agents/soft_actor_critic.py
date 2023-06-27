@@ -1075,39 +1075,18 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         else:
             loss_T3 = torch.tensor([0.0], requires_grad = True).to(self.device)
             log_prob3 = torch.empty(1).to(self.device)              
-                        
-        losses = [loss_T1 ,loss_T2, loss_T3]
-        # loss_T1_clone = loss_T1.clone()
-        losses = torch.stack(losses)        
-        # total_weighted_loss = torch.dot(self.weights, losses)
         
-        # self.shared_backward(losses, last_layer_params)
-
-        loss = (loss_T1 + loss_T2 + loss_T3) / N
-        loss.backward(retain_graph=True)        
-        
-        # if self.init_losses is None:
-        #     self.init_losses = losses.detach_().data
-
-        # norms = []
-        
-        # norms.append(torch.norm(w_i * dlidW))
-        # norms = torch.stack(norms)
-            
+        # loss = (loss_T1 + loss_T2 + loss_T3)
+        # loss.backward(retain_graph=True)
+        losses = [loss_T1, loss_T2, loss_T3]
+        self.pc_backward(losses)
         self.shared_policy_optimizer.step()
         
         loss_T1.backward()
         if self.max_grad_norm is not None:
             clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
         self.policy_optimizer1.step()
-        self.n_policy_updates1 += 1
-
-        # self.weights.grad.zero_()
-
-        loss_T1.requires_grad_()
-        last_layer_params = self.shared_policy[-2].parameters()
-        dlidW = torch.autograd.grad(loss_T1, last_layer_params, retain_graph=True)[0]
-        print("YOYOY", dlidW)
+        self.n_policy_updates1 += 1        
         
         loss_T2.backward()
         if self.max_grad_norm is not None:
@@ -1148,33 +1127,113 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 if batch_state3.numel() > 0:
                     self.entropy_record3.extend(-log_prob3.detach().cpu().numpy())
 
-    def shared_backward(self, losses, last_shared_params):
-        """Update gradients of the weights.
+    def pc_backward(self, objectives):
+        '''
+        calculate the gradient of the parameters
 
-        :param losses:
-        :param last_shared_params:
-        :param returns:
-        :return:
-        """        
-            
-        with torch.no_grad():
-            # loss ratios
-            loss_ratios = losses / self.init_losses
-            # inverse training rate r(t)
-            inverse_train_rates = loss_ratios / loss_ratios.mean()
-            constant_term = norms.mean() * (inverse_train_rates ** self.alpha)
+        input:
+        - objectives: a list of objectives
+        '''
 
-        grad_norm_loss = (norms - constant_term).abs().sum()
-        self.weights.grad = torch.autograd.grad(grad_norm_loss, self.weights)[0]
+        grads, shapes, has_grads = self._pack_grad(objectives)
+        pc_grad = self._project_conflicting(grads, has_grads)
+        pc_grad = self._unflatten_grad(pc_grad, shapes[0])
+        self._set_grad(pc_grad)
+        return
 
-        # make sure sum_i w_i = T, where T is the number of tasks
-        with torch.no_grad():
-            renormalize_coeff = self.n_tasks / self.weights.sum()
-            self.weights *= renormalize_coeff
+    def _project_conflicting(self, grads, has_grads, shapes=None):
+        shared = torch.stack(has_grads).prod(0).bool()
+        pc_grad, num_task = copy.deepcopy(grads), len(grads)
+        for g_i in pc_grad:
+            random.shuffle(grads)
+            for g_j in grads:
+                g_i_g_j = torch.dot(g_i, g_j)
+                if g_i_g_j < 0:
+                    g_i -= (g_i_g_j) * g_j / (g_j.norm()**2)
+        merged_grad = torch.zeros_like(grads[0]).to(grads[0].device)
+        if self._reduction:
+            merged_grad[shared] = torch.stack([g[shared]
+                                           for g in pc_grad]).mean(dim=0)
+        elif self._reduction == 'sum':
+            merged_grad[shared] = torch.stack([g[shared]
+                                           for g in pc_grad]).sum(dim=0)
+        else: exit('invalid reduction method')
 
-        if returns:
-            return total_weighted_loss
+        merged_grad[~shared] = torch.stack([g[~shared]
+                                            for g in pc_grad]).sum(dim=0)
+        return merged_grad
 
+    def _set_grad(self, grads):
+        '''
+        set the modified gradients to the network
+        '''
+
+        idx = 0
+        for group in self._optim.param_groups:
+            for p in group['params']:
+                # if p.grad is None: continue
+                p.grad = grads[idx]
+                idx += 1
+        return
+
+    def _pack_grad(self, objectives):
+        '''
+        pack the gradient of the parameters of the network for each objective
+        
+        output:
+        - grad: a list of the gradient of the parameters
+        - shape: a list of the shape of the parameters
+        - has_grad: a list of mask represent whether the parameter has gradient
+        '''
+
+        grads, shapes, has_grads = [], [], []
+        for obj in objectives:
+            self._optim.zero_grad(set_to_none=True)
+            obj.backward(retain_graph=True)
+            grad, shape, has_grad = self._retrieve_grad()
+            grads.append(self._flatten_grad(grad, shape))
+            has_grads.append(self._flatten_grad(has_grad, shape))
+            shapes.append(shape)
+        return grads, shapes, has_grads
+
+    def _unflatten_grad(self, grads, shapes):
+        unflatten_grad, idx = [], 0
+        for shape in shapes:
+            length = np.prod(shape)
+            unflatten_grad.append(grads[idx:idx + length].view(shape).clone())
+            idx += length
+        return unflatten_grad
+
+    def _flatten_grad(self, grads, shapes):
+        flatten_grad = torch.cat([g.flatten() for g in grads])
+        return flatten_grad
+
+    def _retrieve_grad(self):
+        '''
+        get the gradient of the parameters of the network with specific 
+        objective
+        
+        output:
+        - grad: a list of the gradient of the parameters
+        - shape: a list of the shape of the parameters
+        - has_grad: a list of mask represent whether the parameter has gradient
+        '''
+
+        grad, shape, has_grad = [], [], []
+        for group in self._optim.param_groups:
+            for p in group['params']:
+                # if p.grad is None: continue
+                # tackle the multi-head scenario
+                if p.grad is None:
+                    shape.append(p.shape)
+                    grad.append(torch.zeros_like(p).to(p.device))
+                    has_grad.append(torch.zeros_like(p).to(p.device))
+                    continue
+                shape.append(p.grad.shape)
+                grad.append(p.grad.clone())
+                has_grad.append(torch.ones_like(p).to(p.device))
+        return grad, shape, has_grad
+    
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
         with torch.autograd.profiler.profile(use_cuda=True) as prof:
