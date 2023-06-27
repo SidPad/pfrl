@@ -1085,12 +1085,17 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         loss = (loss_T1 + loss_T2 + loss_T3) / N
         loss.backward(retain_graph=True)
+        self.weights.grad.zero_()
+
+        if self.init_losses is None:
+            self.init_losses = losses.detach_().data
 
         norms = []
-        for w_i, L_i in zip(self.weights, losses):
-            dlidW = torch.autograd.grad(L_i, last_layer_params, retain_graph=True)[0]
-            print(dlidW)
-            norms.append(torch.norm(w_i * dlidW))
+        
+        dlidW = torch.autograd.grad(loss_T1, last_layer_params, retain_graph=True)[0]
+        print(dlidW)
+        norms.append(torch.norm(w_i * dlidW))
+        norms = torch.stack(norms)
             
         self.shared_policy_optimizer.step()
         
@@ -1146,20 +1151,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         :param last_shared_params:
         :param returns:
         :return:
-        """
-        
-        if self.init_losses is None:
-            self.init_losses = losses.detach_().data
-                
-        # zero the w_i(t) gradients since we want to update the weights using gradnorm loss
-        # self.weights.grad = 0.0 * self.weights.grad
-        self.weights.grad.zero_()
-
-        # compute grad norms            
-        norms = torch.stack(norms)
-
-        # compute the constant term without accumulating gradients
-        # as it should stay constant during back-propagation        
+        """        
             
         with torch.no_grad():
             # loss ratios
