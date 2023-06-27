@@ -1169,7 +1169,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         '''
 
         idx = 0
-        for group in self._optim.param_groups:
+        for group in self.shared_policy_optimizer.param_groups:
             for p in group['params']:
                 # if p.grad is None: continue
                 p.grad = grads[idx]
@@ -1188,7 +1188,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         grads, shapes, has_grads = [], [], []
         for obj in objectives:
-            self._optim.zero_grad(set_to_none=True)
+            self.shared_policy_optimizer.zero_grad(set_to_none=True)
             obj.backward(retain_graph=True)
             grad, shape, has_grad = self._retrieve_grad()
             grads.append(self._flatten_grad(grad, shape))
