@@ -1102,7 +1102,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.policy_optimizer1.step()
         self.n_policy_updates1 += 1
 
-        self.weights.grad.zero_()
+        # self.weights.grad.zero_()
         
         last_layer_params = self.shared_policy[-2].parameters()
         dlidW = torch.autograd.grad(loss_T1, last_layer_params, retain_graph=True)[0]
