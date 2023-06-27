@@ -1138,10 +1138,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         :return:
         """
         if isinstance(losses, list):
-            losses = torch.stack(losses)
-
-        if self.init_losses is None:
-            self.init_losses = losses.detach_().data
+            losses = torch.stack(losses)        
 
         weighted_losses = self.weights * losses
         total_weighted_loss = weighted_losses.sum()
@@ -1162,6 +1159,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         # compute the constant term without accumulating gradients
         # as it should stay constant during back-propagation
+        if self.init_losses is None:
+            self.init_losses = losses.detach_().data
+            
         with torch.no_grad():
             # loss ratios
             loss_ratios = losses / self.init_losses
