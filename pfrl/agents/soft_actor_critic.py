@@ -1078,6 +1078,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob3 = torch.empty(1).to(self.device)              
                         
         losses = [loss_T1 ,loss_T2, loss_T3]
+        loss_T1_clone = loss_T1.clone()
         losses = torch.stack(losses)        
         # total_weighted_loss = torch.dot(self.weights, losses)
         
@@ -1092,7 +1093,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         norms = []
         
-        dlidW = torch.autograd.grad(loss_T1, last_layer_params, retain_graph=True)[0]
+        dlidW = torch.autograd.grad(loss_T1_clone, last_layer_params, retain_graph=True)[0]
         print("YOYOY", dlidW)
         norms.append(torch.norm(w_i * dlidW))
         norms = torch.stack(norms)
