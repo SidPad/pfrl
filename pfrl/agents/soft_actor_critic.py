@@ -1078,16 +1078,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob3 = torch.empty(1).to(self.device)              
                         
         losses = [loss_T1 ,loss_T2, loss_T3]
-        losses = torch.stack(losses)
-        print(self.weights)
-        total_weighted_loss = torch.dot(self.weights, losses)
+        losses = torch.stack(losses)        
+        # total_weighted_loss = torch.dot(self.weights, losses)
         
         # self.shared_backward(losses, last_layer_params)
 
         loss = (loss_T1 + loss_T2 + loss_T3) / N
-        total_weighted_loss.backward(retain_graph=True)
-        print(self.weights)
-        self.weights.grad.zero_()
+        loss.backward(retain_graph=True)        
+        # self.weights.grad.zero_()
 
         if self.init_losses is None:
             self.init_losses = losses.detach_().data
