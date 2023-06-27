@@ -1007,8 +1007,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state2[~self.mask2] = 0
         batch_state3[~self.mask3] = 0        
         
-        batch_state_shared = self.shared_policy(batch_state)
-        last_layer_params = self.shared_policy[-2].parameters()
+        batch_state_shared = self.shared_policy(batch_state)        
         #### Divide into three ####
         batch_state_shared1 = batch_state_shared.clone().detach()
         batch_state_shared2 = batch_state_shared.clone().detach()
@@ -1042,6 +1041,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         else:
             loss_T1 = torch.tensor([0.0], requires_grad = True).to(self.device)
             log_prob1 = torch.empty(1).to(self.device)
+        loss_T1_clone = loss_T1.clone()
         
         if batch_state2.numel() > 0:
             action_distrib2 = self.policy2(batch_state_shared2)
@@ -1078,7 +1078,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob3 = torch.empty(1).to(self.device)              
                         
         losses = [loss_T1 ,loss_T2, loss_T3]
-        loss_T1_clone = loss_T1.clone()
+        # loss_T1_clone = loss_T1.clone()
         losses = torch.stack(losses)        
         # total_weighted_loss = torch.dot(self.weights, losses)
         
@@ -1092,7 +1092,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.init_losses = losses.detach_().data
 
         norms = []
-        
+        last_layer_params = self.shared_policy[-2].parameters()
         dlidW = torch.autograd.grad(loss_T1_clone, last_layer_params, retain_graph=True)[0]
         print("YOYOY", dlidW)
         norms.append(torch.norm(w_i * dlidW))
