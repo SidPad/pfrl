@@ -1041,9 +1041,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         else:
             loss_T1 = torch.tensor([0.0], requires_grad = True).to(self.device)
             log_prob1 = torch.empty(1).to(self.device)
-        loss_T1_clone = loss_T1.clone()
+        
         last_layer_params = self.shared_policy[-2].parameters()
-        dlidW = torch.autograd.grad(loss_T1_clone, last_layer_params, retain_graph=True)[0]
+        dlidW = torch.autograd.grad(loss_T1, last_layer_params, retain_graph=True)[0]
         print("YOYOY", dlidW)
         
         if batch_state2.numel() > 0:
