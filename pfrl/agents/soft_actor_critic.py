@@ -1129,7 +1129,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 if batch_state3.numel() > 0:
                     self.entropy_record3.extend(-log_prob3.detach().cpu().numpy())
 
-    def shared_backward(self, losses, last_shared_params, returns=False, **kwargs):
+    def shared_backward(self, losses, last_shared_params):
         """Update gradients of the weights.
 
         :param losses:
@@ -1143,7 +1143,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         total_weighted_loss = torch.dot(self.weights, losses)
 
         if self.init_losses is None:
-            self.init_losses = losses.data
+            self.init_losses = losses
         
         # compute and retain gradients
         total_weighted_loss.backward(retain_graph=True)        
