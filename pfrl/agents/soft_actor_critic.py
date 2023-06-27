@@ -1140,8 +1140,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         if isinstance(losses, list):
             losses = torch.stack(losses)        
 
-        weighted_losses = torch.mul(self.weights, losses)
-        total_weighted_loss = torch.cat(weighted_losses)
+        total_weighted_loss = torch.dot(self.weights, losses)        
         print(total_weighted_loss)
         
         # compute and retain gradients
