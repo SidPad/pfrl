@@ -1019,7 +1019,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         temp1, temp2, temp3 = self.temperature
                 
-        # self.shared_policy_optimizer.zero_grad()
+        self.shared_policy_optimizer.zero_grad()
         self.policy_optimizer1.zero_grad()
         self.policy_optimizer2.zero_grad()
         self.policy_optimizer3.zero_grad()
@@ -1040,11 +1040,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             N += 1
         else:
             loss_T1 = torch.tensor([0.0], requires_grad = True).to(self.device)
-            log_prob1 = torch.empty(1).to(self.device)
-        
-        last_layer_params = self.shared_policy[-2].parameters()
-        dlidW = torch.autograd.grad(loss_T1, last_layer_params, retain_graph=True)[0]
-        print("YOYOY", dlidW)
+            log_prob1 = torch.empty(1).to(self.device)        
         
         if batch_state2.numel() > 0:
             action_distrib2 = self.policy2(batch_state_shared2)
@@ -1089,15 +1085,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         loss = (loss_T1 + loss_T2 + loss_T3) / N
         loss.backward(retain_graph=True)        
-        # self.weights.grad.zero_()
-
-        if self.init_losses is None:
-            self.init_losses = losses.detach_().data
-
-        norms = []
         
-        norms.append(torch.norm(w_i * dlidW))
-        norms = torch.stack(norms)
+        # if self.init_losses is None:
+        #     self.init_losses = losses.detach_().data
+
+        # norms = []
+        
+        # norms.append(torch.norm(w_i * dlidW))
+        # norms = torch.stack(norms)
             
         self.shared_policy_optimizer.step()
         
@@ -1106,6 +1101,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
         self.policy_optimizer1.step()
         self.n_policy_updates1 += 1
+
+        self.weights.grad.zero_()
+        
+        last_layer_params = self.shared_policy[-2].parameters()
+        dlidW = torch.autograd.grad(loss_T1, last_layer_params, retain_graph=True)[0]
+        print("YOYOY", dlidW)
         
         loss_T2.backward()
         if self.max_grad_norm is not None:
