@@ -1019,8 +1019,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state_shared3[~self.mask3] = 0        
         
         temp1, temp2, temp3 = self.temperature
-        
-        self.shared_policy_optimizer.zero_grad()
+                
         self.policy_optimizer1.zero_grad()
         self.policy_optimizer2.zero_grad()
         self.policy_optimizer3.zero_grad()
@@ -1140,8 +1139,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         if isinstance(losses, list):
             losses = torch.stack(losses)        
 
-        total_weighted_loss = torch.dot(self.weights, losses)        
-        print(total_weighted_loss)
+        total_weighted_loss = torch.dot(self.weights, losses)
+        self.shared_policy_optimizer.zero_grad()
         
         # compute and retain gradients
         total_weighted_loss.backward(retain_graph=True)        
