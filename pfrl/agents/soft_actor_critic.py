@@ -1089,7 +1089,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         norms = []
         for w_i, L_i in zip(self.weights, losses):
-            dlidW = torch.autograd.backward(L_i, last_layer_params, retain_graph=True)[0]
+            dlidW = torch.autograd.grad(L_i, last_layer_params, retain_graph=True)[0]
             print(dlidW)
             norms.append(torch.norm(w_i * dlidW))
         
