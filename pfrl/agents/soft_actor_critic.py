@@ -1143,7 +1143,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         total_weighted_loss = torch.dot(self.weights, losses)
 
         if self.init_losses is None:
-            self.init_losses = losses
+            self.init_losses = losses.detach_().data
         
         # compute and retain gradients
         total_weighted_loss.backward(retain_graph=True)        
@@ -1155,7 +1155,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # compute grad norms
         norms = []        
         for w_i, L_i in zip(self.weights, losses):
-            dlidW = torch.autograd.grad(L_i, last_shared_params, retain_graph=True)[0]
+            dlidW = torch.autograd.backward(L_i, last_shared_params, retain_graph=True)[0]
             print(dlidW)            
             norms.append(torch.norm(w_i * dlidW))
             
