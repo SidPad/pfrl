@@ -1083,8 +1083,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         # self.shared_backward(losses, last_layer_params)
 
-        # loss = (loss_T1 + loss_T2 + loss_T3) / N
-        total_weighted_loss.backward(retain_graph=True)
+        loss = (loss_T1 + loss_T2 + loss_T3) / N
+        loss.backward(retain_graph=True)
         self.shared_policy_optimizer.step()
 
         norms = []
