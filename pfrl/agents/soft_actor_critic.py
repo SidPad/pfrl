@@ -1220,7 +1220,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         '''
 
         grad, shape, has_grad = [], [], []
-        for group in self._optim.param_groups:
+        for group in self.shared_policy_optimizer.param_groups:
             for p in group['params']:
                 # if p.grad is None: continue
                 # tackle the multi-head scenario
