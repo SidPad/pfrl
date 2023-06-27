@@ -1078,10 +1078,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob3 = torch.empty(1).to(self.device)              
                         
         losses = [loss_T1 ,loss_T2, loss_T3]
+        losses = torch.stack(losses)
+        total_weighted_loss = torch.dot(self.weights, losses)
+        
         # self.shared_backward(losses, last_layer_params)
 
-        loss = (loss_T1 + loss_T2 + loss_T3) / N
-        loss.backward(retain_graph=True)
+        # loss = (loss_T1 + loss_T2 + loss_T3) / N
+        total_weighted_loss.backward(retain_graph=True)
         self.shared_policy_optimizer.step()
         
         loss_T1.backward()
@@ -1137,17 +1140,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         :param returns:
         :return:
         """
-        if isinstance(losses, list):
-            losses = torch.stack(losses)        
-
-        total_weighted_loss = torch.dot(self.weights, losses)
-
+        
         if self.init_losses is None:
             self.init_losses = losses.detach_().data
-        
-        # compute and retain gradients
-        total_weighted_loss.backward(retain_graph=True)        
-        
+                
         # zero the w_i(t) gradients since we want to update the weights using gradnorm loss
         # self.weights.grad = 0.0 * self.weights.grad
         self.weights.grad.zero_()
