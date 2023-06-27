@@ -1135,6 +1135,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         - objectives: a list of objectives
         '''
 
+        self._reduction = 'mean'
         grads, shapes, has_grads = self._pack_grad(objectives)
         pc_grad = self._project_conflicting(grads, has_grads)
         pc_grad = self._unflatten_grad(pc_grad, shapes[0])
