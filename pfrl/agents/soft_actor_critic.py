@@ -1081,8 +1081,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.shared_backward(losses, last_layer_params)
 
         # loss = (loss_T1 + loss_T2 + loss_T3) / N
-        # loss.backward(retain_graph=True)
-        self.shared_policy_optimizer.step()
+        # loss.backward(retain_graph=True)        
         
         loss_T1.backward()
         if self.max_grad_norm is not None:
@@ -1145,6 +1144,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         # compute and retain gradients
         total_weighted_loss.backward(retain_graph=True)
+
+        self.shared_policy_optimizer.step()
         
         # zero the w_i(t) gradients since we want to update the weights using gradnorm loss
         self.weights.grad = 0.0 * self.weights.grad
