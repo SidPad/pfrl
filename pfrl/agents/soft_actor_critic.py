@@ -492,7 +492,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         "policy1",
         "policy2",
         "policy3",
-        "shared_policy",        
+        "policy",
         "q_func1_T1",
         "q_func2_T1",
         "q_func1_T2",
@@ -563,10 +563,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         act_deterministically=True,
     ):    
 
-        self.policy1 = policy1
-        self.policy2 = policy2
-        self.policy3 = policy3
-        self.shared_policy = shared_policy
+        self.policy = policy1        
+        # self.policy2 = policy2
+        # self.policy3 = policy3
+        # self.shared_policy = shared_policy
         
         self.q_func1_T1 = q_func1_T1
         self.q_func2_T1 = q_func2_T1
@@ -581,10 +581,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             assert torch.cuda.is_available()
             self.device = torch.device("cuda:{}".format(gpu))
             
-            self.policy1.to(self.device)
-            self.policy2.to(self.device)
-            self.policy3.to(self.device)
-            self.shared_policy.to(self.device)
+            self.policy.to(self.device)
+            # self.policy2.to(self.device)
+            # self.policy3.to(self.device)
+            # self.shared_policy.to(self.device)
             
             self.q_func1_T1.to(self.device)
             self.q_func2_T1.to(self.device)
@@ -603,10 +603,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.soft_update_tau = soft_update_tau
         self.logger = logger
         
-        self.policy_optimizer1 = policy_optimizer1
-        self.policy_optimizer2 = policy_optimizer2
-        self.policy_optimizer3 = policy_optimizer3
-        self.shared_policy_optimizer = shared_policy_optimizer
+        self.policy_optimizer = policy_optimizer1
+        # self.policy_optimizer2 = policy_optimizer2
+        # self.policy_optimizer3 = policy_optimizer3
+        # self.shared_policy_optimizer = shared_policy_optimizer
         
         self.q_func1_optimizer1 = q_func1_optimizer1
         self.q_func2_optimizer1 = q_func2_optimizer1
@@ -687,6 +687,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.target_q_func1_T3 = copy.deepcopy(self.q_func1_T3).eval().requires_grad_(False)
         self.target_q_func2_T3 = copy.deepcopy(self.q_func2_T3).eval().requires_grad_(False)
 
+        self.policy1 = copy.deepcopy(self.policy).eval().requires_grad_(False)
+        self.policy2 = copy.deepcopy(self.policy).eval().requires_grad_(False)
+        self.policy3 = copy.deepcopy(self.policy).eval().requires_grad_(False)
+        
+        self.policy1.load_state_dict(torch.load('/home/jovyan/private/Models/PULLUPHARD_RHP7DR/79c34fc51ded6035b440970184982c2700979a46-00000000-7b65c434/best/policy.pt'))
+        self.policy2.load_state_dict(torch.load('/home/jovyan/private/Models/S_RHP7_28_HARD_DR_2/35000210b8420e9c80ce2d8e92a128c85ff54da8-00000000-7b65c434/best/policy.pt'))
+        self.policy3.load_state_dict(torch.load('/home/jovyan/private/Models/PO_RHP7_12_HARD_DR/7fc547b81709d90aae5437e53aaf8a9ed4ef6b87-a2052abf-7b65c434/best/policy.pt'))
+
         # Statistics
         self.q1_record_T1 = collections.deque(maxlen=1000)
         self.q2_record_T1 = collections.deque(maxlen=1000)
@@ -711,7 +719,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.n_policy_updates3 = 0
         
         self.minibatch_size = minibatch_size        
-        self.scaler = torch.cuda.amp.GradScaler(enabled=True)
+        self.scaler = torch.cuda.amp.GradScaler(enabled=True)        
 
     @property
     def temperature(self):
@@ -825,7 +833,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_discount2[~self.mask2] = 0
         batch_discount3[~self.mask3] = 0                
 
-        with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T1), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(self.target_q_func1_T2), pfrl.utils.evaluating(self.target_q_func2_T2), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):            
+        with torch.no_grad(), pfrl.utils.evaluating(self.policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T1), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(self.target_q_func1_T2), pfrl.utils.evaluating(self.target_q_func2_T2), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):
             temp1, temp2, temp3 = self.temperature
             batch_next_state_shared = self.shared_policy(batch_next_state)            
             ##### Divide into three #####
@@ -835,10 +843,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             batch_next_state_shared1[~self.mask1] = 0
             batch_next_state_shared2[~self.mask2] = 0
-            batch_next_state_shared3[~self.mask3] = 0            
+            batch_next_state_shared3[~self.mask3] = 0
             N = 0
             if batch_next_state1.numel() > 0:
-                next_action_distrib1 = self.policy1(batch_next_state_shared1)
+                next_action_distrib1 = self.policy(batch_next_state_shared1)
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
                 next_q1_T1 = self.target_q_func1_T1((batch_next_state1, next_actions1))
@@ -854,7 +862,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 N += 1
             
             if batch_next_state2.numel() > 0:
-                next_action_distrib2 = self.policy2(batch_next_state_shared2)
+                next_action_distrib2 = self.policy(batch_next_state_shared2)
                 next_actions2 = next_action_distrib2.sample()
                 next_log_prob2 = next_action_distrib2.log_prob(next_actions2)
                 next_q1_T2 = self.target_q_func1_T2((batch_next_state2, next_actions2))
@@ -870,7 +878,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 N += 1
             
             if batch_next_state3.numel() > 0:
-                next_action_distrib3 = self.policy3(batch_next_state_shared3)
+                next_action_distrib3 = self.policy(batch_next_state_shared3)
                 next_actions3 = next_action_distrib3.sample()
                 next_log_prob3 = next_action_distrib3.log_prob(next_actions3)
                 next_q1_T3 = self.target_q_func1_T3((batch_next_state3, next_actions3))
@@ -1014,14 +1022,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         temp1, temp2, temp3 = self.temperature
         
-        self.shared_policy_optimizer.zero_grad()
+        # self.shared_policy_optimizer.zero_grad()
         self.policy_optimizer1.zero_grad()
-        self.policy_optimizer2.zero_grad()
-        self.policy_optimizer3.zero_grad()
+        # self.policy_optimizer2.zero_grad()
+        # self.policy_optimizer3.zero_grad()
         
         N = 0
         if batch_state1.numel() > 0:
-            action_distrib1 = self.policy1(batch_state_shared1)
+            action_distrib1 = self.policy(batch_state_shared1)
             actions1 = action_distrib1.rsample()
             log_prob1 = action_distrib1.log_prob(actions1)
             q1_T1 = self.q_func1_T1((batch_state1, actions1))
@@ -1038,7 +1046,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob1 = torch.empty(1).to(self.device)
         
         if batch_state2.numel() > 0:
-            action_distrib2 = self.policy2(batch_state_shared2)
+            action_distrib2 = self.policy(batch_state_shared2)
             actions2 = action_distrib2.rsample()
             log_prob2 = action_distrib2.log_prob(actions2)
             q1_T2 = self.q_func1_T2((batch_state2, actions2))
@@ -1055,7 +1063,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob2 = torch.empty(1).to(self.device)
         
         if batch_state3.numel() > 0:
-            action_distrib3 = self.policy3(batch_state_shared3)
+            action_distrib3 = self.policy(batch_state_shared3)
             actions3 = action_distrib3.rsample()
             log_prob3 = action_distrib3.log_prob(actions3)
             q1_T3 = self.q_func1_T3((batch_state3, actions3))
@@ -1071,27 +1079,48 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss_T3 = torch.tensor([0.0], requires_grad = True).to(self.device)
             log_prob3 = torch.empty(1).to(self.device)
         
-        loss = (loss_T1 + loss_T2 + loss_T3) / N        
+        loss = (loss_T1 + loss_T2 + loss_T3) / N
+
+        with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
+            kl_div = nn.KLDivLoss(reduction="batchmean")
+            
+            policy_output1 = self.policy1(batch_state_shared1)
+            policy_output2 = self.policy2(batch_state_shared2)
+            policy_output3 = self.policy3(batch_state_shared3)
+
+            kl_loss = 0
+            kl_n = 0
+            if q1 < 18:
+                kl_loss = kl_div(action_distrib1, policy_output1)
+                kl_n += 1
+            if q2 < 6:
+                kl_loss += kl_div(action_distrib2, policy_output2)
+                kl_n += 1
+            if q3 < -1.6:
+                kl_loss += kl_div(action_distrib3, policy_output3)
+                kl_n += 1
+            
+        loss += (kl_loss / kl_n)
         loss.backward(retain_graph=True)
-        self.shared_policy_optimizer.step()
-        
-        loss_T1.backward()
-        if self.max_grad_norm is not None:
-            clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
         self.policy_optimizer1.step()
+        
+        # loss_T1.backward()
+        # if self.max_grad_norm is not None:
+        #     clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
+        # self.policy_optimizer1.step()
         self.n_policy_updates1 += 1
         
-        loss_T2.backward()
-        if self.max_grad_norm is not None:
-            clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
-        self.policy_optimizer2.step()
-        self.n_policy_updates2 += 1
+        # loss_T2.backward()
+        # if self.max_grad_norm is not None:
+        #     clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
+        # self.policy_optimizer2.step()
+        # self.n_policy_updates2 += 1
         
-        loss_T3.backward()
-        if self.max_grad_norm is not None:
-            clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
-        self.policy_optimizer3.step()
-        self.n_policy_updates3 += 1
+        # loss_T3.backward()
+        # if self.max_grad_norm is not None:
+        #     clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
+        # self.policy_optimizer3.step()
+        # self.n_policy_updates3 += 1
 
         if self.entropy_target is not None:
             self.update_temperature(log_prob1.detach(), log_prob2.detach(), log_prob3.detach())
@@ -1130,49 +1159,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # print(prof)
 
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
-        with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
-            batch_xs = self.batch_states(batch_obs, self.device, self.phi)            
-            shared_policy_out = self.shared_policy(batch_xs)
-            
-            mask1 = torch.all(batch_xs[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
-            mask2 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
-            mask3 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
-            
-            indicesA = torch.where(mask1)[0]
-            indicesB = torch.where(mask2)[0]
-            indicesC = torch.where(mask3)[0]
-            
-            shared_policy_out1 = shared_policy_out.clone().detach()
-            shared_policy_out2 = shared_policy_out.clone().detach()
-            shared_policy_out3 = shared_policy_out.clone().detach()
-            
-            shared_policy_out1[~mask1] = 0
-            shared_policy_out2[~mask2] = 0
-            shared_policy_out3[~mask3] = 0            
-            
-            policy_out1 = self.policy1(shared_policy_out1)
-            policy_out2 = self.policy2(shared_policy_out2)
-            policy_out3 = self.policy3(shared_policy_out3)
-                        
-            batch_action = np.empty((9,23))
+        with torch.no_grad(), pfrl.utils.evaluating(self.policy):
+            batch_xs = self.batch_states(batch_obs, self.device, self.phi)
+            policy_out = self.policy(batch_xs)            
             if deterministic:
-                batch_action1 = mode_of_distribution(policy_out1).cpu().numpy()
-                batch_action2 = mode_of_distribution(policy_out2).cpu().numpy()
-                batch_action3 = mode_of_distribution(policy_out3).cpu().numpy()
+                batch_action = mode_of_distribution(policy_out).cpu().numpy()
             else:
-                batch_action1 = policy_out1.sample().cpu().numpy()
-                batch_action2 = policy_out2.sample().cpu().numpy()
-                batch_action3 = policy_out3.sample().cpu().numpy()
+                batch_action = policy_out.sample().cpu().numpy()
             
-            for index in range(9):
-                if torch.any(indicesA == index):
-                    batch_action[index] = batch_action1[index%9]
-                elif torch.any(indicesB == index):
-                    batch_action[index] = batch_action2[index%9]
-                elif torch.any(indicesC == index):
-                    batch_action[index] = batch_action3[index%9]
-                        
-            action = torch.tensor(batch_action)            
+            action = torch.tensor(batch_action)
             action = action.to('cuda:0')            
                                         
         return batch_action
@@ -1195,8 +1190,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
     def _batch_act_train(self, batch_obs):
         assert self.training
-        with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
-            if self.burnin_action_func is not None and self.n_policy_updates1 == 0 and self.n_policy_updates2 == 0 and self.n_policy_updates3 == 0:
+        with torch.no_grad(), pfrl.utils.evaluating(self.policy):
+            if self.burnin_action_func is not None and self.n_policy_updates1 == 0:
                 batch_action = [self.burnin_action_func() for _ in range(len(batch_obs))]
             else:
                 batch_action = self.batch_select_greedy_action(batch_obs)            
