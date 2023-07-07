@@ -1082,9 +1082,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy3): # pfrl.utils.evaluating(self.policy2), 
             kl_div = nn.KLDivLoss(reduction="batchmean")
             
-            policy_output1 = self.policy1(batch_state1)
-            # policy_output2 = self.policy2(batch_state_shared2)
-            policy_output3 = self.policy3(batch_state3)
+            policy_distrib1 = self.policy1(batch_state1)
+            policy_output1 = policy_distrib1.rsample()
+            # policy_distrib2 = self.policy2(batch_state2)
+            # policy_output2 = policy_distrib2.rsample()
+            policy_distrib3 = self.policy3(batch_state3)
+            policy_output3 = policy_distrib3.rsample()
 
             kl_loss = 0
             kl_n = 0            
