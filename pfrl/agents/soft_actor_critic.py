@@ -583,8 +583,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.device = torch.device("cuda:{}".format(gpu))
             
             self.policy.to(self.device)
+            self.policy1.to(self.device)
             # self.policy2.to(self.device)
-            # self.policy3.to(self.device)
+            self.policy3.to(self.device)
             # self.shared_policy.to(self.device)
             
             self.q_func1_T1.to(self.device)
