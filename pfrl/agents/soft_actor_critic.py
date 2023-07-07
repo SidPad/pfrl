@@ -1100,8 +1100,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if torch.mean(q_T3) < -1.6:
                 kl_loss += kl_div(actions3, policy_output3)
                 kl_n += 1
-            
-        loss += (kl_loss / kl_n)
+        if kl_n != 0:
+            loss += (kl_loss / kl_n)
         loss.backward(retain_graph=True)
         self.policy_optimizer1.step()
         
