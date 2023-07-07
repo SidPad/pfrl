@@ -689,9 +689,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # self.policy2 = copy.deepcopy(self.policy).eval().requires_grad_(False)
         self.policy3 = copy.deepcopy(self.policy).eval().requires_grad_(False)
         
-        self.policy1.load_state_dict(torch.load('/home/jovyan/private/Models/PullUp_Soft_Redo/7fc547b81709d90aae5437e53aaf8a9ed4ef6b87-2395938a-7b65c434/best/policy.pt'))
+        self.policy1.load_state_dict(torch.load('/home/jovyan/private/Models/B_RHP7_6/ff8548963277328deacabc047af71c4d991fcab6-00000000-7b65c434/best/policy.pt'))
         # self.policy2.load_state_dict(torch.load('/home/jovyan/private/Models/S_RHP7_28_HARD_DR_2/35000210b8420e9c80ce2d8e92a128c85ff54da8-00000000-7b65c434/best/policy.pt'))
-        self.policy3.load_state_dict(torch.load('/home/jovyan/private/Models/Pullover_Soft_Redo/7fc547b81709d90aae5437e53aaf8a9ed4ef6b87-bb83d14f-7b65c434/best/policy.pt'))
+        self.policy3.load_state_dict(torch.load('/home/jovyan/private/Models/L_RHP7_12/877f621a575d90c5d065b1cc28cfacfeaffd8c53-00000000-7b65c434/best/policy.pt'))
 
         # Statistics
         self.q1_record_T1 = collections.deque(maxlen=1000)
