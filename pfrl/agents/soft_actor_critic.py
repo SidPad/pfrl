@@ -603,7 +603,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.soft_update_tau = soft_update_tau
         self.logger = logger
         
-        self.policy_optimizer = policy_optimizer1
+        self.policy_optimizer1 = policy_optimizer1
         # self.policy_optimizer2 = policy_optimizer2
         # self.policy_optimizer3 = policy_optimizer3
         # self.shared_policy_optimizer = shared_policy_optimizer
