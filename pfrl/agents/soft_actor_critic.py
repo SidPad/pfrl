@@ -492,7 +492,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         "policy1",
         # "policy2",
         "policy3",
-        "policy",
+        "shared_policy",
         "q_func1_T1",
         "q_func2_T1",
         # "q_func1_T2",
