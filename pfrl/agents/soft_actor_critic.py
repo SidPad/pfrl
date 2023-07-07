@@ -779,9 +779,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = batch_actions.to(torch.float32)
         
         ##### Divide into three #####
-        self.mask1 = torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
+        self.mask1 = torch.all(batch_next_state[:, -2:] == torch.tensor([1, 0]).to(self.device), dim=1)
         # self.mask2 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
-        self.mask3 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
+        self.mask3 = torch.all(batch_next_state[:, -2:] == torch.tensor([0, 1]).to(self.device), dim=1)
 
         batch_next_state1 = batch_next_state.clone().detach()
         # batch_next_state2 = batch_next_state.clone().detach()
@@ -1081,12 +1081,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy3): # pfrl.utils.evaluating(self.policy2), 
             kl_div = nn.KLDivLoss(reduction="batchmean")
+
+            batch_state1_reduced = batch_state1[:, :-2]
+            batch_state3_reduced = batch_state3[:, :-2]
             
-            policy_distrib1 = self.policy1(batch_state1)
+            policy_distrib1 = self.policy1(batch_state1_reduced)
             policy_output1 = policy_distrib1.rsample()
             # policy_distrib2 = self.policy2(batch_state2)
             # policy_output2 = policy_distrib2.rsample()
-            policy_distrib3 = self.policy3(batch_state3)
+            policy_distrib3 = self.policy3(batch_state3_reduced)
             policy_output3 = policy_distrib3.rsample()
 
             kl_loss = 0
