@@ -563,9 +563,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         act_deterministically=True,
     ):    
 
-        self.policy = policy1        
+        self.policy = shared_policy        
+        self.policy1 = policy1
         # self.policy2 = policy2
-        # self.policy3 = policy3
+        self.policy3 = policy3
         # self.shared_policy = shared_policy
         
         self.q_func1_T1 = q_func1_T1
@@ -685,9 +686,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.target_q_func1_T3 = copy.deepcopy(self.q_func1_T3).eval().requires_grad_(False)
         self.target_q_func2_T3 = copy.deepcopy(self.q_func2_T3).eval().requires_grad_(False)
 
-        self.policy1 = copy.deepcopy(self.policy).eval().requires_grad_(False)
+        self.policy1 = copy.deepcopy(self.policy1).eval().requires_grad_(False)
         # self.policy2 = copy.deepcopy(self.policy).eval().requires_grad_(False)
-        self.policy3 = copy.deepcopy(self.policy).eval().requires_grad_(False)
+        self.policy3 = copy.deepcopy(self.policy3).eval().requires_grad_(False)
         
         self.policy1.load_state_dict(torch.load('/home/jovyan/private/Models/B_RHP7_6/ff8548963277328deacabc047af71c4d991fcab6-00000000-7b65c434/best/policy.pt'))
         # self.policy2.load_state_dict(torch.load('/home/jovyan/private/Models/S_RHP7_28_HARD_DR_2/35000210b8420e9c80ce2d8e92a128c85ff54da8-00000000-7b65c434/best/policy.pt'))
