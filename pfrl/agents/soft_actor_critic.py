@@ -1088,13 +1088,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
             kl_loss = 0
             kl_n = 0
-            if q1 < 18:
+            if q_T1 < 18:
                 kl_loss = kl_div(action_distrib1, policy_output1)
                 kl_n += 1
             # if q2 < 6:
             #     kl_loss += kl_div(action_distrib2, policy_output2)
             #     kl_n += 1
-            if q3 < -1.6:
+            if q_T3 < -1.6:
                 kl_loss += kl_div(action_distrib3, policy_output3)
                 kl_n += 1
             
