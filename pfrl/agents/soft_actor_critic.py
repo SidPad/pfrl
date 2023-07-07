@@ -604,10 +604,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.soft_update_tau = soft_update_tau
         self.logger = logger
         
-        self.policy_optimizer1 = policy_optimizer1
+        # self.policy_optimizer1 = policy_optimizer1
         # self.policy_optimizer2 = policy_optimizer2
         # self.policy_optimizer3 = policy_optimizer3
-        # self.shared_policy_optimizer = shared_policy_optimizer
+        self.shared_policy_optimizer = shared_policy_optimizer
         
         self.q_func1_optimizer1 = q_func1_optimizer1
         self.q_func2_optimizer1 = q_func2_optimizer1
@@ -1022,7 +1022,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         temp1, temp3 = self.temperature # temp2, 
         
         # self.shared_policy_optimizer.zero_grad()
-        self.policy_optimizer1.zero_grad()
+        self.shared_policy_optimizer.zero_grad()
         # self.policy_optimizer2.zero_grad()
         # self.policy_optimizer3.zero_grad()
         
@@ -1107,7 +1107,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         if kl_n != 0:
             loss += (kl_loss / kl_n)
         loss.backward(retain_graph=True)
-        self.policy_optimizer1.step()
+        self.shared_policy_optimizer.step()
         
         # loss_T1.backward()
         # if self.max_grad_norm is not None:
