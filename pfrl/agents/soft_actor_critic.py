@@ -1096,13 +1096,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
             kl_loss = 0
             kl_n = 0            
-            if torch.mean(q_T1) < 18:
+            if torch.mean(q_T1) < 96:
                 kl_loss = kl_div(actions1, policy_output1)
                 kl_n += 1
             # if q2 < 6:
             #     kl_loss += kl_div(action_distrib2, policy_output2)
             #     kl_n += 1
-            if torch.mean(q_T3) < -1.6:
+            if torch.mean(q_T3) < 96:
                 kl_loss += kl_div(actions3, policy_output3)
                 kl_n += 1
         if kl_n != 0:
