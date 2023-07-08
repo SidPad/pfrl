@@ -505,9 +505,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # "target_q_func2_T2",
         "target_q_func1_T3",
         "target_q_func2_T3",
-        "policy_optimizer1",
+        # "policy_optimizer1",
         # "policy_optimizer2",
-        "policy_optimizer3",
+        # "policy_optimizer3",
         "shared_policy_optimizer",
         "q_func1_optimizer1",
         "q_func2_optimizer1",
@@ -526,24 +526,24 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     def __init__(
         self,
         policy1,
-        policy2,
+        # policy2,
         policy3,
-        shared_policy,
+        policy,
         q_func1_T1,
         q_func2_T1,
-        q_func1_T2,
-        q_func2_T2,
+        # q_func1_T2,
+        # q_func2_T2,
         q_func1_T3,
         q_func2_T3,
-        policy_optimizer1,
-        policy_optimizer2,
-        policy_optimizer3,
+        # policy_optimizer1,
+        # policy_optimizer2,
+        # policy_optimizer3,
         shared_policy_optimizer,
         q_func1_optimizer1,
-        q_func1_optimizer2,
+        # q_func1_optimizer2,
         q_func1_optimizer3,
         q_func2_optimizer1,
-        q_func2_optimizer2,
+        # q_func2_optimizer2,
         q_func2_optimizer3,
         replay_buffer,
         gamma,
@@ -563,9 +563,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         act_deterministically=True,
     ):    
 
-        self.policy = policy1        
+        self.policy = policy        
+        self.policy1 = policy1
         # self.policy2 = policy2
-        # self.policy3 = policy3
+        self.policy3 = policy3
         # self.shared_policy = shared_policy
         
         self.q_func1_T1 = q_func1_T1
@@ -582,8 +583,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.device = torch.device("cuda:{}".format(gpu))
             
             self.policy.to(self.device)
+            self.policy1.to(self.device)
             # self.policy2.to(self.device)
-            # self.policy3.to(self.device)
+            self.policy3.to(self.device)
             # self.shared_policy.to(self.device)
             
             self.q_func1_T1.to(self.device)
@@ -685,9 +687,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.target_q_func1_T3 = copy.deepcopy(self.q_func1_T3).eval().requires_grad_(False)
         self.target_q_func2_T3 = copy.deepcopy(self.q_func2_T3).eval().requires_grad_(False)
 
-        self.policy1 = copy.deepcopy(self.policy).eval().requires_grad_(False)
+        # self.policy1 = copy.deepcopy(self.policy1).eval().requires_grad_(False)
         # self.policy2 = copy.deepcopy(self.policy).eval().requires_grad_(False)
-        self.policy3 = copy.deepcopy(self.policy).eval().requires_grad_(False)
+        # self.policy3 = copy.deepcopy(self.policy3).eval().requires_grad_(False)
         
         self.policy1.load_state_dict(torch.load('/home/jovyan/private/Models/PullUp_Soft_Redo/7fc547b81709d90aae5437e53aaf8a9ed4ef6b87-2395938a-7b65c434/best/policy.pt'))
         # self.policy2.load_state_dict(torch.load('/home/jovyan/private/Models/S_RHP7_28_HARD_DR_2/35000210b8420e9c80ce2d8e92a128c85ff54da8-00000000-7b65c434/best/policy.pt'))
