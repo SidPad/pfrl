@@ -492,7 +492,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         "policy1",
         # "policy2",
         "policy3",
-        "shared_policy",
+        "policy",
         "q_func1_T1",
         "q_func2_T1",
         # "q_func1_T2",
@@ -528,7 +528,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         policy1,
         # policy2,
         policy3,
-        shared_policy,
+        policy,
         q_func1_T1,
         q_func2_T1,
         # q_func1_T2,
@@ -563,7 +563,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         act_deterministically=True,
     ):    
 
-        self.policy = shared_policy        
+        self.policy = policy        
         self.policy1 = policy1
         # self.policy2 = policy2
         self.policy3 = policy3
