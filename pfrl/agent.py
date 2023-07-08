@@ -85,6 +85,7 @@ class AttributeSavingMixin(object):
     def __save(self, dirname: str, ancestors: List[Any]):
         os.makedirs(dirname, exist_ok=True)
         ancestors.append(self)
+        print(self.saved_attributes)
         for attr in self.saved_attributes:
             assert hasattr(self, attr)
             attr_value = getattr(self, attr)
