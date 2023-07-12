@@ -881,7 +881,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
 
-                batch_next_state1_dep = torch.cat(batch_next_state1_d, next_actions1)
+                batch_next_state1_dep = torch.cat((batch_next_state1_d, next_actions1), dim = 1)
                 
                 next_q1_T1 = self.target_q_func1_T1((batch_next_state_shared1, batch_next_state1_dep))
                 next_q2_T1 = self.target_q_func2_T1((batch_next_state_shared1, batch_next_state1_dep))
@@ -900,7 +900,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_actions2 = next_action_distrib2.sample()
                 next_log_prob2 = next_action_distrib2.log_prob(next_actions2)
 
-                batch_next_state2_dep = torch.cat(batch_next_state2_d, next_actions2)
+                batch_next_state2_dep = torch.cat((batch_next_state2_d, next_actions2), dim = 1)
                 
                 next_q1_T2 = self.target_q_func1_T2((batch_next_state_shared2, batch_next_state2_dep))
                 next_q2_T2 = self.target_q_func2_T2((batch_next_state_shared2, batch_next_state2_dep))
@@ -919,7 +919,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_actions3 = next_action_distrib3.sample()
                 next_log_prob3 = next_action_distrib3.log_prob(next_actions3)
 
-                batch_next_state3_dep = torch.cat(batch_next_state3_d, next_actions3)
+                batch_next_state3_dep = torch.cat((batch_next_state3_d, next_actions3), dim = 1)
                 
                 next_q1_T3 = self.target_q_func1_T3((batch_next_state_shared3, batch_next_state3_dep))
                 next_q2_T3 = self.target_q_func2_T3((batch_next_state_shared3, batch_next_state3_dep))
@@ -933,9 +933,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 
                 N += 1
                 
-        batch_state1_dep = torch.cat(batch_state1_d, actions1)
-        batch_state2_dep = torch.cat(batch_state2_d, actions2)
-        batch_state3_dep = torch.cat(batch_state3_d, actions3)
+        batch_state1_dep = torch.cat((batch_state1_d, actions1), dim = 1)
+        batch_state2_dep = torch.cat((batch_state2_d, actions2), dim = 1)
+        batch_state3_dep = torch.cat((batch_state3_d, actions3), dim = 1)
         
         if batch_next_state1.numel() > 0:
             predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_state_shared1, batch_state1_dep)))
@@ -1100,7 +1100,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             actions1 = action_distrib1.rsample()
             log_prob1 = action_distrib1.log_prob(actions1)
 
-            batch_state1_dep = torch.cat(batch_state1_d, actions1)
+            batch_state1_dep = torch.cat((batch_state1_d, actions1), dim = 1)
         
             q1_T1 = self.q_func1_T1((batch_state_shared1, batch_state1_dep))
             q2_T1 = self.q_func2_T1((batch_state_shared1, batch_state1_dep))
@@ -1120,7 +1120,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             actions2 = action_distrib2.rsample()
             log_prob2 = action_distrib2.log_prob(actions2)
             
-            batch_state2_dep = torch.cat(batch_state2_d, actions2)
+            batch_state2_dep = torch.cat((batch_state2_d, actions2), dim = 1)
             
             q1_T2 = self.q_func1_T2((batch_state_shared2, batch_state2_dep))
             q2_T2 = self.q_func2_T2((batch_state_shared2, batch_state2_dep))
@@ -1140,7 +1140,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             actions3 = action_distrib3.rsample()
             log_prob3 = action_distrib3.log_prob(actions3)
 
-            batch_state3_dep = torch.cat(batch_state3_d, actions3)
+            batch_state3_dep = torch.cat((batch_state3_d, actions3), dim = 1))
             
             q1_T3 = self.q_func1_T3((batch_state_shared3, batch_state3_dep))
             q2_T3 = self.q_func2_T3((batch_state_shared3, batch_state3_dep))
