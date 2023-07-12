@@ -1265,8 +1265,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
         with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
             batch_xs = self.batch_states(batch_obs, self.device, self.phi)
-            batch_xs_ind = batch_xs[:, :56]
-            batch_xs_d = batch_xs[:, -5:]
+            batch_xs_ind = batch_xs[:, :55]
+            batch_xs_d = batch_xs[:, -6:]
             
             shared_policy_out = self.shared_policy(batch_xs_ind)
             
