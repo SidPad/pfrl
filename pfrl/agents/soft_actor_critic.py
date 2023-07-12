@@ -1140,7 +1140,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             actions3 = action_distrib3.rsample()
             log_prob3 = action_distrib3.log_prob(actions3)
 
-            batch_state3_dep = torch.cat((batch_state3_d, actions3), dim = 1))
+            batch_state3_dep = torch.cat((batch_state3_d, actions3), dim = 1)
             
             q1_T3 = self.q_func1_T3((batch_state_shared3, batch_state3_dep))
             q2_T3 = self.q_func2_T3((batch_state_shared3, batch_state3_dep))
