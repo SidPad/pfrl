@@ -1296,12 +1296,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # print(prof)
 
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
-        with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
-            batch_xs = self.batch_states(batch_obs, self.device, self.phi)
-            batch_xs_ind = batch_xs[:, :55]
-            batch_xs_d = batch_xs[:, -6:]
-            
-            shared_policy_out = self.shared_policy(batch_xs_ind)
+        with torch.no_grad(), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3):
+            batch_xs = self.batch_states(batch_obs, self.device, self.phi)            
             
             mask1 = torch.all(batch_xs[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
             mask2 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
@@ -1311,25 +1307,17 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             indicesB = torch.where(mask2)[0]
             indicesC = torch.where(mask3)[0]
             
-            shared_policy_out1 = shared_policy_out.clone().detach()
-            shared_policy_out2 = shared_policy_out.clone().detach()
-            shared_policy_out3 = shared_policy_out.clone().detach()
+            shared_policy_out1 = batch_xs.clone().detach()
+            shared_policy_out2 = batch_xs.clone().detach()
+            shared_policy_out3 = batch_xs.clone().detach()
             
             shared_policy_out1[~mask1] = 0
             shared_policy_out2[~mask2] = 0
             shared_policy_out3[~mask3] = 0
-
-            batch_xs_d1 = batch_xs_d.clone().detach()
-            batch_xs_d2 = batch_xs_d.clone().detach()
-            batch_xs_d3 = batch_xs_d.clone().detach()
-
-            batch_xs_d1[~mask1] = 0
-            batch_xs_d2[~mask2] = 0
-            batch_xs_d3[~mask3] = 0
             
-            policy_out1 = self.policy1((shared_policy_out1, batch_xs_d1))
-            policy_out2 = self.policy2((shared_policy_out2, batch_xs_d2))
-            policy_out3 = self.policy3((shared_policy_out3, batch_xs_d3))
+            policy_out1 = self.policy1(shared_policy_out1)
+            policy_out2 = self.policy2(shared_policy_out2)
+            policy_out3 = self.policy3(shared_policy_out3)
                         
             batch_action = np.empty((9,23))
             if deterministic:
