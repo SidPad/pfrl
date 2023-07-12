@@ -875,15 +875,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_state2_d[~self.mask2] = 0
             batch_state3_d[~self.mask3] = 0
 
-            batch_next_state1_dep = torch.cat(batch_next_state1_d, next_actions1)
-            batch_next_state2_dep = torch.cat(batch_next_state2_d, next_actions2)
-            batch_next_state3_dep = torch.cat(batch_next_state3_d, next_actions3)            
-            
             N = 0
             if batch_next_state1.numel() > 0:
                 next_action_distrib1 = self.policy1(batch_next_state1)
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
+
+                batch_next_state1_dep = torch.cat(batch_next_state1_d, next_actions1)
+                
                 next_q1_T1 = self.target_q_func1_T1((batch_next_state_shared1, batch_next_state1_dep))
                 next_q2_T1 = self.target_q_func2_T1((batch_next_state_shared1, batch_next_state1_dep))
                 next_q_T1 = torch.min(next_q1_T1, next_q2_T1)
@@ -900,6 +899,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_action_distrib2 = self.policy2(batch_next_state2)
                 next_actions2 = next_action_distrib2.sample()
                 next_log_prob2 = next_action_distrib2.log_prob(next_actions2)
+
+                batch_next_state2_dep = torch.cat(batch_next_state2_d, next_actions2)
+                
                 next_q1_T2 = self.target_q_func1_T2((batch_next_state_shared2, batch_next_state2_dep))
                 next_q2_T2 = self.target_q_func2_T2((batch_next_state_shared2, batch_next_state2_dep))
                 next_q_T2 = torch.min(next_q1_T2, next_q2_T2)
@@ -916,6 +918,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_action_distrib3 = self.policy3(batch_next_state3)
                 next_actions3 = next_action_distrib3.sample()
                 next_log_prob3 = next_action_distrib3.log_prob(next_actions3)
+
+                batch_next_state3_dep = torch.cat(batch_next_state3_d, next_actions3)
+                
                 next_q1_T3 = self.target_q_func1_T3((batch_next_state_shared3, batch_next_state3_dep))
                 next_q2_T3 = self.target_q_func2_T3((batch_next_state_shared3, batch_next_state3_dep))
                 next_q_T3 = torch.min(next_q1_T3, next_q2_T3)
