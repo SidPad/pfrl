@@ -828,8 +828,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy2), pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T1), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(self.target_q_func1_T2), pfrl.utils.evaluating(self.target_q_func2_T2), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):            
             temp1, temp2, temp3 = self.temperature
             
-            batch_next_state_ind = batch_next_state[:, :56]
-            batch_next_state_d = batch_next_state[:, -5:]            
+            batch_next_state_ind = batch_next_state[:, :55]
+            batch_next_state_d = batch_next_state[:, -6:]            
             batch_next_state_shared = self.shared_policy(batch_next_state_ind)
             
             ##### Divide into three #####
@@ -1006,8 +1006,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         """Compute loss for actor."""
 
         batch_state = batch["state"]
-        batch_state_ind = batch_state[:, :56]
-        batch_state_d = batch_state[:, -5:]
+        batch_state_ind = batch_state[:, :55]
+        batch_state_d = batch_state[:, -6:]
         #### Divide into three ####
         batch_state1 = batch_state.clone().detach()
         batch_state2 = batch_state.clone().detach()
