@@ -933,9 +933,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 
                 N += 1
                 
-        batch_state1_dep = torch.cat((batch_state1_d, actions1), dim = 1)
-        batch_state2_dep = torch.cat((batch_state2_d, actions2), dim = 1)
-        batch_state3_dep = torch.cat((batch_state3_d, actions3), dim = 1)
+        batch_state1_dep = torch.cat((batch_state1_d, batch_actions1), dim = 1)
+        batch_state2_dep = torch.cat((batch_state2_d, batch_actions2), dim = 1)
+        batch_state3_dep = torch.cat((batch_state3_d, batch_actions3), dim = 1)
         
         if batch_next_state1.numel() > 0:
             predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_state_shared1, batch_state1_dep)))
