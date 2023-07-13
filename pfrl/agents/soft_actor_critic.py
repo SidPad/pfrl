@@ -850,7 +850,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             N = 0
             if batch_next_state1.numel() > 0:
-                next_action_distrib1 = self.policy1((batch_next_state_shared1))
+                next_action_distrib1 = self.policy1(batch_next_state_shared1)
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
                 next_q1_T1 = self.target_q_func1_T1((batch_next_state1, next_actions1))
@@ -882,7 +882,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 # N += 1
             
             if batch_next_state3.numel() > 0:
-                next_action_distrib3 = self.policy3((batch_next_state_shared3))
+                next_action_distrib3 = self.policy3(batch_next_state_shared3)
                 next_actions3 = next_action_distrib3.sample()
                 next_log_prob3 = next_action_distrib3.log_prob(next_actions3)
                 next_q1_T3 = self.target_q_func1_T3((batch_next_state3, next_actions3))
@@ -1043,7 +1043,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         N = 0
         if batch_state1.numel() > 0:
-            action_distrib1 = self.policy1((batch_state_shared1))
+            action_distrib1 = self.policy1(batch_state_shared1)
             actions1 = action_distrib1.rsample()
             log_prob1 = action_distrib1.log_prob(actions1)
             q1_T1 = self.q_func1_T1((batch_state1, actions1))
@@ -1077,7 +1077,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             # log_prob2 = torch.empty(1).to(self.device)
         
         if batch_state3.numel() > 0:
-            action_distrib3 = self.policy3((batch_state_shared3))
+            action_distrib3 = self.policy3(batch_state_shared3)
             actions3 = action_distrib3.rsample()
             log_prob3 = action_distrib3.log_prob(actions3)
             q1_T3 = self.q_func1_T3((batch_state3, actions3))
@@ -1301,9 +1301,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             # batch_xs_d2[~mask2] = 0
             # batch_xs_d3[~mask3] = 0
             
-            policy_out1 = self.policy1((shared_policy_out1))
+            policy_out1 = self.policy1(shared_policy_out1)
             # policy_out2 = self.policy2((shared_policy_out2, batch_xs_d2))
-            policy_out3 = self.policy3((shared_policy_out3))
+            policy_out3 = self.policy3(shared_policy_out3)
                         
             batch_action = np.empty((6,23))
             if deterministic:
