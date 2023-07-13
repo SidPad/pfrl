@@ -25,6 +25,7 @@ from pfrl.utils.recurrent import (
     recurrent_state_as_numpy,
     recurrent_state_from_numpy
 )
+import time as t
 # import torch_xla
 # import torch_xla.core.xla_model as xm
 
@@ -1254,10 +1255,18 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
         with torch.autograd.profiler.profile(use_cuda=True) as prof:
+            be = t.time()
             batch = batch_experiences(experiences, self.device, self.phi, self.gamma)
+            q = t.time()
+            print((q - be), "batch_experience")
             self.update_q_func(batch)
+            pt = t.time()
+            print((pt - q), "Q-Func")
             self.update_policy_and_temperature(batch)
-            self.sync_target_network()
+            st = t.time()
+            print((st - pt), "PolicyTemp")
+            self.sync_target_network()            
+            print((t.time() - st), "SyncTarget")
         # print(prof)
 
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
