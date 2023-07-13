@@ -6,6 +6,7 @@ import numpy as np
 from torch.distributions.utils import lazy_property
 
 import pfrl
+import time as t
 
 
 def worker(remote, env_fn):
@@ -14,6 +15,7 @@ def worker(remote, env_fn):
     env = env_fn()
     try:
         while True:
+            start = t.time()
             cmd, data = remote.recv()
             if cmd == "step":
                 ob, reward, done, info = env.step(data)
@@ -32,6 +34,8 @@ def worker(remote, env_fn):
                 remote.send(env.seed(data))
             else:
                 raise NotImplementedError
+            end = t.time()
+            print(end - start, "MultiProcess")
     finally:
         env.close()
 
