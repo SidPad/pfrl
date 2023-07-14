@@ -855,7 +855,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             N = 0
             if batch_next_state1.numel() > 0:
                 next_action_distrib1 = torch.jit.trace(self.policy1, batch_next_state_shared1)
-                next_action_distrib1 = self.gaussian_policy(next_action_distrib1)
+                next_action_distrib1 = self.gaussian_policy(next_action_distrib1(batch_next_state_shared1))
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
 
@@ -891,7 +891,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             if batch_next_state3.numel() > 0:
                 next_action_distrib3 = self.policy3(batch_next_state_shared3)
-                next_action_distrib3 = self.gaussian_policy(next_action_distrib3)
+                next_action_distrib3 = self.gaussian_policy(next_action_distrib3(batch_next_state_shared3))
                 next_actions3 = next_action_distrib3.sample()
                 next_log_prob3 = next_action_distrib3.log_prob(next_actions3)
 
