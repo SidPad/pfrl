@@ -831,7 +831,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         self.q_func1_optimizer3.zero_grad()
         self.q_func2_optimizer3.zero_grad()
-        with autocast(dtype=torch.float16):
+        with autocast():
             with torch.no_grad(), pfrl.utils.evaluating(self.shared_policy), pfrl.utils.evaluating(self.policy1), pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T1), pfrl.utils.evaluating(self.target_q_func2_T1), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):            
                 temp1, temp3 = self.temperature
                 
