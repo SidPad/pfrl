@@ -1254,19 +1254,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
-        with torch.autograd.profiler.profile(use_cuda=True) as prof:
-            be = t.time()
-            batch = batch_experiences(experiences, self.device, self.phi, self.gamma)
-            q = t.time()
-            print((q - be), "batch_experience")
-            self.update_q_func(batch)
-            pt = t.time()
-            print((pt - q), "Q-Func")
-            self.update_policy_and_temperature(batch)
-            st = t.time()
-            print((st - pt), "PolicyTemp")
-            self.sync_target_network()            
-            print((t.time() - st), "SyncTarget")
+        with torch.autograd.profiler.profile(use_cuda=True) as prof:            
+            batch = batch_experiences(experiences, self.device, self.phi, self.gamma)                        
+            self.update_q_func(batch)            
+            self.update_policy_and_temperature(batch)            
+            self.sync_target_network()
         # print(prof)
 
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
