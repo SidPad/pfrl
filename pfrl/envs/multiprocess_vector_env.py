@@ -14,8 +14,7 @@ def worker(remote, env_fn):
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     env = env_fn()
     try:
-        while True:
-            start = t.time()
+        while True:            
             cmd, data = remote.recv()
             if cmd == "step":
                 ob, reward, done, info = env.step(data)
@@ -33,9 +32,7 @@ def worker(remote, env_fn):
             elif cmd == "seed":
                 remote.send(env.seed(data))
             else:
-                raise NotImplementedError
-            end = t.time()
-            print(end - start, "MultiProcess")
+                raise NotImplementedError            
     finally:
         env.close()
 
