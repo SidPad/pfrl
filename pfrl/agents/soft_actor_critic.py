@@ -848,7 +848,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             # batch_next_state2_d[~self.mask2] = 0
             # batch_next_state3_d[~self.mask3] = 0
 
-            @torch.jit.ignore
+            @torch.jit.trace
             def minni(x, y):
                 return torch.min(x, y)
             
