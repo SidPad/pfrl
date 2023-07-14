@@ -829,12 +829,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             # batch_next_state_ind = batch_next_state[:, :55]
             # batch_next_state_d = batch_next_state[:, -6:]            
-            batch_next_state_shared = self.shared_policy(batch_next_state)
+            batch_next_state_shared = torch.jit.trace(self.shared_policy, batch_next_state)
             
             ##### Divide into three #####
-            batch_next_state_shared1 = batch_next_state_shared.clone().detach()
+            batch_next_state_shared1 = batch_next_state_shared #.clone().detach()
             # batch_next_state_shared2 = batch_next_state_shared.clone().detach()
-            batch_next_state_shared3 = batch_next_state_shared.clone().detach()
+            batch_next_state_shared3 = batch_next_state_shared #.clone().detach()
             
             batch_next_state_shared1[~self.mask1] = 0
             # batch_next_state_shared2[~self.mask2] = 0
@@ -850,7 +850,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             N = 0
             if batch_next_state1.numel() > 0:
-                next_action_distrib1 = self.policy1(batch_next_state_shared1)
+                next_action_distrib1 = torch.jit.trace(self.policy1, batch_next_state_shared1)
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
 
