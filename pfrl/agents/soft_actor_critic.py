@@ -854,7 +854,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
 
-                inputtttt = torch.cat(batch_next_state1, next_actions1), dim = -1)
+                inputtttt = torch.cat((batch_next_state1, next_actions1), dim = -1)
                 
                 next_q1_T1 = torch.jit.trace(self.target_q_func1_T1, inputtttt)
                 next_q2_T1 = torch.jit.trace(self.target_q_func2_T1, inputtttt)
