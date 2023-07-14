@@ -858,6 +858,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 
                 next_q1_T1 = torch.jit.trace(self.target_q_func1_T1, inputtttt)
                 next_q2_T1 = torch.jit.trace(self.target_q_func2_T1, inputtttt)
+                @torch.jit.ignore
                 next_q_T1 = torch.min(next_q1_T1, next_q2_T1)
                 entropy_term1 = temp1 * next_log_prob1[..., None]
                 assert next_q_T1.shape == entropy_term1.shape
