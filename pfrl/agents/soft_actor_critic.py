@@ -1054,9 +1054,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             action_distrib1 = self.policy1(batch_state_shared1)
             actions1 = action_distrib1.rsample()
             log_prob1 = action_distrib1.log_prob(actions1)
-            q1_T1 = self.q_func1_T1((batch_state1, actions1))
-            q2_T1 = self.q_func2_T1((batch_state1, actions1))
-            q_T1 = torch.min(q1_T1, q2_T1)
+
+            batch_state_action1 = torch.cat((batch_state1, batch_actions1), dim = -1)
+            
+            q1_T1 = torch.jit.trace(self.q_func1_T1, batch_state_action1)
+            q2_T1 = torch.jit.trace(self.q_func2_T1, batch_state_action1)
+            q_T1 = torch.min(q1_T1(batch_state_action1), q2_T1(batch_state_action1))
 
             entropy_term1 = temp1 * log_prob1[..., None]
             assert q_T1.shape == entropy_term1.shape
@@ -1088,9 +1091,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             action_distrib3 = self.policy3(batch_state_shared3)
             actions3 = action_distrib3.rsample()
             log_prob3 = action_distrib3.log_prob(actions3)
-            q1_T3 = self.q_func1_T3((batch_state3, actions3))
-            q2_T3 = self.q_func2_T3((batch_state3, actions3))
-            q_T3 = torch.min(q1_T3, q2_T3)
+
+            batch_state_action3 = torch.cat((batch_state3, batch_actions3), dim = -1)
+            
+            q1_T3 = torch.jit.trace(self.q_func1_T3, batch_state_action3)
+            q2_T3 = torch.jit.trace(self.q_func2_T3, batch_state_action3)
+            q_T3 = torch.min(q1_T3(batch_state_action3), q2_T3(batch_state_action3))
 
             entropy_term3 = temp3 * log_prob3[..., None]
             assert q_T3.shape == entropy_term3.shape
