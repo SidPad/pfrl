@@ -26,6 +26,7 @@ from pfrl.utils.recurrent import (
     recurrent_state_from_numpy
 )
 import time as t
+from torch.cuda.amp import autocast
 # import torch_xla
 # import torch_xla.core.xla_model as xm
 
