@@ -531,7 +531,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # policy2,
         policy3,
         shared_policy,
-        gaussian_policy
+        gaussian_policy,
         q_func1_T1,
         q_func2_T1,
         # q_func1_T2,
