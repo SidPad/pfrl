@@ -922,7 +922,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss1_T1.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func1_T1.parameters(), self.max_grad_norm)
-            self.scaler.step(self.q_func1_optimizer1)
+            self.q_func1_optimizer1.step()
 
             self.q_func2_optimizer1.zero_grad()
             loss2_T1.backward()
@@ -973,7 +973,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss1_T3.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func1_T3.parameters(), self.max_grad_norm)
-            self.scaler.step(self.q_func1_optimizer3)
+            self.q_func1_optimizer3.step()
                 
             self.q_func2_optimizer3.zero_grad()
             loss2_T3.backward()
