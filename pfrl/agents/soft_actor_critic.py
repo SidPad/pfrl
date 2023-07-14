@@ -853,8 +853,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 next_action_distrib1 = self.policy1(batch_next_state_shared1)
                 next_actions1 = next_action_distrib1.sample()
                 next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
-                next_q1_T1 = torch.jit.script(self.target_q_func1_T1, ((batch_next_state1, next_actions1)))
-                next_q2_T1 = torch.jit.script(self.target_q_func2_T1, ((batch_next_state1, next_actions1)))
+                next_q1_T1 = self.target_q_func1_T1((batch_next_state1, next_actions1))
+                next_q2_T1 = self.target_q_func2_T1((batch_next_state1, next_actions1))
                 next_q_T1 = torch.min(next_q1_T1, next_q2_T1)
                 entropy_term1 = temp1 * next_log_prob1[..., None]
                 assert next_q_T1.shape == entropy_term1.shape
