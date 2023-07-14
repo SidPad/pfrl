@@ -984,6 +984,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     clip_l2_grad_norm_(self.q_func2_T3.parameters(), self.max_grad_norm)
                 self.scaler.step(self.q_func2_optimizer3)
 
+            self.scaler.update()
+
     def update_temperature(self, log_prob1, log_prob3):
         assert not log_prob1.requires_grad
         # assert not log_prob2.requires_grad
