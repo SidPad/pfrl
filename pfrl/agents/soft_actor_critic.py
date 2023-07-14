@@ -835,10 +835,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_next_state_shared1 = batch_next_state_shared #.clone().detach()
             # batch_next_state_shared2 = batch_next_state_shared.clone().detach()
             batch_next_state_shared3 = batch_next_state_shared #.clone().detach()
+
+            mask1 = (~self.mask1).nonzero(as_tuple=False).squeeze()
+            mask3 = (~self.mask3).nonzero(as_tuple=False).squeeze()
             
-            batch_next_state_shared1[~self.mask1] = 0
+            batch_next_state_shared1[mask1] = 0
             # batch_next_state_shared2[~self.mask2] = 0
-            batch_next_state_shared3[~self.mask3] = 0
+            batch_next_state_shared3[mask3] = 0
 
             # batch_next_state1_d = batch_next_state_d.clone().detach()
             # batch_next_state2_d = batch_next_state_d.clone().detach()
