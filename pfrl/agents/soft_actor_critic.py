@@ -907,9 +907,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         if batch_next_state1.numel() > 0:
             batch_state_action1 = torch.cat((batch_state1, batch_actions1), dim = -1)
             predict_q1_T1 = torch.jit.script(self.q_func1_T1, batch_state_action1)
-            predict_q1_T1 = torch.flatten(predict_q1_T1)
+            predict_q1_T1 = torch.flatten(predict_q1_T1(batch_state_action1))
             predict_q2_T1 = torch.jit.script(self.q_func2_T1, batch_state_action1)
-            predict_q2_T1 = torch.flatten(predict_q2_T1)
+            predict_q2_T1 = torch.flatten(predict_q2_T1(batch_state_action1))
 
             loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
             loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)
