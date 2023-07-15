@@ -581,7 +581,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 
         if gpu is not None and gpu >= 0:
             assert torch.cuda.is_available()
-            self.device = torch.device("cuda:{}".format(gpu))
+            self.device = torch.device("cuda:{}".format(rank))
             
             self.policy1.to(self.device)
             # self.policy2.to(self.device)
@@ -594,6 +594,18 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             # self.q_func2_T2.to(self.device)
             self.q_func1_T3.to(self.device)
             self.q_func2_T3.to(self.device)
+
+            self.policy1 = DDP(self.policy1, device_ids=[self.device])
+            # self.policy2.to(self.device)
+            self.policy3 = DDP(self.policy3, device_ids=[self.device])
+            self.shared_policy = DDP(self.shared_policy, device_ids=[self.device])
+            
+            self.q_func1_T1 = DDP(self.q_func1_T1, device_ids=[self.device])
+            self.q_func2_T1 = DDP(self.q_func2_T1, device_ids=[self.device])
+            # self.q_func1_T2.to(self.device)
+            # self.q_func2_T2.to(self.device)
+            self.q_func1_T3 = DDP(self.q_func1_T3, device_ids=[self.device])
+            self.q_func2_T3 = DDP(self.q_func2_T3, device_ids=[self.device])
                         
         else:
             self.device = torch.device("cpu")
