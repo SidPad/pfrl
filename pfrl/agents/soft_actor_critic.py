@@ -1041,7 +1041,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.n_policy_updates2 += 1
         
         elif self.mask3.numel() > 0:
-            with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf)
+            with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf):
                 policymid1, policymid2 = self.policy1fhalf(batch_state), self.policy2fhalf(batch_state)
             action_distrib3 = self.policy3((policymid1, policymid2))
             actions3 = action_distrib3.rsample()
