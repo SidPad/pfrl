@@ -744,68 +744,71 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             with torch.no_grad():
                 return float(self.temperature_holder1()), float(self.temperature_holder2()), float(self.temperature_holder3())
 
-    def sync_target_network(self):
+    def sync_target_network(self, t):
         """Synchronize target network with current network."""
-        synchronize_parameters(
-            src=self.q_func1_T1fhalf,
-            dst=self.target_q_func1_T1fhalf,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
-        synchronize_parameters(
-            src=self.q_func1_T1shalf,
-            dst=self.target_q_func1_T1shalf,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
-        synchronize_parameters(
-            src=self.q_func2_T1fhalf,
-            dst=self.target_q_func2_T1fhalf,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
-        synchronize_parameters(
-            src=self.q_func2_T1shalf,
-            dst=self.target_q_func2_T1shalf,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
-        synchronize_parameters(
-            src=self.q_func1_T2fhalf,
-            dst=self.target_q_func1_T2fhalf,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
-        synchronize_parameters(
-            src=self.q_func1_T2shalf,
-            dst=self.target_q_func1_T2shalf,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
-        synchronize_parameters(
-            src=self.q_func2_T2fhalf,
-            dst=self.target_q_func2_T2fhalf,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
-        synchronize_parameters(
-            src=self.q_func2_T2shalf,
-            dst=self.target_q_func2_T2shalf,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
-        synchronize_parameters(
-            src=self.q_func1_T3,
-            dst=self.target_q_func1_T3,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
-        synchronize_parameters(
-            src=self.q_func2_T3,
-            dst=self.target_q_func2_T3,
-            method="soft",
-            tau=self.soft_update_tau,
-        )
+        if t == 1:
+            synchronize_parameters(
+                src=self.q_func1_T1fhalf,
+                dst=self.target_q_func1_T1fhalf,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
+            synchronize_parameters(
+                src=self.q_func1_T1shalf,
+                dst=self.target_q_func1_T1shalf,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
+            synchronize_parameters(
+                src=self.q_func2_T1fhalf,
+                dst=self.target_q_func2_T1fhalf,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
+            synchronize_parameters(
+                src=self.q_func2_T1shalf,
+                dst=self.target_q_func2_T1shalf,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
+        elif t == 2:
+            synchronize_parameters(
+                src=self.q_func1_T2fhalf,
+                dst=self.target_q_func1_T2fhalf,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
+            synchronize_parameters(
+                src=self.q_func1_T2shalf,
+                dst=self.target_q_func1_T2shalf,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
+            synchronize_parameters(
+                src=self.q_func2_T2fhalf,
+                dst=self.target_q_func2_T2fhalf,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
+            synchronize_parameters(
+                src=self.q_func2_T2shalf,
+                dst=self.target_q_func2_T2shalf,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
+        elif t == 3:
+            synchronize_parameters(
+                src=self.q_func1_T3,
+                dst=self.target_q_func1_T3,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
+            synchronize_parameters(
+                src=self.q_func2_T3,
+                dst=self.target_q_func2_T3,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
 
     def update_q_func(self, batch):
         """Compute loss for a given Q-function."""
@@ -830,10 +833,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             temp1, temp2, temp3 = self.temperature
             
             batch_next_state_ind = batch_next_state[:, :55]
-            batch_next_state_d = batch_next_state[:, -6:]
-            print("Q")
-            if self.mask1.numel() > 0:
-                print("Task 1")
+            batch_next_state_d = batch_next_state[:, -6:]            
+            if self.mask1.numel() > 0:                
                 next_action_distrib = self.policy1shalf((self.policy1fhalf(batch_next_state_ind), batch_next_state_d))
                 next_actions = next_action_distrib.sample()
                 next_log_prob = next_action_distrib.log_prob(next_actions)
@@ -851,9 +852,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 target_q = batch_rewards + batch_discount * (
                     1.0 - batch_terminal
                 ) * torch.flatten(next_q - entropy_term)
+
+                t = 1
             
-            elif self.mask2.numel() > 0:
-                print("Task 2")
+            elif self.mask2.numel() > 0:                
                 next_action_distrib = self.policy2shalf((self.policy2fhalf(batch_next_state_ind), next_actions))
                 next_actions = next_action_distrib.sample()
                 next_log_prob = next_action_distrib.log_prob(next_actions)
@@ -871,9 +873,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 target_q = batch_rewards + batch_discount * (
                     1.0 - batch_terminal
                 ) * torch.flatten(next_q - entropy_term)
+
+                t = 2
             
-            elif self.mask3.numel() > 0:
-                print("Task 3")
+            elif self.mask3.numel() > 0:                
                 policy3_input = torch.cat(self.policy1fhalf(batch_next_state_ind), self.policy2fhalf(batch_next_state_ind), dim = 1)
                 next_action_distrib = self.policy3((policy3_input, batch_next_state_d))
                 next_actions = next_action_distrib.sample()
@@ -899,11 +902,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     1.0 - batch_terminal
                 ) * torch.flatten(next_q - entropy_term)
 
+                t = 3
+
         batch_state_ind = batch_state[:, :55]
         batch_state_d = batch_state[:, -6:]
         
-        if self.mask1.numel() > 0:
-            print("Task 1")
+        if self.mask1.numel() > 0:            
             predict_q1 = torch.flatten(self.q_func1_T1shalf((self.q_func1_T1fhalf((batch_state_ind, batch_actions)), batch_state_d)))
             predict_q2 = torch.flatten(self.q_func2_T1shalf((self.q_func2_T1fhalf((batch_state_ind, batch_actions)), batch_state_d)))
 
@@ -928,8 +932,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 clip_l2_grad_norm_(self.q_func2.parameters(), self.max_grad_norm)
             self.q_func2_optimizer1.step()
         
-        elif self.mask2.numel() > 0:
-            print("Task 2")
+        elif self.mask2.numel() > 0:            
             predict_q1 = torch.flatten(self.q_func1_T2shalf((self.q_func1_T2fhalf((batch_state_ind, batch_actions)), batch_state_d)))
             predict_q2 = torch.flatten(self.q_func2_T2shalf((self.q_func2_T2fhalf((batch_state_ind, batch_actions)), batch_state_d)))
 
@@ -954,8 +957,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 clip_l2_grad_norm_(self.q_func2.parameters(), self.max_grad_norm)
             self.q_func2_optimizer2.step()
         
-        elif self.mask3.numel() > 0:
-            print("Task 3")
+        elif self.mask3.numel() > 0:            
             q3_input = torch.cat(self.q_func1_T1fhalf((batch_state_ind, batch_actions)), self.q_func2_T2fhalf((batch_state_ind, batch_actions)), dim = 1)
             predict_q1 = torch.flatten(self.q_func1_T3((q3_input, batch_state_d)))
             predict_q2 = torch.flatten(self.q_func2_T3((q3_input, batch_state_d)))
@@ -980,6 +982,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func2.parameters(), self.max_grad_norm)
             self.q_func2_optimizer3.step()
+
+        return t
 
     def update_temperature(self, log_prob1, log_prob2, log_prob3):
         assert not log_prob1.requires_grad
@@ -1023,10 +1027,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 
         self.policy_optimizer1.zero_grad()
         self.policy_optimizer2.zero_grad()
-        self.policy_optimizer3.zero_grad()        
-        print("Actor")
-        if self.mask1.numel() > 0:
-            print("Task 1")
+        self.policy_optimizer3.zero_grad()
+        if self.mask1.numel() > 0:            
             action_distrib1 = self.policy1shalf((self.policy1fhalf(batch_state_ind), batch_state_d))
             actions = action_distrib1.rsample()
             log_prob1 = action_distrib1.log_prob(actions)
@@ -1047,8 +1049,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob2 = torch.empty(1).to(self.device)
             log_prob3 = torch.empty(1).to(self.device)
         
-        elif self.mask2.numel() > 0:
-            print("Task 2")
+        elif self.mask2.numel() > 0:            
             action_distrib2 = self.policy2shalf((self.policy2fhalf(batch_state_ind), batch_state_d))
             actions = action_distrib2.rsample()
             log_prob2 = action_distrib2.log_prob(actions)
@@ -1069,8 +1070,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob1 = torch.empty(1).to(self.device)
             log_prob3 = torch.empty(1).to(self.device)
         
-        elif self.mask3.numel() > 0:
-            print("Task 3")
+        elif self.mask3.numel() > 0:            
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf):
                 policymid1, policymid2 = self.policy1fhalf(batch_state_ind), self.policy2fhalf(batch_state_ind)
             p3_input = torch.cat(policymid1, policymid2, dim = 1)
@@ -1125,9 +1125,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         """Update the model from experiences"""        
         with torch.autograd.profiler.profile(use_cuda=True) as prof:
             batch = batch_experiences(experiences, self.device, self.phi, self.gamma)
-            self.update_q_func(batch)
+            t = self.update_q_func(batch)
             self.update_policy_and_temperature(batch)
-            self.sync_target_network()
+            self.sync_target_network(t)
         # print(prof)
 
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
@@ -1140,15 +1140,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             mask1 = torch.all(batch_xs[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
             mask2 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
             mask3 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
-            print("Greedy")            
-            if mask1.numel() > 0:
-                print("Task 1")
+                  
+            if mask1.numel() > 0:                
                 policy_out = self.policy1shalf((self.policy1fhalf(batch_xs_ind), batch_xs_d))
-            elif mask2.numel() > 0:
-                print("Task 2")
+            elif mask2.numel() > 0:                
                 policy_out = self.policy2shalf((self.policy2fhalf(batch_xs_ind), batch_xs_d))
-            elif mask3.numel() > 0:
-                print("Task 3")
+            elif mask3.numel() > 0:                
                 p3_input = torch.cat(self.policy1fhalf(batch_xs_ind), self.policy2fhalf(batch_xs_ind), dim = 1)
                 policy_out = self.policy3((p3_input, batch_xs_d))
                 
