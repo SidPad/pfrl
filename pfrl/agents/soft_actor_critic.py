@@ -1023,8 +1023,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             action_distrib1 = self.policy1shalf((self.policy1fhalf(batch_state_ind), batch_state_d))
             actions = action_distrib1.rsample()
             log_prob1 = action_distrib1.log_prob(actions)
-            q1 = self.q_func1_T1shalf((self.q_func1_T1fhalf((batch_state_ind, batch_actions)), batch_state_d))
-            q2 = self.q_func2_T1shalf((self.q_func2_T1fhalf((batch_state_ind, batch_actions)), batch_state_d))
+            q1 = self.q_func1_T1shalf((self.q_func1_T1fhalf((batch_state_ind, actions)), batch_state_d))
+            q2 = self.q_func2_T1shalf((self.q_func2_T1fhalf((batch_state_ind, actions)), batch_state_d))
             q = torch.min(q1, q2)
 
             entropy_term1 = temp1 * log_prob1[..., None]
@@ -1041,8 +1041,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             action_distrib2 = self.policy2shalf((self.policy2fhalf(batch_state_ind), batch_state_d))
             actions = action_distrib2.rsample()
             log_prob2 = action_distrib2.log_prob(actions)
-            q1 = self.q_func1_T2shalf((self.q_func1_T2fhalf((batch_state_ind, batch_actions)), batch_state_d))
-            q2 = self.q_func2_T2shalf((self.q_func2_T2fhalf((batch_state_ind, batch_actions)), batch_state_d))
+            q1 = self.q_func1_T2shalf((self.q_func1_T2fhalf((batch_state_ind, actions)), batch_state_d))
+            q2 = self.q_func2_T2shalf((self.q_func2_T2fhalf((batch_state_ind, actions)), batch_state_d))
             q = torch.min(q1, q2)
 
             entropy_term2 = temp2 * log_prob2[..., None]
@@ -1062,8 +1062,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             action_distrib3 = self.policy3((p3_input, batch_state_d))
             actions3 = action_distrib3.rsample()
             log_prob3 = action_distrib3.log_prob(actions3)
-            q1 = self.q_func1_T3shalf((self.q_func1_T3fhalf((batch_state_ind, batch_actions)), batch_state_d))
-            q2 = self.q_func2_T3shalf((self.q_func2_T3fhalf((batch_state_ind, batch_actions)), batch_state_d))
+            q1 = self.q_func1_T3shalf((self.q_func1_T3fhalf((batch_state_ind, actions)), batch_state_d))
+            q2 = self.q_func2_T3shalf((self.q_func2_T3fhalf((batch_state_ind, actions)), batch_state_d))
             q = torch.min(q1, q2)
 
             entropy_term3 = temp3 * log_prob3[..., None]
