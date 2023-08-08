@@ -714,8 +714,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.q1_record = collections.deque(maxlen=1000)
         self.q2_record = collections.deque(maxlen=1000)
         self.entropy_record = collections.deque(maxlen=1000)
-        self.q_func1_loss = collections.deque(maxlen=100)
-        self.q_func2_loss = collections.deque(maxlen=100)                
+        self.q_func1_loss_record = collections.deque(maxlen=100)
+        self.q_func2_loss_record = collections.deque(maxlen=100)                
         
         self.n_policy_updates = 0        
         
