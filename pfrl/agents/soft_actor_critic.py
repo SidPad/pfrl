@@ -831,8 +831,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             batch_next_state_ind = batch_next_state[:, :55]
             batch_next_state_d = batch_next_state[:, -6:]
-            
+            print("Q")
             if self.mask1.numel() > 0:
+                print("Task 1")
                 next_action_distrib = self.policy1shalf((self.policy1fhalf(batch_next_state_ind), batch_next_state_d))
                 next_actions = next_action_distrib.sample()
                 next_log_prob = next_action_distrib.log_prob(next_actions)
@@ -851,7 +852,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     1.0 - batch_terminal
                 ) * torch.flatten(next_q - entropy_term)
             
-            elif self.mask2.numel() > 0:                
+            elif self.mask2.numel() > 0:
+                print("Task 2")
                 next_action_distrib = self.policy2shalf((self.policy2fhalf(batch_next_state_ind), next_actions))
                 next_actions = next_action_distrib.sample()
                 next_log_prob = next_action_distrib.log_prob(next_actions)
@@ -871,6 +873,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 ) * torch.flatten(next_q - entropy_term)
             
             elif self.mask3.numel() > 0:
+                print("Task 3")
                 policy3_input = torch.cat(self.policy1fhalf(batch_next_state_ind), self.policy2fhalf(batch_next_state_ind), dim = 1)
                 next_action_distrib = self.policy3((policy3_input, batch_next_state_d))
                 next_actions = next_action_distrib.sample()
@@ -900,6 +903,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state_d = batch_state[:, -6:]
         
         if self.mask1.numel() > 0:
+            print("Task 1")
             predict_q1 = torch.flatten(self.q_func1_T1shalf((self.q_func1_T1fhalf((batch_state_ind, batch_actions)), batch_state_d)))
             predict_q2 = torch.flatten(self.q_func2_T1shalf((self.q_func2_T1fhalf((batch_state_ind, batch_actions)), batch_state_d)))
 
@@ -925,6 +929,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func2_optimizer1.step()
         
         elif self.mask2.numel() > 0:
+            print("Task 2")
             predict_q1 = torch.flatten(self.q_func1_T2shalf((self.q_func1_T2fhalf((batch_state_ind, batch_actions)), batch_state_d)))
             predict_q2 = torch.flatten(self.q_func2_T2shalf((self.q_func2_T2fhalf((batch_state_ind, batch_actions)), batch_state_d)))
 
@@ -950,6 +955,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func2_optimizer2.step()
         
         elif self.mask3.numel() > 0:
+            print("Task 3")
             q3_input = torch.cat(self.q_func1_T1fhalf((batch_state_ind, batch_actions)), self.q_func2_T2fhalf((batch_state_ind, batch_actions)), dim = 1)
             predict_q1 = torch.flatten(self.q_func1_T3((q3_input, batch_state_d)))
             predict_q2 = torch.flatten(self.q_func2_T3((q3_input, batch_state_d)))
@@ -1018,8 +1024,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.policy_optimizer1.zero_grad()
         self.policy_optimizer2.zero_grad()
         self.policy_optimizer3.zero_grad()        
-        
+        print("Actor")
         if self.mask1.numel() > 0:
+            print("Task 1")
             action_distrib1 = self.policy1shalf((self.policy1fhalf(batch_state_ind), batch_state_d))
             actions = action_distrib1.rsample()
             log_prob1 = action_distrib1.log_prob(actions)
@@ -1041,6 +1048,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob3 = torch.empty(1).to(self.device)
         
         elif self.mask2.numel() > 0:
+            print("Task 2")
             action_distrib2 = self.policy2shalf((self.policy2fhalf(batch_state_ind), batch_state_d))
             actions = action_distrib2.rsample()
             log_prob2 = action_distrib2.log_prob(actions)
@@ -1062,6 +1070,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             log_prob3 = torch.empty(1).to(self.device)
         
         elif self.mask3.numel() > 0:
+            print("Task 3")
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf):
                 policymid1, policymid2 = self.policy1fhalf(batch_state_ind), self.policy2fhalf(batch_state_ind)
             p3_input = torch.cat(policymid1, policymid2, dim = 1)
@@ -1131,12 +1140,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             mask1 = torch.all(batch_xs[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
             mask2 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
             mask3 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
-                        
+            print("Greedy")            
             if mask1.numel() > 0:
+                print("Task 1")
                 policy_out = self.policy1shalf((self.policy1fhalf(batch_xs_ind), batch_xs_d))
             elif mask2.numel() > 0:
+                print("Task 2")
                 policy_out = self.policy2shalf((self.policy2fhalf(batch_xs_ind), batch_xs_d))
             elif mask3.numel() > 0:
+                print("Task 3")
                 p3_input = torch.cat(self.policy1fhalf(batch_xs_ind), self.policy2fhalf(batch_xs_ind), dim = 1)
                 policy_out = self.policy3((p3_input, batch_xs_d))
                 
