@@ -829,8 +829,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy1shalf), pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T1fhalf), pfrl.utils.evaluating(self.target_q_func1_T1shalf), pfrl.utils.evaluating(self.target_q_func2_T1fhalf), pfrl.utils.evaluating(self.target_q_func2_T1shalf), pfrl.utils.evaluating(self.target_q_func1_T2fhalf), pfrl.utils.evaluating(self.target_q_func1_T2shalf), pfrl.utils.evaluating(self.target_q_func2_T2fhalf), pfrl.utils.evaluating(self.target_q_func2_T2shalf), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):
             temp1, temp2, temp3 = self.temperature
             
-            batch_next_state_ind = batch_next_state[:, :58]
-            batch_next_state_d = batch_next_state[:, -3:]
+            batch_next_state_ind = batch_next_state[:, :55]
+            batch_next_state_d = batch_next_state[:, -6:]
             
             if self.mask1.numel() > 0:
                 next_action_distrib = self.policy1shalf((self.policy1fhalf(batch_next_state_ind), batch_next_state_d))
@@ -896,8 +896,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     1.0 - batch_terminal
                 ) * torch.flatten(next_q - entropy_term)
 
-        batch_state_ind = batch_state[:, :58]
-        batch_state_d = batch_state[:, -3:]
+        batch_state_ind = batch_state[:, :55]
+        batch_state_d = batch_state[:, -6:]
         
         if self.mask1.numel() > 0:
             predict_q1 = torch.flatten(self.q_func1_T1shalf((self.q_func1_T1fhalf((batch_state_ind, batch_actions)), batch_state_d)))
@@ -1008,8 +1008,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         """Compute loss for actor."""
 
         batch_state = batch["state"]
-        batch_state_ind = batch_state[:, :58]
-        batch_state_d = batch_state[:, -3:]
+        batch_state_ind = batch_state[:, :55]
+        batch_state_d = batch_state[:, -6:]
 
         ##### separate task depedent info #####
         
@@ -1115,8 +1115,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy1shalf), pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.policy3):
             batch_xs = self.batch_states(batch_obs, self.device, self.phi)
-            batch_xs_ind = batch_xs[:, :58]
-            batch_xs_d = batch_xs[:, -3:]
+            batch_xs_ind = batch_xs[:, :55]
+            batch_xs_d = batch_xs[:, -6:]
             ##### separate task depedent info #####
             
             mask1 = torch.all(batch_xs[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
