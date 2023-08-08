@@ -1019,12 +1019,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         if self.mask1.numel() > 0:            
             action_distrib1 = self.policy1shalf((self.policy1fhalf(batch_state_ind), batch_state_d))
             actions = action_distrib1.rsample()
-            log_prob1 = action_distrib1.log_prob(actions)
+            log_prob = action_distrib1.log_prob(actions)
             q1 = self.q_func1_T1shalf((self.q_func1_T1fhalf((batch_state_ind, actions)), batch_state_d))
             q2 = self.q_func2_T1shalf((self.q_func2_T1fhalf((batch_state_ind, actions)), batch_state_d))
             q = torch.min(q1, q2)
 
-            entropy_term1 = temp1 * log_prob1[..., None]
+            entropy_term1 = temp1 * log_prob[..., None]
             assert q.shape == entropy_term1.shape
             loss = torch.mean(entropy_term1 - q)
             
@@ -1038,12 +1038,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         elif self.mask2.numel() > 0:            
             action_distrib2 = self.policy2shalf((self.policy2fhalf(batch_state_ind), batch_state_d))
             actions = action_distrib2.rsample()
-            log_prob2 = action_distrib2.log_prob(actions)
+            log_prob = action_distrib2.log_prob(actions)
             q1 = self.q_func1_T2shalf((self.q_func1_T2fhalf((batch_state_ind, actions)), batch_state_d))
             q2 = self.q_func2_T2shalf((self.q_func2_T2fhalf((batch_state_ind, actions)), batch_state_d))
             q = torch.min(q1, q2)
 
-            entropy_term2 = temp2 * log_prob2[..., None]
+            entropy_term2 = temp2 * log_prob[..., None]
             assert q.shape == entropy_term2.shape
             loss = torch.mean(entropy_term2 - q)
             
@@ -1099,11 +1099,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             except NotImplementedError:
                 # Record - log p(x) instead
                 if self.mask1.numel() > 0:
-                    self.entropy_record1.extend(-log_prob1.detach().cpu().numpy())
+                    self.entropy_record1.extend(-log_prob.detach().cpu().numpy())
                 if self.mask2.numel() > 0:
-                    self.entropy_record2.extend(-log_prob2.detach().cpu().numpy())
+                    self.entropy_record2.extend(-log_prob.detach().cpu().numpy())
                 if self.mask3.numel() > 0:
-                    self.entropy_record3.extend(-log_prob3.detach().cpu().numpy())
+                    self.entropy_record3.extend(-log_prob.detach().cpu().numpy())
 
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
