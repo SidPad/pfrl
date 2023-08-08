@@ -909,8 +909,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             # Update stats
             self.q1_record_T1.extend(predict_q1.detach().cpu().numpy())
             self.q2_record_T1.extend(predict_q2.detach().cpu().numpy())
-            self.q_func1_loss_record_T1.append(float(loss1))
-            self.q_func2_loss_record_T1.append(float(loss2))
+            self.q_func1_loss_T1_record.append(float(loss1))
+            self.q_func2_loss_T1_record.append(float(loss2))
 
             self.q_func1_optimizer1.zero_grad()
             loss1.backward()
@@ -934,8 +934,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             # Update stats
             self.q1_record_T2.extend(predict_q1.detach().cpu().numpy())
             self.q2_record_T2.extend(predict_q2.detach().cpu().numpy())
-            self.q_func1_loss_record_T2.append(float(loss1))
-            self.q_func2_loss_record_T2.append(float(loss2))
+            self.q_func1_loss_T2_record.append(float(loss1))
+            self.q_func2_loss_T2_record.append(float(loss2))
 
             self.q_func1_optimizer2.zero_grad()
             loss1.backward()
@@ -960,8 +960,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             # Update stats
             self.q1_record_T3.extend(predict_q1.detach().cpu().numpy())
             self.q2_record_T3.extend(predict_q2.detach().cpu().numpy())
-            self.q_func1_loss_record_T3.append(float(loss1))
-            self.q_func2_loss_record_T3.append(float(loss2))
+            self.q_func1_loss_T3_record.append(float(loss1))
+            self.q_func2_loss_T3_record.append(float(loss2))
 
             self.q_func1_optimizer3.zero_grad()
             loss1.backward()
