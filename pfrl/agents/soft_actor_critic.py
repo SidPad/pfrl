@@ -713,7 +713,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # Statistics
         self.q1_record = collections.deque(maxlen=1000)
         self.q2_record = collections.deque(maxlen=1000)
-        self.entropy_record = collections.deque(maxlen=1000)
+        self.entropy_record1 = collections.deque(maxlen=1000)
+        self.entropy_record2 = collections.deque(maxlen=1000)
+        self.entropy_record3 = collections.deque(maxlen=1000)
         self.q_func1_loss_record = collections.deque(maxlen=100)
         self.q_func2_loss_record = collections.deque(maxlen=100)                
         
@@ -1088,25 +1090,25 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad():
             try:
                 if self.mask1.numel() > 0:
-                    self.entropy_record.extend(
+                    self.entropy_record1.extend(
                         action_distrib1.entropy().detach().cpu().numpy()
                     )
                 if self.mask2.numel() > 0:
-                    self.entropy_record.extend(
+                    self.entropy_record2.extend(
                         action_distrib2.entropy().detach().cpu().numpy()
                     )
                 if self.mask3.numel() > 0:
-                    self.entropy_record.extend(
+                    self.entropy_record3.extend(
                         action_distrib3.entropy().detach().cpu().numpy()
                     )
             except NotImplementedError:
                 # Record - log p(x) instead
                 if self.mask1.numel() > 0:
-                    self.entropy_record.extend(-log_prob1.detach().cpu().numpy())
+                    self.entropy_record1.extend(-log_prob1.detach().cpu().numpy())
                 if self.mask2.numel() > 0:
-                    self.entropy_record.extend(-log_prob2.detach().cpu().numpy())
+                    self.entropy_record2.extend(-log_prob2.detach().cpu().numpy())
                 if self.mask3.numel() > 0:
-                    self.entropy_record.extend(-log_prob3.detach().cpu().numpy())
+                    self.entropy_record3.extend(-log_prob3.detach().cpu().numpy())
 
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
