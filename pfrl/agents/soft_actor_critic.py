@@ -1109,15 +1109,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     self.entropy_record.extend(-log_prob3.detach().cpu().numpy())
 
     def update(self, experiences, errors_out=None):
-        """Update the model from experiences"""
-        timer = time.time()
+        """Update the model from experiences"""        
         # with torch.autograd.profiler.profile(use_cuda=True) as prof:
         batch = batch_experiences(experiences, self.device, self.phi, self.gamma)
         t = self.update_q_func(batch)
         self.update_policy_and_temperature(batch)
         self.sync_target_network(t)
-        # print(prof)
-        print(time.time() - timer)
+        # print(prof)        
 
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy1shalf), pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.policy3):
