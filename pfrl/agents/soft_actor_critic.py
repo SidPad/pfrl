@@ -872,7 +872,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             elif self.mask3.numel() > 0:
                 policy3_input = torch.cat(self.policy1fhalf(batch_next_state_ind), self.policy2fhalf(batch_next_state_ind), dim = 1)
-                next_action_distrib = self.policy3((policy3_input, batch_next_state_d)))
+                next_action_distrib = self.policy3((policy3_input, batch_next_state_d))
                 next_actions = next_action_distrib.sample()
                 next_log_prob = next_action_distrib.log_prob(next_actions)
                 
