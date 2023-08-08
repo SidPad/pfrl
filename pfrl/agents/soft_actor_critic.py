@@ -829,80 +829,83 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
 
         ##### separate task depedent info #####
 
-        with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy1shalf), pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T1fhalf), pfrl.utils.evaluating(self.target_q_func1_T1shalf), pfrl.utils.evaluating(self.target_q_func2_T1fhalf), pfrl.utils.evaluating(self.target_q_func2_T1shalf), pfrl.utils.evaluating(self.target_q_func1_T2fhalf), pfrl.utils.evaluating(self.target_q_func1_T2shalf), pfrl.utils.evaluating(self.target_q_func2_T2fhalf), pfrl.utils.evaluating(self.target_q_func2_T2shalf), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):
+        with torch.no_grad():
             temp1, temp2, temp3 = self.temperature
             
             batch_next_state_ind = batch_next_state[:, :55]
             batch_next_state_d = batch_next_state[:, -6:]            
-            if self.mask1.numel() > 0:                
-                next_action_distrib = self.policy1shalf((self.policy1fhalf(batch_next_state_ind), batch_next_state_d))
-                next_actions = next_action_distrib.sample()
-                next_log_prob = next_action_distrib.log_prob(next_actions)
-                
-                target_q1_mid = self.target_q_func1_T1fhalf((batch_next_state_ind, next_actions))
-                next_q1 = self.target_q_func1_T1shalf((target_q1_mid, batch_next_state_d))
-                
-                target_q2_mid = self.target_q_func2_T1fhalf((batch_next_state_ind, next_actions))
-                next_q2 = self.target_q_func2_T1shalf((target_q2_mid, batch_next_state_d))
-                
-                next_q = torch.min(next_q1, next_q2)
-                entropy_term = temp1 * next_log_prob[..., None]
-                assert next_q.shape == entropy_term.shape
-
-                target_q = batch_rewards + batch_discount * (
-                    1.0 - batch_terminal
-                ) * torch.flatten(next_q - entropy_term)
-
-                t = 1
+            if self.mask1.numel() > 0:
+                with pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy1shalf), pfrl.utils.evaluating(self.target_q_func1_T1fhalf), pfrl.utils.evaluating(self.target_q_func1_T1shalf), pfrl.utils.evaluating(self.target_q_func2_T1fhalf), pfrl.utils.evaluating(self.target_q_func2_T1shalf):
+                    next_action_distrib = self.policy1shalf((self.policy1fhalf(batch_next_state_ind), batch_next_state_d))
+                    next_actions = next_action_distrib.sample()
+                    next_log_prob = next_action_distrib.log_prob(next_actions)
+                    
+                    target_q1_mid = self.target_q_func1_T1fhalf((batch_next_state_ind, next_actions))
+                    next_q1 = self.target_q_func1_T1shalf((target_q1_mid, batch_next_state_d))
+                    
+                    target_q2_mid = self.target_q_func2_T1fhalf((batch_next_state_ind, next_actions))
+                    next_q2 = self.target_q_func2_T1shalf((target_q2_mid, batch_next_state_d))
+                    
+                    next_q = torch.min(next_q1, next_q2)
+                    entropy_term = temp1 * next_log_prob[..., None]
+                    assert next_q.shape == entropy_term.shape
+    
+                    target_q = batch_rewards + batch_discount * (
+                        1.0 - batch_terminal
+                    ) * torch.flatten(next_q - entropy_term)
+    
+                    t = 1
             
-            elif self.mask2.numel() > 0:                
-                next_action_distrib = self.policy2shalf((self.policy2fhalf(batch_next_state_ind), next_actions))
-                next_actions = next_action_distrib.sample()
-                next_log_prob = next_action_distrib.log_prob(next_actions)
-                
-                target_q1_mid = self.target_q_func1_T2fhalf((batch_next_state_ind, next_actions))
-                next_q1 = self.target_q_func1_T2shalf((target_q1_mid, batch_next_state_d))
-                
-                target_q2_mid = self.target_q_func2_T2fhalf((batch_next_state, next_actions))
-                next_q2 = self.target_q_func2_T2shalf((target_q2_mid, batch_next_state_d))
-                
-                next_q = torch.min(next_q1, next_q2)
-                entropy_term = temp2 * next_log_prob[..., None]
-                assert next_q.shape == entropy_term.shape
-
-                target_q = batch_rewards + batch_discount * (
-                    1.0 - batch_terminal
-                ) * torch.flatten(next_q - entropy_term)
-
-                t = 2
+            elif self.mask2.numel() > 0:
+                with pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.target_q_func1_T2fhalf), pfrl.utils.evaluating(self.target_q_func1_T2shalf), pfrl.utils.evaluating(self.target_q_func2_T2fhalf), pfrl.utils.evaluating(self.target_q_func2_T2shalf):
+                    next_action_distrib = self.policy2shalf((self.policy2fhalf(batch_next_state_ind), next_actions))
+                    next_actions = next_action_distrib.sample()
+                    next_log_prob = next_action_distrib.log_prob(next_actions)
+                    
+                    target_q1_mid = self.target_q_func1_T2fhalf((batch_next_state_ind, next_actions))
+                    next_q1 = self.target_q_func1_T2shalf((target_q1_mid, batch_next_state_d))
+                    
+                    target_q2_mid = self.target_q_func2_T2fhalf((batch_next_state, next_actions))
+                    next_q2 = self.target_q_func2_T2shalf((target_q2_mid, batch_next_state_d))
+                    
+                    next_q = torch.min(next_q1, next_q2)
+                    entropy_term = temp2 * next_log_prob[..., None]
+                    assert next_q.shape == entropy_term.shape
+    
+                    target_q = batch_rewards + batch_discount * (
+                        1.0 - batch_terminal
+                    ) * torch.flatten(next_q - entropy_term)
+    
+                    t = 2
             
-            elif self.mask3.numel() > 0:                
-                policy3_input = torch.cat(self.policy1fhalf(batch_next_state_ind), self.policy2fhalf(batch_next_state_ind), dim = 1)
-                next_action_distrib = self.policy3((policy3_input, batch_next_state_d))
-                next_actions = next_action_distrib.sample()
-                next_log_prob = next_action_distrib.log_prob(next_actions)
-                
-                target_q1_mid1 = self.target_q_func1_T1fhalf((batch_next_state_ind, next_actions))
-                target_q1_mid2 = self.target_q_func1_T2fhalf((batch_next_state_ind, next_actions))
-
-                q3_input_1 = torch.cat(target_q1_mid1, target_q1_mid2, dim = 1)
-                next_q1 = self.target_q_func1_T3((q3_input_1, batch_next_state_d))
-                
-                target_q2_mid1 = self.target_q_func2_T1fhalf((batch_next_state_ind, next_actions))    
-                target_q2_mid2 = self.target_q_func2_T2fhalf((batch_next_state_ind, next_actions))
-
-                q3_input_2 = torch.cat(target_q2_mid1, target_q2_mid2, dim = 1)
-                next_q2 = self.target_q_func2_T3((q3_input_2, batch_next_state_d))
-                
-                next_q = torch.min(next_q1, next_q2)
-                entropy_term = temp3 * next_log_prob[..., None]
-                assert next_q.shape == entropy_term.shape
-
-                target_q = batch_rewards + batch_discount * (
-                    1.0 - batch_terminal
-                ) * torch.flatten(next_q - entropy_term)
-
-                t = 3
+            elif self.mask3.numel() > 0:
+                with pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):
+                    policy3_input = torch.cat(self.policy1fhalf(batch_next_state_ind), self.policy2fhalf(batch_next_state_ind), dim = 1)
+                    next_action_distrib = self.policy3((policy3_input, batch_next_state_d))
+                    next_actions = next_action_distrib.sample()
+                    next_log_prob = next_action_distrib.log_prob(next_actions)
+                    
+                    target_q1_mid1 = self.target_q_func1_T1fhalf((batch_next_state_ind, next_actions))
+                    target_q1_mid2 = self.target_q_func1_T2fhalf((batch_next_state_ind, next_actions))
+    
+                    q3_input_1 = torch.cat(target_q1_mid1, target_q1_mid2, dim = 1)
+                    next_q1 = self.target_q_func1_T3((q3_input_1, batch_next_state_d))
+                    
+                    target_q2_mid1 = self.target_q_func2_T1fhalf((batch_next_state_ind, next_actions))    
+                    target_q2_mid2 = self.target_q_func2_T2fhalf((batch_next_state_ind, next_actions))
+    
+                    q3_input_2 = torch.cat(target_q2_mid1, target_q2_mid2, dim = 1)
+                    next_q2 = self.target_q_func2_T3((q3_input_2, batch_next_state_d))
+                    
+                    next_q = torch.min(next_q1, next_q2)
+                    entropy_term = temp3 * next_log_prob[..., None]
+                    assert next_q.shape == entropy_term.shape
+    
+                    target_q = batch_rewards + batch_discount * (
+                        1.0 - batch_terminal
+                    ) * torch.flatten(next_q - entropy_term)
+    
+                    t = 3
 
         batch_state_ind = batch_state[:, :55]
         batch_state_d = batch_state[:, -6:]
