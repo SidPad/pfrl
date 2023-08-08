@@ -1036,6 +1036,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
             self.policy_optimizer1.step()
             self.n_policy_updates1 += 1
+
+            log_prob2 = torch.empty(1).to(self.device)
+            log_prob3 = torch.empty(1).to(self.device)
         
         elif self.mask2.numel() > 0:
             action_distrib2 = self.policy2shalf((self.policy2fhalf(batch_state_ind), batch_state_d))
@@ -1054,6 +1057,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
             self.policy_optimizer2.step()
             self.n_policy_updates2 += 1
+
+            log_prob1 = torch.empty(1).to(self.device)
+            log_prob3 = torch.empty(1).to(self.device)
         
         elif self.mask3.numel() > 0:
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf):
@@ -1074,7 +1080,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
             self.policy_optimizer3.step()
-            self.n_policy_updates3 += 1        
+            self.n_policy_updates3 += 1
+
+            log_prob1 = torch.empty(1).to(self.device)
+            log_prob2 = torch.empty(1).to(self.device)
 
         if self.entropy_target is not None:
             self.update_temperature(log_prob1.detach(), log_prob2.detach(), log_prob3.detach())
