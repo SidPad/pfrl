@@ -904,10 +904,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 loss2 = 0.5 * F.mse_loss(target_q, predict_q2)
     
                 # Update stats
-                self.q1_record_T1.extend(predict_q1.detach().cpu().numpy())
-                self.q2_record_T1.extend(predict_q2.detach().cpu().numpy())
-                self.q_func1_loss_T1_record.append(float(loss1))
-                self.q_func2_loss_T1_record.append(float(loss2))
+                self.q1_record.extend(predict_q1.detach().cpu().numpy())
+                self.q2_record.extend(predict_q2.detach().cpu().numpy())
+                self.q_func1_loss_record.append(float(loss1))
+                self.q_func2_loss_record.append(float(loss2))
     
                 self.q_func1_optimizer1.zero_grad()
                 loss1.backward()
@@ -929,10 +929,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 loss2 = 0.5 * F.mse_loss(target_q, predict_q2)
     
                 # Update stats
-                self.q1_record_T2.extend(predict_q1.detach().cpu().numpy())
-                self.q2_record_T2.extend(predict_q2.detach().cpu().numpy())
-                self.q_func1_loss_T2_record.append(float(loss1))
-                self.q_func2_loss_T2_record.append(float(loss2))
+                self.q1_record.extend(predict_q1.detach().cpu().numpy())
+                self.q2_record.extend(predict_q2.detach().cpu().numpy())
+                self.q_func1_loss_record.append(float(loss1))
+                self.q_func2_loss_record.append(float(loss2))
     
                 self.q_func1_optimizer2.zero_grad()
                 loss1.backward()
@@ -955,10 +955,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 loss2 = 0.5 * F.mse_loss(target_q, predict_q2)
     
                 # Update stats
-                self.q1_record_T3.extend(predict_q1.detach().cpu().numpy())
-                self.q2_record_T3.extend(predict_q2.detach().cpu().numpy())
-                self.q_func1_loss_T3_record.append(float(loss1))
-                self.q_func2_loss_T3_record.append(float(loss2))
+                self.q1_record.extend(predict_q1.detach().cpu().numpy())
+                self.q2_record.extend(predict_q2.detach().cpu().numpy())
+                self.q_func1_loss_record.append(float(loss1))
+                self.q_func2_loss_record.append(float(loss2))
     
                 self.q_func1_optimizer3.zero_grad()
                 loss1.backward()
@@ -1033,8 +1033,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
-            self.policy_optimizer1.step()
-            self.n_policy_updates1 += 1
+            self.policy_optimizer1.step()            
 
             log_prob2 = torch.empty(1).to(self.device)
             log_prob3 = torch.empty(1).to(self.device)
@@ -1054,8 +1053,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
-            self.policy_optimizer2.step()
-            self.n_policy_updates2 += 1
+            self.policy_optimizer2.step()            
 
             log_prob1 = torch.empty(1).to(self.device)
             log_prob3 = torch.empty(1).to(self.device)
@@ -1078,11 +1076,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
-            self.policy_optimizer3.step()
-            self.n_policy_updates3 += 1
+            self.policy_optimizer3.step()            
 
             log_prob1 = torch.empty(1).to(self.device)
             log_prob2 = torch.empty(1).to(self.device)
+        
+        self.n_policy_updates += 1
 
         if self.entropy_target is not None:
             self.update_temperature(log_prob1.detach(), log_prob2.detach(), log_prob3.detach())
@@ -1091,25 +1090,25 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad():
             try:
                 if self.mask1.numel() > 0:
-                    self.entropy_record1.extend(
+                    self.entropy_record.extend(
                         action_distrib1.entropy().detach().cpu().numpy()
                     )
                 if self.mask2.numel() > 0:
-                    self.entropy_record2.extend(
+                    self.entropy_record.extend(
                         action_distrib2.entropy().detach().cpu().numpy()
                     )
                 if self.mask3.numel() > 0:
-                    self.entropy_record3.extend(
+                    self.entropy_record.extend(
                         action_distrib3.entropy().detach().cpu().numpy()
                     )
             except NotImplementedError:
                 # Record - log p(x) instead
                 if self.mask1.numel() > 0:
-                    self.entropy_record1.extend(-log_prob1.detach().cpu().numpy())
+                    self.entropy_record.extend(-log_prob1.detach().cpu().numpy())
                 if self.mask2.numel() > 0:
-                    self.entropy_record2.extend(-log_prob2.detach().cpu().numpy())
+                    self.entropy_record.extend(-log_prob2.detach().cpu().numpy())
                 if self.mask3.numel() > 0:
-                    self.entropy_record3.extend(-log_prob3.detach().cpu().numpy())
+                    self.entropy_record.extend(-log_prob3.detach().cpu().numpy())
 
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
@@ -1168,7 +1167,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     def _batch_act_train(self, batch_obs):
         assert self.training
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy1shalf), pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.policy3):
-            if self.burnin_action_func is not None and self.n_policy_updates1 == 0 and self.n_policy_updates2 == 0 and self.n_policy_updates3 == 0:
+            if self.burnin_action_func is not None and self.n_policy_updates == 0:
                 batch_action = [self.burnin_action_func() for _ in range(len(batch_obs))]
             else:
                 batch_action = self.batch_select_greedy_action(batch_obs)            
@@ -1225,25 +1224,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     def get_statistics(self):
         temp1, temp2, temp3 = self.temperature
         return [
-            ("average_q1_T1", _mean_or_nan(self.q1_record_T1)),
-            ("average_q2_T1", _mean_or_nan(self.q2_record_T1)),
-            ("average_q_func1_loss_T1", _mean_or_nan(self.q_func1_loss_T1_record)),
-            ("average_q_func2_loss_T1", _mean_or_nan(self.q_func2_loss_T1_record)),
-            ("n_updates1", self.n_policy_updates1),
-            ("average_entropy1", _mean_or_nan(self.entropy_record1)),
+            ("average_q1", _mean_or_nan(self.q1_record)),
+            ("average_q2", _mean_or_nan(self.q2_record)),
+            ("average_q_func1_loss", _mean_or_nan(self.q_func1_loss_record)),
+            ("average_q_func2_loss", _mean_or_nan(self.q_func2_loss_record)),
+            ("n_updates", self.n_policy_updates),
+            ("average_entropy", _mean_or_nan(self.entropy_record)),
             ("temperature1", temp1),
-            ("average_q1_T2", _mean_or_nan(self.q1_record_T2)),
-            ("average_q2_T2", _mean_or_nan(self.q2_record_T2)),
-            ("average_q_func1_loss_T2", _mean_or_nan(self.q_func1_loss_T2_record)),
-            ("average_q_func2_loss_T2", _mean_or_nan(self.q_func2_loss_T2_record)),
-            ("n_updates2", self.n_policy_updates2),
-            ("average_entropy2", _mean_or_nan(self.entropy_record2)),
             ("temperature2", temp2),
-            ("average_q1_T3", _mean_or_nan(self.q1_record_T3)),
-            ("average_q2_T3", _mean_or_nan(self.q2_record_T3)),
-            ("average_q_func1_loss_T3", _mean_or_nan(self.q_func1_loss_T3_record)),
-            ("average_q_func2_loss_T3", _mean_or_nan(self.q_func2_loss_T3_record)),
-            ("n_updates3", self.n_policy_updates3),
-            ("average_entropy3", _mean_or_nan(self.entropy_record3)),
             ("temperature3", temp3),
         ]
