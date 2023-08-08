@@ -1148,15 +1148,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                                         
         return batch_action
 
-    def batch_act(self, batch_obs, batch_acts):        
+    def batch_act(self, batch_obs):        
         if self.training:
             return self._batch_act_train(batch_obs)
         else:
             return self._batch_act_eval(batch_obs)
 
-    def batch_observe(self, batch_obs, batch_acts, batch_reward, batch_done, batch_reset):        
+    def batch_observe(self, batch_obs, batch_reward, batch_done, batch_reset):        
         if self.training:
-            self._batch_observe_train(batch_obs, batch_acts, batch_reward, batch_done, batch_reset)        
+            self._batch_observe_train(batch_obs, batch_reward, batch_done, batch_reset)        
                 
     def _batch_act_eval(self, batch_obs):
         assert not self.training
@@ -1198,7 +1198,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         else:
             return recurrent_states
 
-    def _batch_observe_train(self, batch_obs, batch_acts, batch_reward, batch_done, batch_reset):        
+    def _batch_observe_train(self, batch_obs, batch_reward, batch_done, batch_reset):        
         assert self.training
         for i in range(len(batch_obs)):
             self.t += 1
