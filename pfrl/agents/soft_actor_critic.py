@@ -975,29 +975,27 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         return t
 
-    def update_temperature(self, log_prob1, log_prob2, log_prob3):
-        assert not log_prob1.requires_grad
-        assert not log_prob2.requires_grad
-        assert not log_prob3.requires_grad
+    def update_temperature(self, log_prob, t):
+        assert not log_prob.requires_grad        
         
-        if log_prob1.numel() > 0:
-            loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
+        if t == 1:
+            loss1 = -torch.mean(self.temperature_holder1() * (log_prob + self.entropy_target))
             self.temperature_optimizer1.zero_grad()
             loss1.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
             self.temperature_optimizer1.step()
         
-        if log_prob2.numel() > 0:
-            loss2 = -torch.mean(self.temperature_holder2() * (log_prob2 + self.entropy_target))
+        elif t == 2:
+            loss2 = -torch.mean(self.temperature_holder2() * (log_prob + self.entropy_target))
             self.temperature_optimizer2.zero_grad()
             loss2.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder2.parameters(), self.max_grad_norm)
             self.temperature_optimizer2.step()
             
-        if log_prob3.numel() > 0:
-            loss3 = -torch.mean(self.temperature_holder3() * (log_prob3 + self.entropy_target))
+        elif t == 3:
+            loss3 = -torch.mean(self.temperature_holder3() * (log_prob + self.entropy_target))
             self.temperature_optimizer3.zero_grad()
             loss3.backward()
             if self.max_grad_norm is not None:
@@ -1033,10 +1031,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
-            self.policy_optimizer1.step()            
+            self.policy_optimizer1.step()
 
-            log_prob2 = torch.empty(1).to(self.device)
-            log_prob3 = torch.empty(1).to(self.device)
+            t = 1
         
         elif self.mask2.numel() > 0:            
             action_distrib2 = self.policy2shalf((self.policy2fhalf(batch_state_ind), batch_state_d))
@@ -1053,10 +1050,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
-            self.policy_optimizer2.step()            
+            self.policy_optimizer2.step()
 
-            log_prob1 = torch.empty(1).to(self.device)
-            log_prob3 = torch.empty(1).to(self.device)
+            t = 2
         
         elif self.mask3.numel() > 0:            
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf):
@@ -1064,27 +1060,26 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             p3_input = torch.cat(policymid1, policymid2, dim = 1)
             action_distrib3 = self.policy3((p3_input, batch_state_d))
             actions3 = action_distrib3.rsample()
-            log_prob3 = action_distrib3.log_prob(actions3)
+            log_prob = action_distrib3.log_prob(actions3)
             q1 = self.q_func1_T3shalf((self.q_func1_T3fhalf((batch_state_ind, actions)), batch_state_d))
             q2 = self.q_func2_T3shalf((self.q_func2_T3fhalf((batch_state_ind, actions)), batch_state_d))
             q = torch.min(q1, q2)
 
-            entropy_term3 = temp3 * log_prob3[..., None]
+            entropy_term3 = temp3 * log_prob[..., None]
             assert q.shape == entropy_term3.shape
             loss = torch.mean(entropy_term3 - q)
                   
             loss.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
-            self.policy_optimizer3.step()            
+            self.policy_optimizer3.step()
 
-            log_prob1 = torch.empty(1).to(self.device)
-            log_prob2 = torch.empty(1).to(self.device)
+            t = 3
         
         self.n_policy_updates += 1
 
         if self.entropy_target is not None:
-            self.update_temperature(log_prob1.detach(), log_prob2.detach(), log_prob3.detach())
+            self.update_temperature(log_prob.detach(), t)#, log_prob2.detach(), log_prob3.detach())
 
         # Record entropy
         with torch.no_grad():
