@@ -823,15 +823,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_next_state_d = batch_next_state[:, -6:]            
             if self.mask1.numel() > 0:
                 with pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy1shalf), pfrl.utils.evaluating(self.target_q_func1_T1fhalf), pfrl.utils.evaluating(self.target_q_func1_T1shalf), pfrl.utils.evaluating(self.target_q_func2_T1fhalf), pfrl.utils.evaluating(self.target_q_func2_T1shalf):
-                    next_action_distrib = self.policy1shalf((self.policy1fhalf(batch_next_state_ind), batch_next_state_d))
+                    next_action_distrib = self.policy1shalf((self.policy1fhalf(batch_next_state)))
                     next_actions = next_action_distrib.sample()
                     next_log_prob = next_action_distrib.log_prob(next_actions)
                     
-                    target_q1_mid = self.target_q_func1_T1fhalf((batch_next_state_ind, next_actions))
-                    next_q1 = self.target_q_func1_T1shalf((target_q1_mid, batch_next_state_d))
+                    target_q1_mid = self.target_q_func1_T1fhalf((batch_next_state, next_actions))
+                    next_q1 = self.target_q_func1_T1shalf((target_q1_mid))
                     
-                    target_q2_mid = self.target_q_func2_T1fhalf((batch_next_state_ind, next_actions))
-                    next_q2 = self.target_q_func2_T1shalf((target_q2_mid, batch_next_state_d))
+                    target_q2_mid = self.target_q_func2_T1fhalf((batch_next_state, next_actions))
+                    next_q2 = self.target_q_func2_T1shalf((target_q2_mid))
                     
                     next_q = torch.min(next_q1, next_q2)
                     entropy_term = temp1 * next_log_prob[..., None]
@@ -845,15 +845,15 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             elif self.mask2.numel() > 0:
                 with pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.target_q_func1_T2fhalf), pfrl.utils.evaluating(self.target_q_func1_T2shalf), pfrl.utils.evaluating(self.target_q_func2_T2fhalf), pfrl.utils.evaluating(self.target_q_func2_T2shalf):
-                    next_action_distrib = self.policy2shalf((self.policy2fhalf(batch_next_state_ind), next_actions))
+                    next_action_distrib = self.policy2shalf((self.policy2fhalf(batch_next_state)))
                     next_actions = next_action_distrib.sample()
                     next_log_prob = next_action_distrib.log_prob(next_actions)
                     
-                    target_q1_mid = self.target_q_func1_T2fhalf((batch_next_state_ind, next_actions))
-                    next_q1 = self.target_q_func1_T2shalf((target_q1_mid, batch_next_state_d))
+                    target_q1_mid = self.target_q_func1_T2fhalf((batch_next_state, next_actions))
+                    next_q1 = self.target_q_func1_T2shalf((target_q1_mid))
                     
                     target_q2_mid = self.target_q_func2_T2fhalf((batch_next_state, next_actions))
-                    next_q2 = self.target_q_func2_T2shalf((target_q2_mid, batch_next_state_d))
+                    next_q2 = self.target_q_func2_T2shalf((target_q2_mid))
                     
                     next_q = torch.min(next_q1, next_q2)
                     entropy_term = temp2 * next_log_prob[..., None]
@@ -867,22 +867,22 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             
             elif self.mask3.numel() > 0:
                 with pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):
-                    policy3_input = torch.cat(self.policy1fhalf(batch_next_state_ind), self.policy2fhalf(batch_next_state_ind), dim = 1)
-                    next_action_distrib = self.policy3((policy3_input, batch_next_state_d))
+                    policy3_input = torch.cat(self.policy1fhalf(batch_next_state), self.policy2fhalf(batch_next_state), dim = 1)
+                    next_action_distrib = self.policy3((policy3_input))
                     next_actions = next_action_distrib.sample()
                     next_log_prob = next_action_distrib.log_prob(next_actions)
                     
-                    target_q1_mid1 = self.target_q_func1_T1fhalf((batch_next_state_ind, next_actions))
-                    target_q1_mid2 = self.target_q_func1_T2fhalf((batch_next_state_ind, next_actions))
+                    target_q1_mid1 = self.target_q_func1_T1fhalf((batch_next_state, next_actions))
+                    target_q1_mid2 = self.target_q_func1_T2fhalf((batch_next_state, next_actions))
     
                     q3_input_1 = torch.cat(target_q1_mid1, target_q1_mid2, dim = 1)
-                    next_q1 = self.target_q_func1_T3((q3_input_1, batch_next_state_d))
+                    next_q1 = self.target_q_func1_T3((q3_input_1))
                     
-                    target_q2_mid1 = self.target_q_func2_T1fhalf((batch_next_state_ind, next_actions))    
-                    target_q2_mid2 = self.target_q_func2_T2fhalf((batch_next_state_ind, next_actions))
+                    target_q2_mid1 = self.target_q_func2_T1fhalf((batch_next_state, next_actions))    
+                    target_q2_mid2 = self.target_q_func2_T2fhalf((batch_next_state, next_actions))
     
                     q3_input_2 = torch.cat(target_q2_mid1, target_q2_mid2, dim = 1)
-                    next_q2 = self.target_q_func2_T3((q3_input_2, batch_next_state_d))
+                    next_q2 = self.target_q_func2_T3((q3_input_2))
                     
                     next_q = torch.min(next_q1, next_q2)
                     entropy_term = temp3 * next_log_prob[..., None]
@@ -898,8 +898,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state_d = batch_state[:, -6:]
         
         if self.mask1.numel() > 0:            
-            predict_q1 = torch.flatten(self.q_func1_T1shalf((self.q_func1_T1fhalf((batch_state_ind, batch_actions)), batch_state_d)))
-            predict_q2 = torch.flatten(self.q_func2_T1shalf((self.q_func2_T1fhalf((batch_state_ind, batch_actions)), batch_state_d)))
+            predict_q1 = torch.flatten(self.q_func1_T1shalf((self.q_func1_T1fhalf((batch_state, batch_actions)))))
+            predict_q2 = torch.flatten(self.q_func2_T1shalf((self.q_func2_T1fhalf((batch_state, batch_actions)))))
 
             loss1 = 0.5 * F.mse_loss(target_q, predict_q1)
             loss2 = 0.5 * F.mse_loss(target_q, predict_q2)
@@ -923,8 +923,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func2_optimizer1.step()
         
         elif self.mask2.numel() > 0:            
-            predict_q1 = torch.flatten(self.q_func1_T2shalf((self.q_func1_T2fhalf((batch_state_ind, batch_actions)), batch_state_d)))
-            predict_q2 = torch.flatten(self.q_func2_T2shalf((self.q_func2_T2fhalf((batch_state_ind, batch_actions)), batch_state_d)))
+            predict_q1 = torch.flatten(self.q_func1_T2shalf((self.q_func1_T2fhalf((batch_state, batch_actions)))))
+            predict_q2 = torch.flatten(self.q_func2_T2shalf((self.q_func2_T2fhalf((batch_state, batch_actions)))))
 
             loss1 = 0.5 * F.mse_loss(target_q, predict_q1)
             loss2 = 0.5 * F.mse_loss(target_q, predict_q2)
@@ -948,9 +948,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.q_func2_optimizer2.step()
         
         elif self.mask3.numel() > 0:            
-            q3_input = torch.cat(self.q_func1_T1fhalf((batch_state_ind, batch_actions)), self.q_func2_T2fhalf((batch_state_ind, batch_actions)), dim = 1)
-            predict_q1 = torch.flatten(self.q_func1_T3((q3_input, batch_state_d)))
-            predict_q2 = torch.flatten(self.q_func2_T3((q3_input, batch_state_d)))
+            q3_input = torch.cat(self.q_func1_T1fhalf((batch_state, batch_actions)), self.q_func2_T2fhalf((batch_state, batch_actions)), dim = 1)
+            predict_q1 = torch.flatten(self.q_func1_T3((q3_input)))
+            predict_q2 = torch.flatten(self.q_func2_T3((q3_input)))
 
             loss1 = 0.5 * F.mse_loss(target_q, predict_q1)
             loss2 = 0.5 * F.mse_loss(target_q, predict_q2)
@@ -1017,11 +1017,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.policy_optimizer2.zero_grad()
         self.policy_optimizer3.zero_grad()
         if self.mask1.numel() > 0:            
-            action_distrib1 = self.policy1shalf((self.policy1fhalf(batch_state_ind), batch_state_d))
+            action_distrib1 = self.policy1shalf((self.policy1fhalf(batch_state)))
             actions = action_distrib1.rsample()
             log_prob = action_distrib1.log_prob(actions)
-            q1 = self.q_func1_T1shalf((self.q_func1_T1fhalf((batch_state_ind, actions)), batch_state_d))
-            q2 = self.q_func2_T1shalf((self.q_func2_T1fhalf((batch_state_ind, actions)), batch_state_d))
+            q1 = self.q_func1_T1shalf((self.q_func1_T1fhalf((batch_state, actions))))
+            q2 = self.q_func2_T1shalf((self.q_func2_T1fhalf((batch_state, actions))))
             q = torch.min(q1, q2)
 
             entropy_term1 = temp1 * log_prob[..., None]
@@ -1036,11 +1036,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             t = 1
         
         elif self.mask2.numel() > 0:            
-            action_distrib2 = self.policy2shalf((self.policy2fhalf(batch_state_ind), batch_state_d))
+            action_distrib2 = self.policy2shalf((self.policy2fhalf(batch_state)))
             actions = action_distrib2.rsample()
             log_prob = action_distrib2.log_prob(actions)
-            q1 = self.q_func1_T2shalf((self.q_func1_T2fhalf((batch_state_ind, actions)), batch_state_d))
-            q2 = self.q_func2_T2shalf((self.q_func2_T2fhalf((batch_state_ind, actions)), batch_state_d))
+            q1 = self.q_func1_T2shalf((self.q_func1_T2fhalf((batch_state, actions))))
+            q2 = self.q_func2_T2shalf((self.q_func2_T2fhalf((batch_state, actions))))
             q = torch.min(q1, q2)
 
             entropy_term2 = temp2 * log_prob[..., None]
@@ -1056,13 +1056,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         elif self.mask3.numel() > 0:            
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf):
-                policymid1, policymid2 = self.policy1fhalf(batch_state_ind), self.policy2fhalf(batch_state_ind)
+                policymid1, policymid2 = self.policy1fhalf(batch_state), self.policy2fhalf(batch_state)
             p3_input = torch.cat(policymid1, policymid2, dim = 1)
-            action_distrib3 = self.policy3((p3_input, batch_state_d))
+            action_distrib3 = self.policy3((p3_input))
             actions3 = action_distrib3.rsample()
             log_prob = action_distrib3.log_prob(actions3)
-            q1 = self.q_func1_T3shalf((self.q_func1_T3fhalf((batch_state_ind, actions)), batch_state_d))
-            q2 = self.q_func2_T3shalf((self.q_func2_T3fhalf((batch_state_ind, actions)), batch_state_d))
+            q1 = self.q_func1_T3shalf((self.q_func1_T3fhalf((batch_state, actions))))
+            q2 = self.q_func2_T3shalf((self.q_func2_T3fhalf((batch_state, actions))))
             q = torch.min(q1, q2)
 
             entropy_term3 = temp3 * log_prob[..., None]
@@ -1126,12 +1126,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             mask3 = torch.all(batch_xs[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
                   
             if mask1.numel() > 0:                
-                policy_out = self.policy1shalf((self.policy1fhalf(batch_xs_ind), batch_xs_d))
+                policy_out = self.policy1shalf((self.policy1fhalf(batch_xs)))
             elif mask2.numel() > 0:                
-                policy_out = self.policy2shalf((self.policy2fhalf(batch_xs_ind), batch_xs_d))
+                policy_out = self.policy2shalf((self.policy2fhalf(batch_xs)))
             elif mask3.numel() > 0:                
-                p3_input = torch.cat(self.policy1fhalf(batch_xs_ind), self.policy2fhalf(batch_xs_ind), dim = 1)
-                policy_out = self.policy3((p3_input, batch_xs_d))
+                p3_input = torch.cat(self.policy1fhalf(batch_xs), self.policy2fhalf(batch_xs), dim = 1)
+                policy_out = self.policy3((p3_input))
                 
             if deterministic:
                 batch_action = mode_of_distribution(policy_out).cpu().numpy()                
