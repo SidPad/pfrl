@@ -25,11 +25,11 @@ def _run_episodes(
     lengths = []
     terminate = False
     timestep = 0
-    empty_action = np.zeros(23)
+    empty_action = np.zeros(27)
     reset = True
     timer = 0
     while not terminate:
-        if timer % 5 == 0:
+        if timer % 20 == 0:
             if reset:
                 obs = env.reset()
                 done = False
@@ -128,12 +128,12 @@ def _batch_run_episodes(
     obss = env.reset()
     actions = None
     rs = np.zeros(num_envs, dtype="f")
-    empty_action = np.zeros(23)
+    empty_action = np.zeros(27)
     termination_conditions = False
     timestep = 0
     timer = 0
     while True:
-        if timer % 5 == 0:
+        if timer % 20 == 0:
             # a_t
             actions = agent.batch_act(obss)
             timestep += 1
