@@ -65,7 +65,7 @@ def train_agent_batch(
     eval_stats_history = []  # List of evaluation episode stats dict
     try:
         while True:
-            if timer % 20 == 0:
+            if timer % 5 == 0:
                 # a_t
                 actions = agent.batch_act(obss)
                 # o_{t+1}, r_{t+1}
