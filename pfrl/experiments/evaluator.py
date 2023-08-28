@@ -29,7 +29,7 @@ def _run_episodes(
     reset = True
     timer = 0
     while not terminate:
-        if timer % 5 == 0:
+        if timer % 20 == 0:
             if reset:
                 obs = env.reset()
                 done = False
@@ -133,7 +133,7 @@ def _batch_run_episodes(
     timestep = 0
     timer = 0
     while True:
-        if timer % 5 == 0:
+        if timer % 20 == 0:
             # a_t
             actions = agent.batch_act(obss)
             timestep += 1
