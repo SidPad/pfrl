@@ -56,7 +56,7 @@ def train_agent_batch(
     # o_0, r_0
     obss = env.reset()
     actions = None
-    empty_action = np.zeros(23)
+    empty_action = np.zeros(27)
     timer = 0
     t = step_offset
     if hasattr(agent, "t"):
@@ -65,7 +65,7 @@ def train_agent_batch(
     eval_stats_history = []  # List of evaluation episode stats dict
     try:
         while True:
-            if timer % 5 == 0:
+            if timer % 20 == 0:
                 # a_t
                 actions = agent.batch_act(obss)
                 # o_{t+1}, r_{t+1}
