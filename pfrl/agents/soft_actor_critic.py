@@ -812,18 +812,17 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = batch_actions.to(torch.float32)
         
         ##### Divide into three #####
-        self.mask1 = torch.any(torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1))
-        self.mask2 = torch.any(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1))
-        self.mask3 = torch.any(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1))
-
-        print(torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1), dim=0))
-        if (batch_next_state[0, -3:] == torch.tensor([1, 0, 0]).to(self.device)):
+        self.mask1 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1), dim=0)
+        self.mask2 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1), dim=0)
+        self.mask3 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1), dim=0)
+        
+        if self.mask1:
             t = 1
             print(t)
-        elif (batch_next_state[0, -3:] == torch.tensor([0, 1, 0]).to(self.device)):
+        elif self.mask2:
             t = 2
             print(t)
-        elif (batch_next_state[0, -3:] == torch.tensor([0, 0, 1]).to(self.device)):
+        elif self.mask3:
             t = 3
             print(t)
 
