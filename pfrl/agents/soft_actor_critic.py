@@ -985,6 +985,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
             self.temperature_optimizer1.step()
+
+            print("1")
         
         elif t == 2:
             loss2 = -torch.mean(self.temperature_holder2() * (log_prob + self.entropy_target))
@@ -993,6 +995,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder2.parameters(), self.max_grad_norm)
             self.temperature_optimizer2.step()
+
+            print("2")
             
         elif t == 3:
             loss3 = -torch.mean(self.temperature_holder3() * (log_prob + self.entropy_target))
@@ -1001,6 +1005,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder3.parameters(), self.max_grad_norm)
             self.temperature_optimizer3.step()
+
+            print("3")
 
     def update_policy_and_temperature(self, batch):
         """Compute loss for actor."""
