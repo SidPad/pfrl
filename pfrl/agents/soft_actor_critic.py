@@ -1084,6 +1084,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         
         self.n_policy_updates += 1
 
+        print("T", t)
+
         if self.entropy_target is not None:
             self.update_temperature(log_prob.detach(), t)#, log_prob2.detach(), log_prob3.detach())
 
