@@ -1027,7 +1027,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.policy_optimizer1.zero_grad()
         self.policy_optimizer2.zero_grad()
         self.policy_optimizer3.zero_grad()
-        if self.mask1:            
+        if self.T == 1:            
             action_distrib1 = self.policy1shalf(self.policy1fhalf(batch_state))
             actions = action_distrib1.rsample()
             log_prob = action_distrib1.log_prob(actions)
@@ -1044,7 +1044,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
             self.policy_optimizer1.step()
         
-        elif self.mask2> 0:            
+        elif self.T == 2:            
             action_distrib2 = self.policy2shalf(self.policy2fhalf(batch_state))
             actions = action_distrib2.rsample()
             log_prob = action_distrib2.log_prob(actions)
@@ -1061,7 +1061,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
             self.policy_optimizer2.step()
         
-        elif self.mask3> 0:            
+        elif self.T == 3:            
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf):
                 policymid1, policymid2 = self.policy1fhalf(batch_state), self.policy2fhalf(batch_state)
             p3_input = torch.cat((policymid1, policymid2), dim = 1)
@@ -1081,9 +1081,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
             self.policy_optimizer3.step()
         
-        self.n_policy_updates += 1
-
-        print("T", self.T)
+        self.n_policy_updates += 1        
 
         if self.entropy_target is not None:
             self.update_temperature(log_prob.detach(), self.T)#, log_prob2.detach(), log_prob3.detach())
@@ -1091,25 +1089,25 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         # Record entropy
         with torch.no_grad():
             try:
-                if self.mask1:
+                if self.T == 1:
                     self.entropy_record1.extend(
                         action_distrib1.entropy().detach().cpu().numpy()
                     )
-                if self.mask2:
+                if self.T == 2:
                     self.entropy_record2.extend(
                         action_distrib2.entropy().detach().cpu().numpy()
                     )
-                if self.mask3:
+                if self.T == 3:
                     self.entropy_record3.extend(
                         action_distrib3.entropy().detach().cpu().numpy()
                     )
             except NotImplementedError:
                 # Record - log p(x) instead
-                if self.mask1:
+                if self.T == 1:
                     self.entropy_record1.extend(-log_prob.detach().cpu().numpy())
-                if self.mask2:
+                if self.T == 2:
                     self.entropy_record2.extend(-log_prob.detach().cpu().numpy())
-                if self.mask3:
+                if self.T == 3:
                     self.entropy_record3.extend(-log_prob.detach().cpu().numpy())
 
     def update(self, experiences, errors_out=None):
@@ -1128,9 +1126,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_xs_d = batch_xs[:, -6:]
             ##### separate task depedent info #####
             
-            mask1 = torch.any(torch.all(batch_xs[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1))
-            mask2 = torch.any(torch.all(batch_xs[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1))
-            mask3 = torch.any(torch.all(batch_xs[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1))
+            mask1 = torch.all(torch.all(batch_xs[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1))
+            mask2 = torch.all(torch.all(batch_xs[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1))
+            mask3 = torch.all(torch.all(batch_xs[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1))
                   
             if mask1:
                 policy_out = self.policy1shalf(self.policy1fhalf(batch_xs))
