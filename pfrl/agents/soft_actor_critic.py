@@ -822,7 +822,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.T = 2            
         elif self.mask3:
             self.T = 3
-        print(self.T)
+        print(self.T, batch_next_state[0, -3:])
 
         ##### separate task depedent info #####
         with torch.no_grad():
