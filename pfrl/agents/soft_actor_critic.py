@@ -843,6 +843,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     ) * torch.flatten(next_q - entropy_term)
     
                     self.T = 1
+                    print("YO")
             
             elif self.mask2.numel() > 0:
                 with pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.target_q_func1_T2fhalf), pfrl.utils.evaluating(self.target_q_func1_T2shalf), pfrl.utils.evaluating(self.target_q_func2_T2fhalf), pfrl.utils.evaluating(self.target_q_func2_T2shalf):
@@ -865,6 +866,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     ) * torch.flatten(next_q - entropy_term)
     
                     self.T = 2
+                    print("YO2")
             
             elif self.mask3.numel() > 0:
                 with pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):
@@ -894,6 +896,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                     ) * torch.flatten(next_q - entropy_term)
     
                     self.T = 3
+                    print("YO3")
 
         batch_state_ind = batch_state[:, :55]
         batch_state_d = batch_state[:, -6:]
