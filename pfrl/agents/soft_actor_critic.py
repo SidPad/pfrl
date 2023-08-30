@@ -816,6 +816,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.mask2 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
         self.mask3 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
 
+        print(self.mask1)
+        print(self.mask2)
+        print(self.mask3)
+
         ##### separate task depedent info #####
         with torch.no_grad():
             temp1, temp2, temp3 = self.temperature
