@@ -697,7 +697,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.act_deterministically = act_deterministically
 
         self.t = 0
-        self.T = 0
+        self.T = 1
 
         # Target model       
         self.target_q_func1_T1fhalf = copy.deepcopy(self.q_func1_T1fhalf).eval().requires_grad_(False)
@@ -817,14 +817,12 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.mask3 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1), dim=0)
         
         if self.mask1:
-            t = 1
-            print(t)
+            self.T = 1
         elif self.mask2:
-            t = 2
-            print(t)
+            self.T = 2            
         elif self.mask3:
-            t = 3
-            print(t)
+            self.T = 3
+        print(self.T)
 
         ##### separate task depedent info #####
         with torch.no_grad():
@@ -850,9 +848,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     
                     target_q = batch_rewards + batch_discount * (
                         1.0 - batch_terminal
-                    ) * torch.flatten(next_q - entropy_term)
-    
-                    self.T = 1                    
+                    ) * torch.flatten(next_q - entropy_term)                    
             
             elif self.mask2:
                 with pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.target_q_func1_T2fhalf), pfrl.utils.evaluating(self.target_q_func1_T2shalf), pfrl.utils.evaluating(self.target_q_func2_T2fhalf), pfrl.utils.evaluating(self.target_q_func2_T2shalf):
@@ -901,9 +897,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     
                     target_q = batch_rewards + batch_discount * (
                         1.0 - batch_terminal
-                    ) * torch.flatten(next_q - entropy_term)
-    
-                    self.T = 3                    
+                    ) * torch.flatten(next_q - entropy_term)                    
 
         batch_state_ind = batch_state[:, :55]
         batch_state_d = batch_state[:, -6:]
