@@ -697,6 +697,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.act_deterministically = act_deterministically
 
         self.t = 0
+        self.T = 0
 
         # Target model       
         self.target_q_func1_T1fhalf = copy.deepcopy(self.q_func1_T1fhalf).eval().requires_grad_(False)
@@ -841,7 +842,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         1.0 - batch_terminal
                     ) * torch.flatten(next_q - entropy_term)
     
-                    t = 1
+                    self.T = 1
             
             elif self.mask2.numel() > 0:
                 with pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.target_q_func1_T2fhalf), pfrl.utils.evaluating(self.target_q_func1_T2shalf), pfrl.utils.evaluating(self.target_q_func2_T2fhalf), pfrl.utils.evaluating(self.target_q_func2_T2shalf):
@@ -863,7 +864,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         1.0 - batch_terminal
                     ) * torch.flatten(next_q - entropy_term)
     
-                    t = 2
+                    self.T = 2
             
             elif self.mask3.numel() > 0:
                 with pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):
@@ -892,7 +893,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         1.0 - batch_terminal
                     ) * torch.flatten(next_q - entropy_term)
     
-                    t = 3
+                    self.T = 3
 
         batch_state_ind = batch_state[:, :55]
         batch_state_d = batch_state[:, -6:]
@@ -972,8 +973,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func2.parameters(), self.max_grad_norm)
             self.q_func2_optimizer3.step()
-        
-        return t
+            
 
     def update_temperature(self, log_prob, t):
         assert not log_prob.requires_grad        
@@ -1038,8 +1038,6 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
             self.policy_optimizer1.step()
-
-            t = 1
         
         elif self.mask2.numel() > 0:            
             action_distrib2 = self.policy2shalf(self.policy2fhalf(batch_state))
@@ -1057,8 +1055,6 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
             self.policy_optimizer2.step()
-
-            t = 2
         
         elif self.mask3.numel() > 0:            
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf):
@@ -1079,15 +1075,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
             self.policy_optimizer3.step()
-
-            t = 3
         
         self.n_policy_updates += 1
 
-        print("T", t)
+        print("T", self.T)
 
         if self.entropy_target is not None:
-            self.update_temperature(log_prob.detach(), t)#, log_prob2.detach(), log_prob3.detach())
+            self.update_temperature(log_prob.detach(), self.T)#, log_prob2.detach(), log_prob3.detach())
 
         # Record entropy
         with torch.no_grad():
@@ -1117,9 +1111,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         """Update the model from experiences"""        
         # with torch.autograd.profiler.profile(use_cuda=True) as prof:
         batch = batch_experiences(experiences, self.device, self.phi, self.gamma)
-        t = self.update_q_func(batch)
+        self.update_q_func(batch)
         self.update_policy_and_temperature(batch)
-        self.sync_target_network(t)
+        self.sync_target_network(self.T)
         # print(prof)        
 
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
