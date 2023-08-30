@@ -816,14 +816,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.mask2 = torch.any(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1))
         self.mask3 = torch.any(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1))
 
-        print(batch_next_state[:, -3:])
-        if self.mask1:
+        if torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1):
             t = 1
             print(t)
-        elif self.mask2:
+        elif torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1):
             t = 2
             print(t)
-        elif self.mask3:
+        elif torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1):
             t = 3
             print(t)
 
