@@ -697,7 +697,6 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.act_deterministically = act_deterministically
 
         self.t = 0
-        self.T = 1
 
         # Target model       
         self.target_q_func1_T1fhalf = copy.deepcopy(self.q_func1_T1fhalf).eval().requires_grad_(False)
@@ -812,16 +811,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = batch_actions.to(torch.float32)
         
         ##### Divide into three #####
-        self.mask1 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1), dim=0)
-        self.mask2 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1), dim=0)
-        self.mask3 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1), dim=0)
-        
-        if self.mask1:
-            self.T = 1
-        elif self.mask2:
-            self.T = 2            
-        elif self.mask3:
-            self.T = 3        
+        self.mask1 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1))
+        self.mask2 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1))
+        self.mask3 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1))
 
         ##### separate task depedent info #####
         with torch.no_grad():
@@ -847,7 +839,9 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     
                     target_q = batch_rewards + batch_discount * (
                         1.0 - batch_terminal
-                    ) * torch.flatten(next_q - entropy_term)                    
+                    ) * torch.flatten(next_q - entropy_term)
+    
+                    t = 1
             
             elif self.mask2:
                 with pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.target_q_func1_T2fhalf), pfrl.utils.evaluating(self.target_q_func1_T2shalf), pfrl.utils.evaluating(self.target_q_func2_T2fhalf), pfrl.utils.evaluating(self.target_q_func2_T2shalf):
@@ -869,11 +863,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                         1.0 - batch_terminal
                     ) * torch.flatten(next_q - entropy_term)
     
-                    self.T = 2                    
+                    t = 2
             
             elif self.mask3:
                 with pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):
-                    policy3_input = torch.cat((self.policy1fhalf(batch_next_state), self.policy2fhalf(batch_next_state)), dim = 1)
+                    policy3_input = torch.cat(self.policy1fhalf(batch_next_state), self.policy2fhalf(batch_next_state), dim = 1)
                     next_action_distrib = self.policy3((policy3_input))
                     next_actions = next_action_distrib.sample()
                     next_log_prob = next_action_distrib.log_prob(next_actions)
@@ -896,12 +890,14 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
     
                     target_q = batch_rewards + batch_discount * (
                         1.0 - batch_terminal
-                    ) * torch.flatten(next_q - entropy_term)                    
+                    ) * torch.flatten(next_q - entropy_term)
+    
+                    t = 3
 
         batch_state_ind = batch_state[:, :55]
         batch_state_d = batch_state[:, -6:]
         
-        if self.mask1:            
+        if self.mask1:
             predict_q1 = torch.flatten(self.q_func1_T1shalf(self.q_func1_T1fhalf((batch_state, batch_actions))))
             predict_q2 = torch.flatten(self.q_func2_T1shalf(self.q_func2_T1fhalf((batch_state, batch_actions))))
 
@@ -926,7 +922,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 clip_l2_grad_norm_(self.q_func2.parameters(), self.max_grad_norm)
             self.q_func2_optimizer1.step()
         
-        elif self.mask2:            
+        elif self.mask2:
             predict_q1 = torch.flatten(self.q_func1_T2shalf(self.q_func1_T2fhalf((batch_state, batch_actions))))
             predict_q2 = torch.flatten(self.q_func2_T2shalf(self.q_func2_T2fhalf((batch_state, batch_actions))))
 
@@ -951,8 +947,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
                 clip_l2_grad_norm_(self.q_func2.parameters(), self.max_grad_norm)
             self.q_func2_optimizer2.step()
         
-        elif self.mask3:            
-            q3_input = torch.cat((self.q_func1_T1fhalf((batch_state, batch_actions)), self.q_func2_T2fhalf((batch_state, batch_actions))), dim = 1)
+        elif self.mask3:
+            q3_input = torch.cat(self.q_func1_T1fhalf((batch_state, batch_actions)), self.q_func2_T2fhalf((batch_state, batch_actions)), dim = 1)
             predict_q1 = torch.flatten(self.q_func1_T3(q3_input))
             predict_q2 = torch.flatten(self.q_func2_T3(q3_input))
 
@@ -976,7 +972,8 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func2.parameters(), self.max_grad_norm)
             self.q_func2_optimizer3.step()
-            
+        
+        return t
 
     def update_temperature(self, log_prob, t):
         assert not log_prob.requires_grad        
@@ -987,7 +984,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss1.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
-            self.temperature_optimizer1.step()            
+            self.temperature_optimizer1.step()
         
         elif t == 2:
             loss2 = -torch.mean(self.temperature_holder2() * (log_prob + self.entropy_target))
@@ -995,7 +992,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             loss2.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder2.parameters(), self.max_grad_norm)
-            self.temperature_optimizer2.step()            
+            self.temperature_optimizer2.step()
             
         elif t == 3:
             loss3 = -torch.mean(self.temperature_holder3() * (log_prob + self.entropy_target))
@@ -1004,7 +1001,6 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder3.parameters(), self.max_grad_norm)
             self.temperature_optimizer3.step()
-            
 
     def update_policy_and_temperature(self, batch):
         """Compute loss for actor."""
@@ -1020,7 +1016,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.policy_optimizer1.zero_grad()
         self.policy_optimizer2.zero_grad()
         self.policy_optimizer3.zero_grad()
-        if self.T == 1:            
+        if self.mask1:
             action_distrib1 = self.policy1shalf(self.policy1fhalf(batch_state))
             actions = action_distrib1.rsample()
             log_prob = action_distrib1.log_prob(actions)
@@ -1036,8 +1032,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
             self.policy_optimizer1.step()
+
+            t = 1
         
-        elif self.T == 2:            
+        elif self.mask2:
             action_distrib2 = self.policy2shalf(self.policy2fhalf(batch_state))
             actions = action_distrib2.rsample()
             log_prob = action_distrib2.log_prob(actions)
@@ -1053,11 +1051,13 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
             self.policy_optimizer2.step()
+
+            t = 2
         
-        elif self.T == 3:            
+        elif self.mask3:
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf):
                 policymid1, policymid2 = self.policy1fhalf(batch_state), self.policy2fhalf(batch_state)
-            p3_input = torch.cat((policymid1, policymid2), dim = 1)
+            p3_input = torch.cat(policymid1, policymid2, dim = 1)
             action_distrib3 = self.policy3(p3_input)
             actions3 = action_distrib3.rsample()
             log_prob = action_distrib3.log_prob(actions3)
@@ -1073,43 +1073,45 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
             self.policy_optimizer3.step()
+
+            t = 3
         
-        self.n_policy_updates += 1        
+        self.n_policy_updates += 1
 
         if self.entropy_target is not None:
-            self.update_temperature(log_prob.detach(), self.T)#, log_prob2.detach(), log_prob3.detach())
+            self.update_temperature(log_prob.detach(), t)#, log_prob2.detach(), log_prob3.detach())
 
         # Record entropy
         with torch.no_grad():
             try:
-                if self.T == 1:
+                if self.mask1:
                     self.entropy_record1.extend(
                         action_distrib1.entropy().detach().cpu().numpy()
                     )
-                if self.T == 2:
+                if self.mask2:
                     self.entropy_record2.extend(
                         action_distrib2.entropy().detach().cpu().numpy()
                     )
-                if self.T == 3:
+                if self.mask3:
                     self.entropy_record3.extend(
                         action_distrib3.entropy().detach().cpu().numpy()
                     )
             except NotImplementedError:
                 # Record - log p(x) instead
-                if self.T == 1:
+                if self.mask1:
                     self.entropy_record1.extend(-log_prob.detach().cpu().numpy())
-                if self.T == 2:
+                if self.mask2:
                     self.entropy_record2.extend(-log_prob.detach().cpu().numpy())
-                if self.T == 3:
+                if self.mask3:
                     self.entropy_record3.extend(-log_prob.detach().cpu().numpy())
 
     def update(self, experiences, errors_out=None):
         """Update the model from experiences"""        
         # with torch.autograd.profiler.profile(use_cuda=True) as prof:
         batch = batch_experiences(experiences, self.device, self.phi, self.gamma)
-        self.update_q_func(batch)
+        t = self.update_q_func(batch)
         self.update_policy_and_temperature(batch)
-        self.sync_target_network(self.T)
+        self.sync_target_network(t)
         # print(prof)        
 
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
@@ -1128,7 +1130,7 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             elif mask2:
                 policy_out = self.policy2shalf(self.policy2fhalf(batch_xs))
             elif mask3:
-                p3_input = torch.cat((self.policy1fhalf(batch_xs), self.policy2fhalf(batch_xs)), dim = 1)
+                p3_input = torch.cat(self.policy1fhalf(batch_xs), self.policy2fhalf(batch_xs), dim = 1)
                 policy_out = self.policy3(p3_input)
                 
             if deterministic:
