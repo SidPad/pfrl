@@ -298,7 +298,10 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state = batch["state"]
         batch_state_red = batch_state[:, :67]
 
-        action_distrib = self.policy(batch_state_red)
+        stddevs = torch.abs(batch_state_red * batch_state[0, -1])
+        noisy = torch.normal(batch_state_red, stddevs)
+
+        action_distrib = self.policy(noisy)
         actions = action_distrib.rsample()
         log_prob = action_distrib.log_prob(actions)
         q1 = self.q_func1((batch_state, actions))
@@ -341,8 +344,11 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad(), pfrl.utils.evaluating(self.policy):
             batch_xs = self.batch_states(batch_obs, self.device, self.phi)
             batch_xs_red = batch_xs[:, :67]
+            print(batch_xs)
+            stddevs = torch.abs(batch_xs_red * batch_xs[0, -1])
+            noisy = torch.normal(batch_xs_red, stddevs)
             
-            policy_out = self.policy(batch_xs_red)
+            policy_out = self.policy(noisy)
             mypolicy =list(self.policy.children())
             if deterministic:
                 batch_action = mode_of_distribution(policy_out).cpu().numpy()                
