@@ -239,10 +239,12 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = batch["action"]
         batch_discount = batch["discount"]
 
+        batch_next_state_red = batch_next_state[:, :69]        
+
         with torch.no_grad(), pfrl.utils.evaluating(self.policy), pfrl.utils.evaluating(
             self.target_q_func1
         ), pfrl.utils.evaluating(self.target_q_func2):
-            next_action_distrib = self.policy(batch_next_state)
+            next_action_distrib = self.policy(batch_next_state_red)
             next_actions = next_action_distrib.sample()
             next_log_prob = next_action_distrib.log_prob(next_actions)
             next_q1 = self.target_q_func1((batch_next_state, next_actions))
@@ -292,8 +294,9 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
         """Compute loss for actor."""
 
         batch_state = batch["state"]
+        batch_state_red = batch_state[:, :69]
 
-        action_distrib = self.policy(batch_state)
+        action_distrib = self.policy(batch_state_red)
         actions = action_distrib.rsample()
         log_prob = action_distrib.log_prob(actions)
         q1 = self.q_func1((batch_state, actions))
@@ -335,7 +338,9 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
     def batch_select_greedy_action(self, batch_obs, deterministic=False):
         with torch.no_grad(), pfrl.utils.evaluating(self.policy):
             batch_xs = self.batch_states(batch_obs, self.device, self.phi)
-            policy_out = self.policy(batch_xs)
+            batch_xs_red = batch_xs[:, :69]
+            
+            policy_out = self.policy(batch_xs_red)
             mypolicy =list(self.policy.children())
             if deterministic:
                 batch_action = mode_of_distribution(policy_out).cpu().numpy()                
