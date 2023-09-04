@@ -344,9 +344,8 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
         with torch.no_grad(), pfrl.utils.evaluating(self.policy):
             batch_xs = self.batch_states(batch_obs, self.device, self.phi)
             batch_xs_red = batch_xs[:, :67]
-            print(batch_xs)
-            print(batch_xs[:, -1])
-            stddevs = torch.abs(batch_xs_red * batch_xs[0, -1].unsqueeze(1))
+            
+            stddevs = torch.abs(batch_xs_red * batch_xs[:, -1].unsqueeze(1))
             noisy = torch.normal(batch_xs_red, stddevs)
             
             policy_out = self.policy(noisy)
