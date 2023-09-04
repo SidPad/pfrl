@@ -240,7 +240,7 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_discount = batch["discount"]
 
         batch_next_state_red = batch_next_state[:, :67]        
-        stddevs = torch.abs(batch_next_state_red * batch_next_state[:, -1])
+        stddevs = torch.abs(batch_next_state_red * batch_next_state[:, -1].unsqueeze(1))
         noisy = torch.normal(batch_next_state_red, stddevs)
 
         with torch.no_grad(), pfrl.utils.evaluating(self.policy), pfrl.utils.evaluating(
@@ -298,7 +298,7 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state = batch["state"]
         batch_state_red = batch_state[:, :67]
 
-        stddevs = torch.abs(batch_state_red * batch_state[:, -1])
+        stddevs = torch.abs(batch_state_red * batch_state[:, -1].unsqueeze(1))
         noisy = torch.normal(batch_state_red, stddevs)
 
         action_distrib = self.policy(noisy)
@@ -346,7 +346,7 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_xs_red = batch_xs[:, :67]
             print(batch_xs)
             print(batch_xs[:, -1])
-            stddevs = torch.abs(batch_xs_red * batch_xs[0, -1])
+            stddevs = torch.abs(batch_xs_red * batch_xs[0, -1].unsqueeze(1))
             noisy = torch.normal(batch_xs_red, stddevs)
             
             policy_out = self.policy(noisy)
