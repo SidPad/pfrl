@@ -239,8 +239,7 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = batch["action"]
         batch_discount = batch["discount"]
 
-        batch_next_state_red = batch_next_state[:, :67]
-        print(batch_next_state[0, -1])
+        batch_next_state_red = batch_next_state[:, :67]        
         stddevs = torch.abs(batch_next_state_red * batch_next_state[0, -1])
         noisy = torch.normal(batch_next_state_red, stddevs)
 
