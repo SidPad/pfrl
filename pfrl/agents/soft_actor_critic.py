@@ -349,14 +349,14 @@ class SoftActorCritic(AttributeSavingMixin, BatchAgent):
             noisy = torch.normal(batch_xs_red, stddevs)
             
             policy_out = self.policy(noisy)
-            mypolicy =list(self.policy.children())
+            # mypolicy =list(self.policy.children())
             if deterministic:
                 batch_action = mode_of_distribution(policy_out).cpu().numpy()                
-                keep = mypolicy[0](batch_xs)
-                keep = mypolicy[1](keep)
-                keep = mypolicy[2](keep)
-                keep = mypolicy[3](keep)
-                keep = mypolicy[4](keep)
+                # keep = mypolicy[0](batch_xs)
+                # keep = mypolicy[1](keep)
+                # keep = mypolicy[2](keep)
+                # keep = mypolicy[3](keep)
+                # keep = mypolicy[4](keep)
             else:
                 batch_action = policy_out.sample().cpu().numpy()
             
