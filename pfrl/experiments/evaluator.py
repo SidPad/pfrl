@@ -57,7 +57,7 @@ def _run_episodes(
                 terminate = timestep >= n_steps
         else:
             env.step(empty_action)
-        random.randint(-2, 2)
+        # random.randint(-2, 2)
         timer += 1
     # If all steps were used for a single unfinished episode
     if len(scores) == 0:
@@ -216,7 +216,7 @@ def _batch_run_episodes(
                 obss = env.reset(not_end)
         else:
             env.step(empty_action)
-        random.randint(-2, 2)
+        # random.randint(-2, 2)
         timer += 1
 
     for i, (epi_len, epi_ret) in enumerate(
