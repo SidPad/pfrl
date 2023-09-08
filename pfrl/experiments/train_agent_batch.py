@@ -145,7 +145,7 @@ def train_agent_batch(
                 obss = env.reset(not_end)
             else:
                 env.step(empty_action)
-            # random.randint(-2, 2)
+            random.randint(-2, 2)
             timer += 1
 
     except (Exception, KeyboardInterrupt):
