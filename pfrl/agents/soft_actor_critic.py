@@ -493,25 +493,17 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         "policy1shalf",
         "policy2fhalf",
         "policy2shalf",
-        "policy3",
-        "q_func1_T1fhalf",
-        "q_func1_T1shalf",
-        "q_func2_T1fhalf",
-        "q_func2_T1shalf",
-        "q_func1_T2fhalf",
-        "q_func1_T2shalf",
-        "q_func2_T2fhalf",
-        "q_func2_T2shalf",
-        "q_func1_T3",        
-        "q_func2_T3",
-        "target_q_func1_T1fhalf",
-        "target_q_func1_T1shalf",
-        "target_q_func2_T1fhalf",
-        "target_q_func2_T1shalf",
-        "target_q_func1_T2fhalf",
-        "target_q_func1_T2shalf",
-        "target_q_func2_T2fhalf",
-        "target_q_func2_T2shalf",
+        "policy3",        
+        "q_func1_T1",
+        "q_func2_T1",
+        "q_func1_T2",
+        "q_func2_T2",
+        "q_func1_T3",
+        "q_func2_T3",        
+        "target_q_func1_T1",
+        "target_q_func2_T1",
+        "target_q_func1_T2",
+        "target_q_func2_T2",
         "target_q_func1_T3",
         "target_q_func2_T3",
         "policy_optimizer1",
@@ -537,25 +529,21 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         policy1shalf,
         policy2fhalf,
         policy2shalf,
-        policy3,
-        q_func1_T1fhalf,
-        q_func1_T1shalf,
-        q_func2_T1fhalf,
-        q_func2_T1shalf,
-        q_func1_T2fhalf,
-        q_func1_T2shalf,
-        q_func2_T2fhalf,
-        q_func2_T2shalf,
+        policy3,        
+        q_func1_T1,
+        q_func2_T1,
+        q_func1_T2,
+        q_func2_T2,
         q_func1_T3,
         q_func2_T3,
         policy_optimizer1,
         policy_optimizer2,
         policy_optimizer3,        
         q_func1_optimizer1,
-        q_func1_optimizer2,
-        q_func1_optimizer3,
         q_func2_optimizer1,
+        q_func1_optimizer2,
         q_func2_optimizer2,
+        q_func1_optimizer3,
         q_func2_optimizer3,
         replay_buffer,
         gamma,
@@ -581,14 +569,10 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.policy2shalf = policy2shalf
         self.policy3 = policy3        
         
-        self.q_func1_T1fhalf = q_func1_T1fhalf
-        self.q_func1_T1shalf = q_func1_T1shalf
-        self.q_func2_T1fhalf = q_func2_T1fhalf
-        self.q_func2_T1shalf = q_func2_T1shalf
-        self.q_func1_T2fhalf = q_func1_T2fhalf
-        self.q_func1_T2shalf = q_func1_T2shalf
-        self.q_func2_T2fhalf = q_func2_T2fhalf
-        self.q_func2_T2shalf = q_func2_T2shalf
+        self.q_func1_T1 = q_func1_T1
+        self.q_func2_T1 = q_func2_T1
+        self.q_func1_T2 = q_func1_T2
+        self.q_func2_T2 = q_func2_T2
         self.q_func1_T3 = q_func1_T3
         self.q_func2_T3 = q_func2_T3
         
@@ -602,16 +586,11 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             self.policy1shalf.to(self.device)
             self.policy2fhalf.to(self.device)
             self.policy2shalf.to(self.device)
-            self.policy3.to(self.device)            
-            
-            self.q_func1_T1fhalf.to(self.device)
-            self.q_func1_T1shalf.to(self.device)
-            self.q_func2_T1fhalf.to(self.device)
-            self.q_func2_T1shalf.to(self.device)
-            self.q_func1_T2fhalf.to(self.device)
-            self.q_func1_T2shalf.to(self.device)
-            self.q_func2_T2fhalf.to(self.device)
-            self.q_func2_T2shalf.to(self.device)
+            self.policy3.to(self.device)
+            self.q_func1_T1.to(self.device)
+            self.q_func2_T1.to(self.device)
+            self.q_func1_T2.to(self.device)
+            self.q_func2_T2.to(self.device)
             self.q_func1_T3.to(self.device)
             self.q_func2_T3.to(self.device)
                         
@@ -697,18 +676,50 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.act_deterministically = act_deterministically
 
         self.t = 0
+        
+        self.task = 0
 
-        # Target model       
-        self.target_q_func1_T1fhalf = copy.deepcopy(self.q_func1_T1fhalf).eval().requires_grad_(False)
-        self.target_q_func1_T1shalf = copy.deepcopy(self.q_func1_T1shalf).eval().requires_grad_(False)
-        self.target_q_func2_T1fhalf = copy.deepcopy(self.q_func2_T1fhalf).eval().requires_grad_(False)
-        self.target_q_func2_T1shalf = copy.deepcopy(self.q_func2_T1shalf).eval().requires_grad_(False)
-        self.target_q_func1_T2fhalf = copy.deepcopy(self.q_func1_T2fhalf).eval().requires_grad_(False)
-        self.target_q_func1_T2shalf = copy.deepcopy(self.q_func1_T2shalf).eval().requires_grad_(False)
-        self.target_q_func2_T2fhalf = copy.deepcopy(self.q_func2_T2fhalf).eval().requires_grad_(False)
-        self.target_q_func2_T2shalf = copy.deepcopy(self.q_func2_T2shalf).eval().requires_grad_(False)
+        # Target model
+        self.target_q_func1_T1 = copy.deepcopy(self.q_func1_T1).eval().requires_grad_(False)
+        self.target_q_func2_T1 = copy.deepcopy(self.q_func2_T1).eval().requires_grad_(False)
+        self.target_q_func1_T2 = copy.deepcopy(self.q_func1_T2).eval().requires_grad_(False)
+        self.target_q_func2_T2 = copy.deepcopy(self.q_func2_T2).eval().requires_grad_(False)
         self.target_q_func1_T3 = copy.deepcopy(self.q_func1_T3).eval().requires_grad_(False)
         self.target_q_func2_T3 = copy.deepcopy(self.q_func2_T3).eval().requires_grad_(False)
+
+        # Load Weights
+        # pretrained_weights_policy1fhalf = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_PULLUP_IH_Actor/7fc547b81709d90aae5437e53aaf8a9ed4ef6b87-1e1bf7a1-7b65c434/best/policy1fhalf.pt')
+        # pretrained_weights_policy2fhalf = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_SWING_IH_Actor/7fc547b81709d90aae5437e53aaf8a9ed4ef6b87-0da2bcbd-7b65c434/best/policy2fhalf.pt')
+
+        # pretrained_weights_q_func1_T1fhalf = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_PULLUP_SWING_FIXED_WEIGHTS/PreTrained/best/q_func1_T1fhalf.pt')
+        # pretrained_weights_q_func1_T2fhalf = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_PULLUP_SWING_FIXED_WEIGHTS/PreTrained/best/q_func1_T2fhalf.pt')        
+
+        # pretrained_weights_target_q_func1_T1fhalf = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_PULLUP_SWING_FIXED_WEIGHTS/PreTrained/best/target_q_func1_T1fhalf.pt')
+        # pretrained_weights_target_q_func1_T2fhalf = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_PULLUP_SWING_FIXED_WEIGHTS/PreTrained/best/target_q_func1_T2fhalf.pt')        
+
+        # pretrained_weights_q_func2_T1fhalf = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_PULLUP_SWING_FIXED_WEIGHTS/PreTrained/best/q_func2_T1fhalf.pt')
+        # pretrained_weights_q_func2_T2fhalf = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_PULLUP_SWING_FIXED_WEIGHTS/PreTrained/best/q_func2_T2fhalf.pt')        
+
+        # pretrained_weights_target_q_func2_T1fhalf = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_PULLUP_SWING_FIXED_WEIGHTS/PreTrained/best/target_q_func2_T1fhalf.pt')
+        # pretrained_weights_target_q_func2_T2fhalf = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_PULLUP_SWING_FIXED_WEIGHTS/PreTrained/best/target_q_func2_T2fhalf.pt')        
+        
+        # self.policy1fhalf.load_state_dict(pretrained_weights_policy1fhalf)
+        # self.policy2fhalf.load_state_dict(pretrained_weights_policy2fhalf)
+
+        # self.q_func1_T1fhalf.load_state_dict(pretrained_weights_q_func1_T1fhalf)
+        # self.q_func1_T2fhalf.load_state_dict(pretrained_weights_q_func1_T2fhalf)        
+
+        # self.target_q_func1_T1fhalf.load_state_dict(pretrained_weights_target_q_func1_T1fhalf)
+        # self.target_q_func1_T2fhalf.load_state_dict(pretrained_weights_target_q_func1_T2fhalf)        
+
+        # self.q_func2_T1fhalf.load_state_dict(pretrained_weights_q_func2_T1fhalf)
+        # self.q_func2_T2fhalf.load_state_dict(pretrained_weights_q_func2_T2fhalf)        
+
+        # self.target_q_func2_T1fhalf.load_state_dict(pretrained_weights_target_q_func2_T1fhalf)
+        # self.target_q_func2_T2fhalf.load_state_dict(pretrained_weights_target_q_func2_T2fhalf)
+        
+        # pretrained_dict = torch.load('/home/spyd66/kaleido_pybullet/docker/Kaleido/kaleido/envs/Pullover_COMB_IH_Actor_2/7fc547b81709d90aae5437e53aaf8a9ed4ef6b87-488cbee6-7b65c434/best/policy3.pt', map_location=self.device)
+        # self.policy3.load_state_dict(pretrained_dict)
 
         # Statistics
         self.q1_record = collections.deque(maxlen=1000)
@@ -732,59 +743,35 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             with torch.no_grad():
                 return float(self.temperature_holder1()), float(self.temperature_holder2()), float(self.temperature_holder3())
 
-    def sync_target_network(self, t):
+    def sync_target_network(self):
         """Synchronize target network with current network."""
-        if t == 1:
+        if torch.any(self.mask1):
             synchronize_parameters(
-                src=self.q_func1_T1fhalf,
-                dst=self.target_q_func1_T1fhalf,
+                src=self.q_func1_T1,
+                dst=self.target_q_func1_T1,
                 method="soft",
                 tau=self.soft_update_tau,
             )
             synchronize_parameters(
-                src=self.q_func1_T1shalf,
-                dst=self.target_q_func1_T1shalf,
+                src=self.q_func2_T1,
+                dst=self.target_q_func2_T1,
+                method="soft",
+                tau=self.soft_update_tau,
+            )
+        if torch.any(self.mask2):
+            synchronize_parameters(
+                src=self.q_func1_T2,
+                dst=self.target_q_func1_T2,
                 method="soft",
                 tau=self.soft_update_tau,
             )
             synchronize_parameters(
-                src=self.q_func2_T1fhalf,
-                dst=self.target_q_func2_T1fhalf,
+                src=self.q_func2_T2,
+                dst=self.target_q_func2_T2,
                 method="soft",
                 tau=self.soft_update_tau,
             )
-            synchronize_parameters(
-                src=self.q_func2_T1shalf,
-                dst=self.target_q_func2_T1shalf,
-                method="soft",
-                tau=self.soft_update_tau,
-            )
-        elif t == 2:
-            synchronize_parameters(
-                src=self.q_func1_T2fhalf,
-                dst=self.target_q_func1_T2fhalf,
-                method="soft",
-                tau=self.soft_update_tau,
-            )
-            synchronize_parameters(
-                src=self.q_func1_T2shalf,
-                dst=self.target_q_func1_T2shalf,
-                method="soft",
-                tau=self.soft_update_tau,
-            )
-            synchronize_parameters(
-                src=self.q_func2_T2fhalf,
-                dst=self.target_q_func2_T2fhalf,
-                method="soft",
-                tau=self.soft_update_tau,
-            )
-            synchronize_parameters(
-                src=self.q_func2_T2shalf,
-                dst=self.target_q_func2_T2shalf,
-                method="soft",
-                tau=self.soft_update_tau,
-            )
-        elif t == 3:
+        if torch.any(self.mask3):
             synchronize_parameters(
                 src=self.q_func1_T3,
                 dst=self.target_q_func1_T3,
@@ -811,191 +798,230 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_actions = batch_actions.to(torch.float32)
         
         ##### Divide into three #####
-        self.mask1 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1))
-        self.mask2 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1))
-        self.mask3 = torch.all(torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1))
+        self.mask1 = torch.all(batch_next_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
+        self.mask2 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
+        self.mask3 = torch.all(batch_next_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
+
+        batch_next_state1 = batch_next_state.clone().detach()
+        batch_next_state2 = batch_next_state.clone().detach()
+        batch_next_state3 = batch_next_state.clone().detach()
+
+        batch_next_state1[~self.mask1] = 0
+        batch_next_state2[~self.mask2] = 0
+        batch_next_state3[~self.mask3] = 0
+        
+        batch_state1 = batch_state.clone().detach()
+        batch_state2 = batch_state.clone().detach()
+        batch_state3 = batch_state.clone().detach()
+
+        batch_state1[~self.mask1] = 0
+        batch_state2[~self.mask2] = 0
+        batch_state3[~self.mask3] = 0
+        
+        batch_actions1 = batch_actions.clone().detach()
+        batch_actions2 = batch_actions.clone().detach()
+        batch_actions3 = batch_actions.clone().detach()
+
+        batch_actions1[~self.mask1] = 0
+        batch_actions2[~self.mask2] = 0
+        batch_actions3[~self.mask3] = 0
+        
+        batch_rewards1 = batch_rewards.clone().detach()
+        batch_rewards2 = batch_rewards.clone().detach()
+        batch_rewards3 = batch_rewards.clone().detach()
+
+        batch_rewards1[~self.mask1] = 0
+        batch_rewards2[~self.mask2] = 0
+        batch_rewards3[~self.mask3] = 0
+        
+        batch_terminal1 = batch_terminal.clone().detach()
+        batch_terminal2 = batch_terminal.clone().detach()
+        batch_terminal3 = batch_terminal.clone().detach()
+
+        batch_terminal1[~self.mask1] = 0
+        batch_terminal2[~self.mask2] = 0
+        batch_terminal3[~self.mask3] = 0
+        
+        batch_discount1 = batch_discount.clone().detach()
+        batch_discount2 = batch_discount.clone().detach()
+        batch_discount3 = batch_discount.clone().detach()       
+        
+        batch_discount1[~self.mask1] = 0
+        batch_discount2[~self.mask2] = 0
+        batch_discount3[~self.mask3] = 0
+
+        mask1 = torch.any(self.mask1)
+        mask2 = torch.any(self.mask2)
+        mask3 = torch.any(self.mask3)
 
         ##### separate task depedent info #####
         with torch.no_grad():
             temp1, temp2, temp3 = self.temperature
             
-            batch_next_state_ind = batch_next_state[:, :55]
-            batch_next_state_d = batch_next_state[:, -6:]            
-            if self.mask1:
-                with pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy1shalf), pfrl.utils.evaluating(self.target_q_func1_T1fhalf), pfrl.utils.evaluating(self.target_q_func1_T1shalf), pfrl.utils.evaluating(self.target_q_func2_T1fhalf), pfrl.utils.evaluating(self.target_q_func2_T1shalf):
-                    next_action_distrib = self.policy1shalf(self.policy1fhalf(batch_next_state))
-                    next_actions = next_action_distrib.sample()
-                    next_log_prob = next_action_distrib.log_prob(next_actions)
+            batch_next_state_ind1 = batch_next_state1[:, :55]
+            batch_next_state_ind2 = batch_next_state2[:, :55]
+            batch_next_state_ind3 = batch_next_state3[:, :55]
+
+            batch_next_state_d1 = batch_next_state1[:, -6:]
+            batch_next_state_d2 = batch_next_state2[:, -6:]
+            batch_next_state_d3 = batch_next_state3[:, -6:]
+
+            if mask1:
+                with pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy1shalf), pfrl.utils.evaluating(self.target_q_func1_T1), pfrl.utils.evaluating(self.target_q_func2_T1):
+                    firsthalf_T1 = torch.cat((self.policy1fhalf(batch_next_state_ind1), batch_next_state_d1), dim = 1)
+                    next_action_distrib1 = self.policy1shalf(firsthalf_T1)
+                    next_actions1 = next_action_distrib1.sample()
+                    next_log_prob1 = next_action_distrib1.log_prob(next_actions1)
+
+                    next_q1_T1 = self.target_q_func1_T1((batch_next_state1, next_actions1))
+                    next_q2_T1 = self.target_q_func2_T1((batch_next_state1, next_actions1))
                     
-                    target_q1_mid = self.target_q_func1_T1fhalf((batch_next_state, next_actions))
-                    next_q1 = self.target_q_func1_T1shalf(target_q1_mid)
-                    
-                    target_q2_mid = self.target_q_func2_T1fhalf((batch_next_state, next_actions))
-                    next_q2 = self.target_q_func2_T1shalf(target_q2_mid)
-                    
-                    next_q = torch.min(next_q1, next_q2)
-                    entropy_term = temp1 * next_log_prob[..., None]
-                    assert next_q.shape == entropy_term.shape
+                    next_q_T1 = torch.min(next_q1_T1, next_q2_T1)
+                    entropy_term1 = temp1 * next_log_prob1[..., None]
+                    assert next_q_T1.shape == entropy_term1.shape
     
-                    target_q = batch_rewards + batch_discount * (
-                        1.0 - batch_terminal
-                    ) * torch.flatten(next_q - entropy_term)
-    
-                    t = 1
+                    target_q_T1 = batch_rewards1 + batch_discount1 * (
+                        1.0 - batch_terminal1
+                    ) * torch.flatten(next_q_T1 - entropy_term1)
             
-            elif self.mask2:
-                with pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.target_q_func1_T2fhalf), pfrl.utils.evaluating(self.target_q_func1_T2shalf), pfrl.utils.evaluating(self.target_q_func2_T2fhalf), pfrl.utils.evaluating(self.target_q_func2_T2shalf):
-                    next_action_distrib = self.policy2shalf(self.policy2fhalf(batch_next_state))
-                    next_actions = next_action_distrib.sample()
-                    next_log_prob = next_action_distrib.log_prob(next_actions)
+            if mask2:
+                with pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.target_q_func1_T2), pfrl.utils.evaluating(self.target_q_func2_T2):
+                    firsthalf_T2 = torch.cat((self.policy2fhalf(batch_next_state_ind2), batch_next_state_d2), dim = 1)
+                    next_action_distrib2 = self.policy2shalf(firsthalf_T2)
+                    next_actions2 = next_action_distrib2.sample()
+                    next_log_prob2 = next_action_distrib2.log_prob(next_actions2)
+
+                    next_q1_T2 = self.target_q_func1_T2((batch_next_state2, next_actions2))
+                    next_q2_T2 = self.target_q_func2_T2((batch_next_state2, next_actions2))
                     
-                    target_q1_mid = self.target_q_func1_T2fhalf((batch_next_state, next_actions))
-                    next_q1 = self.target_q_func1_T2shalf(target_q1_mid)
-                    
-                    target_q2_mid = self.target_q_func2_T2fhalf((batch_next_state, next_actions))
-                    next_q2 = self.target_q_func2_T2shalf(target_q2_mid)
-                    
-                    next_q = torch.min(next_q1, next_q2)
-                    entropy_term = temp2 * next_log_prob[..., None]
-                    assert next_q.shape == entropy_term.shape
+                    next_q_T2 = torch.min(next_q1_T2, next_q2_T2)
+                    entropy_term2 = temp2 * next_log_prob2[..., None]
+                    assert next_q_T2.shape == entropy_term2.shape
     
-                    target_q = batch_rewards + batch_discount * (
-                        1.0 - batch_terminal
-                    ) * torch.flatten(next_q - entropy_term)
-    
-                    t = 2
+                    target_q_T2 = batch_rewards2 + batch_discount2 * (
+                        1.0 - batch_terminal2
+                    ) * torch.flatten(next_q_T2 - entropy_term2)
             
-            elif self.mask3:
-                with pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):
-                    policy3_input = torch.cat(self.policy1fhalf(batch_next_state), self.policy2fhalf(batch_next_state), dim = 1)
-                    next_action_distrib = self.policy3((policy3_input))
-                    next_actions = next_action_distrib.sample()
-                    next_log_prob = next_action_distrib.log_prob(next_actions)
+            if mask3:
+                with pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy3), pfrl.utils.evaluating(self.target_q_func1_T3), pfrl.utils.evaluating(self.target_q_func2_T3):
+                    policy3_input = torch.cat((self.policy1fhalf(batch_next_state_ind3), self.policy2fhalf(batch_next_state_ind3), batch_next_state_d3), dim = 1)
+                    next_action_distrib3 = self.policy3((policy3_input))
+                    next_actions3 = next_action_distrib3.sample()
+                    next_log_prob3 = next_action_distrib3.log_prob(next_actions3)
+
+                    next_q1_T3 = self.target_q_func1_T3((batch_next_state3, next_actions3))
+                    next_q2_T3 = self.target_q_func2_T3((batch_next_state3, next_actions3))
                     
-                    target_q1_mid1 = self.target_q_func1_T1fhalf((batch_next_state, next_actions))
-                    target_q1_mid2 = self.target_q_func1_T2fhalf((batch_next_state, next_actions))
+                    next_q_T3 = torch.min(next_q1_T3, next_q2_T3)
+                    entropy_term3 = temp3 * next_log_prob3[..., None]
+                    assert next_q_T3.shape == entropy_term3.shape
     
-                    q3_input_1 = torch.cat(target_q1_mid1, target_q1_mid2, dim = 1)
-                    next_q1 = self.target_q_func1_T3(q3_input_1)
-                    
-                    target_q2_mid1 = self.target_q_func2_T1fhalf((batch_next_state, next_actions))    
-                    target_q2_mid2 = self.target_q_func2_T2fhalf((batch_next_state, next_actions))
-    
-                    q3_input_2 = torch.cat(target_q2_mid1, target_q2_mid2, dim = 1)
-                    next_q2 = self.target_q_func2_T3(q3_input_2)
-                    
-                    next_q = torch.min(next_q1, next_q2)
-                    entropy_term = temp3 * next_log_prob[..., None]
-                    assert next_q.shape == entropy_term.shape
-    
-                    target_q = batch_rewards + batch_discount * (
-                        1.0 - batch_terminal
-                    ) * torch.flatten(next_q - entropy_term)
-    
-                    t = 3
+                    target_q_T3 = batch_rewards3 + batch_discount3 * (
+                        1.0 - batch_terminal3
+                    ) * torch.flatten(next_q_T3 - entropy_term3)
 
         batch_state_ind = batch_state[:, :55]
         batch_state_d = batch_state[:, -6:]
         
-        if self.mask1:
-            predict_q1 = torch.flatten(self.q_func1_T1shalf(self.q_func1_T1fhalf((batch_state, batch_actions))))
-            predict_q2 = torch.flatten(self.q_func2_T1shalf(self.q_func2_T1fhalf((batch_state, batch_actions))))
+        if mask1:            
+            predict_q1_T1 = torch.flatten(self.q_func1_T1((batch_state1, batch_actions1)))
+            predict_q2_T1 = torch.flatten(self.q_func2_T1((batch_state1, batch_actions1)))
 
-            loss1 = 0.5 * F.mse_loss(target_q, predict_q1)
-            loss2 = 0.5 * F.mse_loss(target_q, predict_q2)
+            loss1_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q1_T1)
+            loss2_T1 = 0.5 * F.mse_loss(target_q_T1, predict_q2_T1)
 
             # Update stats
-            self.q1_record.extend(predict_q1.detach().cpu().numpy())
-            self.q2_record.extend(predict_q2.detach().cpu().numpy())
-            self.q_func1_loss_record.append(float(loss1))
-            self.q_func2_loss_record.append(float(loss2))
+            self.q1_record.extend(predict_q1_T1.detach().cpu().numpy())
+            self.q2_record.extend(predict_q2_T1.detach().cpu().numpy())
+            self.q_func1_loss_record.append(float(loss1_T1))
+            self.q_func2_loss_record.append(float(loss2_T1))
 
             self.q_func1_optimizer1.zero_grad()
-            loss1.backward()
+            loss1_T1.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func1.parameters(), self.max_grad_norm)
             self.q_func1_optimizer1.step()
 
             self.q_func2_optimizer1.zero_grad()
-            loss2.backward()
+            loss2_T1.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func2.parameters(), self.max_grad_norm)
             self.q_func2_optimizer1.step()
-        
-        elif self.mask2:
-            predict_q1 = torch.flatten(self.q_func1_T2shalf(self.q_func1_T2fhalf((batch_state, batch_actions))))
-            predict_q2 = torch.flatten(self.q_func2_T2shalf(self.q_func2_T2fhalf((batch_state, batch_actions))))
 
-            loss1 = 0.5 * F.mse_loss(target_q, predict_q1)
-            loss2 = 0.5 * F.mse_loss(target_q, predict_q2)
+        
+        if mask2:            
+            predict_q1_T2 = torch.flatten(self.q_func1_T2((batch_state2, batch_actions2)))
+            predict_q2_T2 = torch.flatten(self.q_func2_T2((batch_state2, batch_actions2)))
+
+            loss1_T2 = 0.5 * F.mse_loss(target_q_T2, predict_q1_T2)
+            loss2_T2 = 0.5 * F.mse_loss(target_q_T2, predict_q2_T2)
 
             # Update stats
-            self.q1_record.extend(predict_q1.detach().cpu().numpy())
-            self.q2_record.extend(predict_q2.detach().cpu().numpy())
-            self.q_func1_loss_record.append(float(loss1))
-            self.q_func2_loss_record.append(float(loss2))
+            self.q1_record.extend(predict_q1_T2.detach().cpu().numpy())
+            self.q2_record.extend(predict_q2_T2.detach().cpu().numpy())
+            self.q_func1_loss_record.append(float(loss1_T2))
+            self.q_func2_loss_record.append(float(loss2_T2))
 
             self.q_func1_optimizer2.zero_grad()
-            loss1.backward()
+            loss1_T2.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func1.parameters(), self.max_grad_norm)
             self.q_func1_optimizer2.step()
 
             self.q_func2_optimizer2.zero_grad()
-            loss2.backward()
+            loss2_T2.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func2.parameters(), self.max_grad_norm)
             self.q_func2_optimizer2.step()
-        
-        elif self.mask3:
-            q3_input = torch.cat(self.q_func1_T1fhalf((batch_state, batch_actions)), self.q_func2_T2fhalf((batch_state, batch_actions)), dim = 1)
-            predict_q1 = torch.flatten(self.q_func1_T3(q3_input))
-            predict_q2 = torch.flatten(self.q_func2_T3(q3_input))
 
-            loss1 = 0.5 * F.mse_loss(target_q, predict_q1)
-            loss2 = 0.5 * F.mse_loss(target_q, predict_q2)
+        
+        if mask3:            
+            predict_q1_T3 = torch.flatten(self.q_func1_T3((batch_state3, batch_actions3)))
+            predict_q2_T3 = torch.flatten(self.q_func2_T3((batch_state3, batch_actions3)))
+
+            loss1_T3 = 0.5 * F.mse_loss(target_q_T3, predict_q1_T3)
+            loss2_T3 = 0.5 * F.mse_loss(target_q_T3, predict_q2_T3)
 
             # Update stats
-            self.q1_record.extend(predict_q1.detach().cpu().numpy())
-            self.q2_record.extend(predict_q2.detach().cpu().numpy())
-            self.q_func1_loss_record.append(float(loss1))
-            self.q_func2_loss_record.append(float(loss2))
+            self.q1_record.extend(predict_q1_T3.detach().cpu().numpy())
+            self.q2_record.extend(predict_q2_T3.detach().cpu().numpy())
+            self.q_func1_loss_record.append(float(loss1_T3))
+            self.q_func2_loss_record.append(float(loss2_T3))
 
             self.q_func1_optimizer3.zero_grad()
-            loss1.backward()
+            loss1_T3.backward(retain_graph=True)
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func1.parameters(), self.max_grad_norm)
             self.q_func1_optimizer3.step()
 
             self.q_func2_optimizer3.zero_grad()
-            loss2.backward()
+            loss2_T3.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.q_func2.parameters(), self.max_grad_norm)
             self.q_func2_optimizer3.step()
-        
-        return t
 
-    def update_temperature(self, log_prob, t):
-        assert not log_prob.requires_grad        
-        
-        if t == 1:
-            loss1 = -torch.mean(self.temperature_holder1() * (log_prob + self.entropy_target))
+    def update_temperature(self, log_prob1, log_prob2, log_prob3):
+        assert not log_prob1.requires_grad
+        assert not log_prob2.requires_grad
+        assert not log_prob3.requires_grad
+        if log_prob1.numel() > 0:
+            loss1 = -torch.mean(self.temperature_holder1() * (log_prob1 + self.entropy_target))
             self.temperature_optimizer1.zero_grad()
             loss1.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder1.parameters(), self.max_grad_norm)
             self.temperature_optimizer1.step()
         
-        elif t == 2:
-            loss2 = -torch.mean(self.temperature_holder2() * (log_prob + self.entropy_target))
+        if log_prob2.numel() > 0:
+            loss2 = -torch.mean(self.temperature_holder2() * (log_prob2 + self.entropy_target))
             self.temperature_optimizer2.zero_grad()
             loss2.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.temperature_holder2.parameters(), self.max_grad_norm)
             self.temperature_optimizer2.step()
             
-        elif t == 3:
-            loss3 = -torch.mean(self.temperature_holder3() * (log_prob + self.entropy_target))
+        if log_prob3.numel() > 0:
+            loss3 = -torch.mean(self.temperature_holder3() * (log_prob3 + self.entropy_target))
             self.temperature_optimizer3.zero_grad()
             loss3.backward()
             if self.max_grad_norm is not None:
@@ -1009,6 +1035,38 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         batch_state_ind = batch_state[:, :55]
         batch_state_d = batch_state[:, -6:]
 
+        mask1 = torch.all(batch_state[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
+        mask2 = torch.all(batch_state[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
+        mask3 = torch.all(batch_state[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
+
+        batch_state1 = batch_state.clone().detach()
+        batch_state2 = batch_state.clone().detach()
+        batch_state3 = batch_state.clone().detach()
+
+        batch_state1[~mask1] = 0
+        batch_state2[~mask2] = 0
+        batch_state3[~mask3] = 0
+
+        batch_state1_ind = batch_state_ind.clone().detach()
+        batch_state2_ind = batch_state_ind.clone().detach()
+        batch_state3_ind = batch_state_ind.clone().detach()
+
+        batch_state1_ind[~mask1] = 0
+        batch_state2_ind[~mask2] = 0
+        batch_state3_ind[~mask3] = 0
+
+        batch_state1_d = batch_state_d.clone().detach()
+        batch_state2_d = batch_state_d.clone().detach()
+        batch_state3_d = batch_state_d.clone().detach()
+        
+        batch_state1_d[~mask1] = 0
+        batch_state2_d[~mask2] = 0
+        batch_state3_d[~mask3] = 0
+
+        m1 = torch.any(mask1)
+        m2 = torch.any(mask2)
+        m3 = torch.any(mask3)
+
         ##### separate task depedent info #####
         
         temp1, temp2, temp3 = self.temperature
@@ -1016,103 +1074,103 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
         self.policy_optimizer1.zero_grad()
         self.policy_optimizer2.zero_grad()
         self.policy_optimizer3.zero_grad()
-        if self.mask1:
-            action_distrib1 = self.policy1shalf(self.policy1fhalf(batch_state))
-            actions = action_distrib1.rsample()
-            log_prob = action_distrib1.log_prob(actions)
-            q1 = self.q_func1_T1shalf(self.q_func1_T1fhalf((batch_state, actions)))
-            q2 = self.q_func2_T1shalf(self.q_func2_T1fhalf((batch_state, actions)))
-            q = torch.min(q1, q2)
+        if m1:
+            action_input1 = torch.cat((self.policy1fhalf(batch_state1_ind), batch_state1_d), dim = 1)
+            action_distrib1 = self.policy1shalf(action_input1)
+            actions1 = action_distrib1.rsample()
+            log_prob1 = action_distrib1.log_prob(actions1)
+            q1_T1 = self.q_func1_T1((batch_state1, actions1))
+            q2_T1 = self.q_func2_T1((batch_state1, actions1))
+            q_T1 = torch.min(q1_T1, q2_T1)
 
-            entropy_term1 = temp1 * log_prob[..., None]
-            assert q.shape == entropy_term1.shape
-            loss = torch.mean(entropy_term1 - q)
+            entropy_term1 = temp1 * log_prob1[..., None]
+            assert q_T1.shape == entropy_term1.shape
+            loss_T1 = torch.mean(entropy_term1 - q_T1)
             
-            loss.backward()
+            loss_T1.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy1.parameters(), self.max_grad_norm)
             self.policy_optimizer1.step()
-
-            t = 1
+        else: 
+            log_prob1 = torch.empty(0)
         
-        elif self.mask2:
-            action_distrib2 = self.policy2shalf(self.policy2fhalf(batch_state))
-            actions = action_distrib2.rsample()
-            log_prob = action_distrib2.log_prob(actions)
-            q1 = self.q_func1_T2shalf(self.q_func1_T2fhalf((batch_state, actions)))
-            q2 = self.q_func2_T2shalf(self.q_func2_T2fhalf((batch_state, actions)))
-            q = torch.min(q1, q2)
+        if m2:
+            action_input2 = torch.cat((self.policy2fhalf(batch_state2_ind), batch_state2_d), dim = 1)
+            action_distrib2 = self.policy2shalf(action_input2)
+            actions2 = action_distrib2.rsample()
+            log_prob2 = action_distrib2.log_prob(actions2)
+            q1_T2 = self.q_func1_T2((batch_state2, actions2))
+            q2_T2 = self.q_func2_T2((batch_state2, actions2))
+            q_T2 = torch.min(q1_T2, q2_T2)
 
-            entropy_term2 = temp2 * log_prob[..., None]
-            assert q.shape == entropy_term2.shape
-            loss = torch.mean(entropy_term2 - q)
+            entropy_term2 = temp2 * log_prob2[..., None]
+            assert q_T2.shape == entropy_term2.shape
+            loss_T2 = torch.mean(entropy_term2 - q_T2)
             
-            loss.backward()
+            loss_T2.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy2.parameters(), self.max_grad_norm)
             self.policy_optimizer2.step()
-
-            t = 2
+        else:
+            log_prob2 = torch.empty(0)
         
-        elif self.mask3:
+        if m3:
             with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy2fhalf):
-                policymid1, policymid2 = self.policy1fhalf(batch_state), self.policy2fhalf(batch_state)
-            p3_input = torch.cat(policymid1, policymid2, dim = 1)
+                policymid1, policymid2 = self.policy1fhalf(batch_state3_ind), self.policy2fhalf(batch_state3_ind)
+            p3_input = torch.cat((policymid1, policymid2, batch_state3_d), dim = 1)
             action_distrib3 = self.policy3(p3_input)
             actions3 = action_distrib3.rsample()
-            log_prob = action_distrib3.log_prob(actions3)
-            q1 = self.q_func1_T3shalf(self.q_func1_T3fhalf((batch_state, actions)))
-            q2 = self.q_func2_T3shalf(self.q_func2_T3fhalf((batch_state, actions)))
-            q = torch.min(q1, q2)
+            log_prob3 = action_distrib3.log_prob(actions3)
+            
+            q1_T3 = self.q_func1_T3((batch_state3, actions3))
+            q2_T3 = self.q_func2_T3((batch_state3, actions3))
+            q_T3 = torch.min(q1_T3, q2_T3)
 
-            entropy_term3 = temp3 * log_prob[..., None]
-            assert q.shape == entropy_term3.shape
-            loss = torch.mean(entropy_term3 - q)
+            entropy_term3 = temp3 * log_prob3[..., None]
+            assert q_T3.shape == entropy_term3.shape
+            loss_T3 = torch.mean(entropy_term3 - q_T3)
                   
-            loss.backward()
+            loss_T3.backward()
             if self.max_grad_norm is not None:
                 clip_l2_grad_norm_(self.policy3.parameters(), self.max_grad_norm)
             self.policy_optimizer3.step()
+        else:
+            log_prob3 = torch.empty(0)
 
-            t = 3
-        
-        self.n_policy_updates += 1
-
+        self.n_policy_updates += 1        
         if self.entropy_target is not None:
-            self.update_temperature(log_prob.detach(), t)#, log_prob2.detach(), log_prob3.detach())
+            self.update_temperature(log_prob1.detach(), log_prob2.detach(), log_prob3.detach())
 
         # Record entropy
         with torch.no_grad():
             try:
-                if self.mask1:
+                if m1:
                     self.entropy_record1.extend(
                         action_distrib1.entropy().detach().cpu().numpy()
                     )
-                if self.mask2:
+                if m2:
                     self.entropy_record2.extend(
                         action_distrib2.entropy().detach().cpu().numpy()
                     )
-                if self.mask3:
+                if m3:
                     self.entropy_record3.extend(
                         action_distrib3.entropy().detach().cpu().numpy()
                     )
             except NotImplementedError:
                 # Record - log p(x) instead
-                if self.mask1:
-                    self.entropy_record1.extend(-log_prob.detach().cpu().numpy())
-                if self.mask2:
-                    self.entropy_record2.extend(-log_prob.detach().cpu().numpy())
-                if self.mask3:
-                    self.entropy_record3.extend(-log_prob.detach().cpu().numpy())
+                if m1:
+                    self.entropy_record1.extend(-log_prob1.detach().cpu().numpy())
+                if m2:
+                    self.entropy_record2.extend(-log_prob2.detach().cpu().numpy())
+                if m3:
+                    self.entropy_record3.extend(-log_prob3.detach().cpu().numpy())
 
     def update(self, experiences, errors_out=None):
-        """Update the model from experiences"""        
-        # with torch.autograd.profiler.profile(use_cuda=True) as prof:
+        """Update the model from experiences"""
         batch = batch_experiences(experiences, self.device, self.phi, self.gamma)
-        t = self.update_q_func(batch)
+        self.update_q_func(batch)
         self.update_policy_and_temperature(batch)
-        self.sync_target_network(t)
-        # print(prof)        
+        self.sync_target_network()        
 
     def batch_select_greedy_action(self, batch_obs, deterministic=False):        
         with torch.no_grad(), pfrl.utils.evaluating(self.policy1fhalf), pfrl.utils.evaluating(self.policy1shalf), pfrl.utils.evaluating(self.policy2fhalf), pfrl.utils.evaluating(self.policy2shalf), pfrl.utils.evaluating(self.policy3):
@@ -1121,25 +1179,100 @@ class MTSoftActorCritic(AttributeSavingMixin, BatchAgent):
             batch_xs_d = batch_xs[:, -6:]
             ##### separate task depedent info #####
             
-            mask1 = torch.all(torch.all(batch_xs[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1))
-            mask2 = torch.all(torch.all(batch_xs[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1))
-            mask3 = torch.all(torch.all(batch_xs[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1))
-                  
-            if mask1:
-                policy_out = self.policy1shalf(self.policy1fhalf(batch_xs))
-            elif mask2:
-                policy_out = self.policy2shalf(self.policy2fhalf(batch_xs))
-            elif mask3:
-                p3_input = torch.cat(self.policy1fhalf(batch_xs), self.policy2fhalf(batch_xs), dim = 1)
-                policy_out = self.policy3(p3_input)
-                
+            mask1 = torch.all(batch_xs_d[:, -3:] == torch.tensor([1, 0, 0]).to(self.device), dim=1)
+            mask2 = torch.all(batch_xs_d[:, -3:] == torch.tensor([0, 1, 0]).to(self.device), dim=1)
+            mask3 = torch.all(batch_xs_d[:, -3:] == torch.tensor([0, 0, 1]).to(self.device), dim=1)
+
+            batch_xs_d1 = batch_xs_d.clone().detach()
+            batch_xs_d2 = batch_xs_d.clone().detach()
+            batch_xs_d3 = batch_xs_d.clone().detach()
+
+            batch_xs_d1[~mask1] = 0
+            batch_xs_d2[~mask2] = 0
+            batch_xs_d3[~mask3] = 0
+
+            batch_xs_ind1 = batch_xs_ind.clone().detach()
+            batch_xs_ind2 = batch_xs_ind.clone().detach()
+            batch_xs_ind3 = batch_xs_ind.clone().detach()
+
+            batch_xs_ind1[~mask1] = 0
+            batch_xs_ind2[~mask2] = 0
+            batch_xs_ind3[~mask3] = 0
+
+            indicesA = torch.where(mask1)[0]
+            indicesB = torch.where(mask2)[0]
+            indicesC = torch.where(mask3)[0]
+
+            m1 = torch.any(mask1)
+            m2 = torch.any(mask2)
+            m3 = torch.any(mask3)
+            
+            # mypolicy3 =list(self.policy3.children())            
+            if m1:                
+                a_input1 = torch.cat((self.policy1fhalf(batch_xs_ind1), batch_xs_d1), dim = 1)
+                policy_out1 = self.policy1shalf(a_input1)
+            if m2:                
+                a_input2 = torch.cat((self.policy2fhalf(batch_xs_ind2), batch_xs_d2), dim = 1)
+                policy_out2 = self.policy2shalf(a_input2)
+            if m3:
+                p3_input = torch.cat((self.policy1fhalf(batch_xs_ind3), self.policy2fhalf(batch_xs_ind3), batch_xs_d3), dim = 1)
+                policy_out3 = self.policy3(p3_input)
+
+                # p1fh = self.policy1fhalf(batch_xs_ind)
+                # p2fh = self.policy2fhalf(batch_xs_ind)
+                # p3fh = mypolicy3[0](p3_input)
+            
+            batch_action = np.empty((6,23))
+
             if deterministic:
-                batch_action = mode_of_distribution(policy_out).cpu().numpy()                
+                if m1:
+                    batch_action1 = mode_of_distribution(policy_out1).cpu().numpy()
+                if m2:
+                    batch_action2 = mode_of_distribution(policy_out2).cpu().numpy()
+                if m3:
+                    batch_action3 = mode_of_distribution(policy_out3).cpu().numpy()
             else:
-                batch_action = policy_out.sample().cpu().numpy()                        
+                if m1:
+                    batch_action1 = policy_out1.sample().cpu().numpy()
+                if m2:
+                    batch_action2 = policy_out2.sample().cpu().numpy()
+                if m3:
+                    batch_action3 = policy_out3.sample().cpu().numpy()
+            
+            for index in range(6):
+                if torch.any(indicesA == index):
+                    batch_action[index] = batch_action1[index%6]
+                elif torch.any(indicesB == index):
+                    batch_action[index] = batch_action2[index%6]
+                elif torch.any(indicesC == index):
+                    batch_action[index] = batch_action3[index%6]
                         
             action = torch.tensor(batch_action)            
-            action = action.to('cuda:0')            
+            action = action.to('cuda:0')
+
+            # p1fh = p1fh.cpu().numpy()
+            # [p1fh] = p1fh
+            # p2fh = p2fh.cpu().numpy()
+            # [p2fh] = p2fh
+            # p3fh = p3fh.cpu().numpy()
+            # [p3fh] = p3fh
+
+            # data_dir = '/home/spyd66/tSNE/Pullover/Pullover_PULLUP_IH_Actor'
+            # np.savez(join(data_dir, 'step{}'.format(self.countuh)),
+            #          step=np.array(self.countuh),
+            #          hidden_states=np.array(p1fh))
+
+            # data_dir = '/home/spyd66/tSNE/Pullover/Pullover_SWING_IH_Actor'
+            # np.savez(join(data_dir, 'step{}'.format(self.countuh)),
+            #          step=np.array(self.countuh),
+            #          hidden_states=np.array(p2fh))
+
+            # data_dir = '/home/spyd66/tSNE/Pullover/Pullover_COMB_IH_Actor_2'
+            # np.savez(join(data_dir, 'step{}'.format(self.countuh)),
+            #          step=np.array(self.countuh),
+            #          hidden_states=np.array(p3fh))
+
+            # self.countuh += 1            
                                         
         return batch_action
 
